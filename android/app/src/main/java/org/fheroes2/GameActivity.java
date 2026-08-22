@@ -39,6 +39,8 @@ import org.libsdl.app.SDLActivity;
 
 public final class GameActivity extends SDLActivity
 {
+    private ThorSecondScreenController secondScreenController;
+
     @Override
     protected void onCreate( final Bundle savedInstanceState )
     {
@@ -59,6 +61,9 @@ public final class GameActivity extends SDLActivity
 
         super.onCreate( savedInstanceState );
 
+        secondScreenController = new ThorSecondScreenController( this );
+        secondScreenController.start();
+
         // If the minimum set of game assets has not been found, run the toolset activity instead
         if ( !HoMM2AssetManagement.isHoMM2AssetsPresent( externalFilesDir ) ) {
             startActivity( new Intent( this, ToolsetActivity.class ) );
@@ -71,6 +76,11 @@ public final class GameActivity extends SDLActivity
     @Override
     protected void onDestroy()
     {
+        if ( secondScreenController != null ) {
+            secondScreenController.stop();
+            secondScreenController = null;
+        }
+
         super.onDestroy();
 
         // When SDL_main() exits, the app process can still remain in memory, and restarting it

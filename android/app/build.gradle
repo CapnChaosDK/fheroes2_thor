@@ -22,7 +22,9 @@ android {
 
         externalNativeBuild {
             ndkBuild {
-                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+                // AYN Thor models use 64-bit Snapdragon SoCs. Keeping this device-specific
+                // build arm64-only substantially reduces APK size and native build time.
+                abiFilters 'arm64-v8a'
                 arguments '-j4'
             }
         }
