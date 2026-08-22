@@ -15,7 +15,7 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Milestone 1: context-sensitive command deck
 
-Status: `in progress`
+Status: `done`
 
 Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by the active game context.
 
@@ -70,7 +70,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 - Battle Spell, Wait/Defend, Turn Order, and Options actions verified by the user.
 - Nested Battle confirmation correctly switches to Dialog and restores Battle after cancellation.
 - Automatic battle resolution was traced to the standard `auto resolve battles` setting and resolved by selecting Manual mode.
-- Several long labels were reported close to their borders. Dynamic measured-text fitting is included in the latest candidate and needs a visual recheck on the device.
+- Dynamic measured-text fitting was verified from a live lower-display capture; long labels retain inset from the inner button frame across the shared renderer.
 
 ## Milestone 2: semantic actions
 
