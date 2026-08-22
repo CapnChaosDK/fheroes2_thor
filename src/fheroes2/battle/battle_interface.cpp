@@ -75,6 +75,7 @@
 #include "settings.h"
 #include "spell_book.h"
 #include "timing.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_constants.h"
@@ -3128,6 +3129,7 @@ void Battle::Interface::HumanTurn( const Unit & unit, Actions & actions )
         _highlightUnitMovementArea = nullptr;
 
         if ( humanturn_spell.isValid() ) {
+            fheroes2::thor::setEnabledActions( 0 );
             HumanCastSpellTurn( unit, actions, msg );
         }
         else {
@@ -3160,6 +3162,7 @@ void Battle::Interface::HumanTurn( const Unit & unit, Actions & actions )
 
     popup.reset();
 
+    fheroes2::thor::setEnabledActions( 0 );
     _currentUnit = nullptr;
     _highlightUnitMovementArea = nullptr;
 }
@@ -3180,47 +3183,91 @@ void Battle::Interface::HumanBattleTurn( const Unit & unit, Actions & actions, s
     _buttonSettings.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( _buttonSettings.area() ) );
     _buttonSkip.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( _buttonSkip.area() ) );
 
-    if ( le.isAnyKeyPressed() ) {
-        // Skip the turn
-        if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_SKIP ) ) {
-            actions.emplace_back( Command::SKIP, unit.GetUID() );
-            humanturn_exit = true;
-        }
-        // Battle options
-        else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_OPTIONS ) ) {
-            EventShowOptions();
-        }
-        // Toggle the display of the battle turn order
-        else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_TOGGLE_TURN_ORDER_DISPLAY ) ) {
-            conf.switchToNextBattleTurnOrderState();
+    using ThorAction = fheroes2::thor::Action;
+    fheroes2::thor::ActionMask enabledThorActions = fheroes2::thor::actionMask( ThorAction::BATTLE_SKIP )
+                                                       | fheroes2::thor::actionMask( ThorAction::BATTLE_TOGGLE_AUTO_COMBAT )
+                                                       | fheroes2::thor::actionMask( ThorAction::BATTLE_QUICK_COMBAT )
+                                                       | fheroes2::thor::actionMask( ThorAction::BATTLE_OPTIONS )
+                                                       | fheroes2::thor::actionMask( ThorAction::BATTLE_TOGGLE_TURN_ORDER );
 
-            _needRedraw = true;
+    const PlayerColor currentColor = unit.GetCurrentOrArmyColor();
+    const HeroBase * currentCommander = unit.GetCurrentOrArmyCommander();
+    if ( currentCommander != nullptr && currentCommander->HaveSpellBook() && !arena.isDisableCastSpell( Spell::NONE ) ) {
+        enabledThorActions |= fheroes2::thor::actionMask( ThorAction::BATTLE_CAST_SPELL );
+    }
+    if ( arena.CanRetreatOpponent( currentColor ) ) {
+        enabledThorActions |= fheroes2::thor::actionMask( ThorAction::BATTLE_RETREAT );
+    }
+    if ( arena.CanSurrenderOpponent( currentColor ) ) {
+        enabledThorActions |= fheroes2::thor::actionMask( ThorAction::BATTLE_SURRENDER );
+    }
+    fheroes2::thor::setEnabledActions( enabledThorActions );
+
+    fheroes2::thor::Action requestedAction = fheroes2::thor::takeAction();
+    if ( requestedAction == fheroes2::thor::Action::NONE && le.isAnyKeyPressed() ) {
+        if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_SKIP ) ) {
+            requestedAction = fheroes2::thor::Action::BATTLE_SKIP;
         }
-        // Switch the auto combat mode on
+        else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_OPTIONS ) ) {
+            requestedAction = fheroes2::thor::Action::BATTLE_OPTIONS;
+        }
+        else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_TOGGLE_TURN_ORDER_DISPLAY ) ) {
+            requestedAction = fheroes2::thor::Action::BATTLE_TOGGLE_TURN_ORDER;
+        }
         else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_TOGGLE_AUTO_COMBAT ) ) {
-            if ( fheroes2::showStandardTextMessage( {}, _( "Are you sure you want to enable the auto combat mode?" ), Dialog::YES | Dialog::NO ) == Dialog::YES ) {
-                _startAutoCombat( unit, actions );
-            }
+            requestedAction = fheroes2::thor::Action::BATTLE_TOGGLE_AUTO_COMBAT;
         }
-        // Resolve the combat in quick combat mode
         else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_QUICK_COMBAT ) ) {
-            if ( fheroes2::showStandardTextMessage( {}, _( "Are you sure you want to resolve the battle in the quick combat mode?" ), Dialog::YES | Dialog::NO )
-                 == Dialog::YES ) {
-                _quickCombat( actions );
-            }
+            requestedAction = fheroes2::thor::Action::BATTLE_QUICK_COMBAT;
         }
-        // Cast the spell
         else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_CAST_SPELL ) ) {
-            ProcessingHeroDialogResult( 1, actions );
+            requestedAction = fheroes2::thor::Action::BATTLE_CAST_SPELL;
         }
-        // Retreat
         else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_RETREAT ) ) {
-            ProcessingHeroDialogResult( 2, actions );
+            requestedAction = fheroes2::thor::Action::BATTLE_RETREAT;
         }
-        // Surrender
         else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_SURRENDER ) ) {
-            ProcessingHeroDialogResult( 3, actions );
+            requestedAction = fheroes2::thor::Action::BATTLE_SURRENDER;
         }
+    }
+
+    switch ( requestedAction ) {
+    case fheroes2::thor::Action::BATTLE_SKIP:
+        // Skip the turn.
+        actions.emplace_back( Command::SKIP, unit.GetUID() );
+        humanturn_exit = true;
+        break;
+    case fheroes2::thor::Action::BATTLE_OPTIONS:
+        EventShowOptions();
+        break;
+    case fheroes2::thor::Action::BATTLE_TOGGLE_TURN_ORDER:
+        conf.switchToNextBattleTurnOrderState();
+
+        _needRedraw = true;
+        break;
+    case fheroes2::thor::Action::BATTLE_TOGGLE_AUTO_COMBAT:
+        if ( fheroes2::showStandardTextMessage( {}, _( "Are you sure you want to enable the auto combat mode?" ), Dialog::YES | Dialog::NO ) == Dialog::YES ) {
+            _startAutoCombat( unit, actions );
+        }
+        break;
+    case fheroes2::thor::Action::BATTLE_QUICK_COMBAT:
+        if ( fheroes2::showStandardTextMessage( {}, _( "Are you sure you want to resolve the battle in the quick combat mode?" ), Dialog::YES | Dialog::NO )
+             == Dialog::YES ) {
+            _quickCombat( actions );
+        }
+        break;
+    case fheroes2::thor::Action::BATTLE_CAST_SPELL:
+        ProcessingHeroDialogResult( 1, actions );
+        break;
+    case fheroes2::thor::Action::BATTLE_RETREAT:
+        ProcessingHeroDialogResult( 2, actions );
+        break;
+    case fheroes2::thor::Action::BATTLE_SURRENDER:
+        ProcessingHeroDialogResult( 3, actions );
+        break;
+    case fheroes2::thor::Action::NONE:
+    default:
+        break;
     }
 
     // Add offsets to inner objects

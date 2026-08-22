@@ -39,18 +39,35 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_CASTLE = 5;
     private static final int CONTEXT_BATTLE = 6;
 
+    private static final int ACTION_NONE = 0;
+    private static final int ACTION_BATTLE_CAST_SPELL = 1;
+    private static final int ACTION_BATTLE_SKIP = 2;
+    private static final int ACTION_BATTLE_TOGGLE_AUTO_COMBAT = 3;
+    private static final int ACTION_BATTLE_QUICK_COMBAT = 4;
+    private static final int ACTION_BATTLE_RETREAT = 5;
+    private static final int ACTION_BATTLE_SURRENDER = 6;
+    private static final int ACTION_BATTLE_OPTIONS = 7;
+    private static final int ACTION_BATTLE_TOGGLE_TURN_ORDER = 8;
+
     interface KeySender
     {
         void send( int keyCode, boolean pressed );
     }
 
+    interface ActionSender
+    {
+        boolean send( int action );
+    }
+
     private final KeySender keySender;
+    private final ActionSender actionSender;
     private CommandDeckView commandDeckView;
 
-    ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender )
+    ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender )
     {
         super( context, display );
         this.keySender = keySender;
+        this.actionSender = actionSender;
     }
 
     @Override
@@ -67,7 +84,7 @@ final class ThorSecondScreenPresentation extends Presentation
             window.getDecorView().setSystemUiVisibility( View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY );
         }
 
-        commandDeckView = new CommandDeckView( getContext(), keySender );
+        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender );
         setContentView( commandDeckView );
     }
 
@@ -80,10 +97,10 @@ final class ThorSecondScreenPresentation extends Presentation
         super.onStop();
     }
 
-    void setGameContext( final int context )
+    void setGameState( final int context, final long enabledActions )
     {
         if ( commandDeckView != null ) {
-            commandDeckView.setGameContext( context );
+            commandDeckView.setGameState( context, enabledActions );
         }
     }
 
@@ -103,33 +120,40 @@ final class ThorSecondScreenPresentation extends Presentation
         private static final int MUTED_TEXT_COLOR = Color.rgb( 190, 164, 112 );
 
         private final KeySender keySender;
+        private final ActionSender actionSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
         private CommandButton pressedButton;
         private int gameContext = -1;
+        private long enabledActions = -1L;
         private String contextTitle = "COMMAND DECK";
 
-        CommandDeckView( final Context context, final KeySender keySender )
+        CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender )
         {
             super( context );
             this.keySender = keySender;
+            this.actionSender = actionSender;
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameContext( CONTEXT_FALLBACK );
+            setGameState( CONTEXT_FALLBACK, -1L );
         }
 
-        void setGameContext( final int requestedContext )
+        void setGameState( final int requestedContext, final long requestedEnabledActions )
         {
             final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE ? requestedContext : CONTEXT_FALLBACK;
-            if ( gameContext == context ) {
+            if ( gameContext == context && enabledActions == requestedEnabledActions ) {
                 return;
             }
 
             releasePressedButton();
+            final boolean contextChanged = gameContext != context;
             gameContext = context;
-            rebuildActions();
-            layoutButtons( getWidth(), getHeight() );
+            enabledActions = requestedEnabledActions;
+            if ( contextChanged ) {
+                rebuildActions();
+                layoutButtons( getWidth(), getHeight() );
+            }
             invalidate();
         }
 
@@ -211,7 +235,8 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( SHADOW_COLOR );
             canvas.drawRoundRect( shadow, 17, 17, paint );
 
-            paint.setColor( button == pressedButton ? BUTTON_PRESSED_COLOR : BUTTON_COLOR );
+            final boolean enabled = isEnabled( button );
+            paint.setColor( !enabled ? PANEL_COLOR : ( button == pressedButton ? BUTTON_PRESSED_COLOR : BUTTON_COLOR ) );
             canvas.drawRoundRect( button.bounds, 17, 17, paint );
 
             paint.setStyle( Paint.Style.STROKE );
@@ -220,12 +245,12 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRoundRect( button.bounds, 17, 17, paint );
 
             paint.setStrokeWidth( 2 );
-            paint.setColor( button == pressedButton ? SHADOW_COLOR : GOLD_LIGHT_COLOR );
+            paint.setColor( !enabled ? GOLD_COLOR : ( button == pressedButton ? SHADOW_COLOR : GOLD_LIGHT_COLOR ) );
             final RectF inner = new RectF( button.bounds.left + 8, button.bounds.top + 8, button.bounds.right - 8, button.bounds.bottom - 8 );
             canvas.drawRoundRect( inner, 11, 11, paint );
 
             paint.setStyle( Paint.Style.FILL );
-            paint.setColor( TEXT_COLOR );
+            paint.setColor( enabled ? TEXT_COLOR : MUTED_TEXT_COLOR );
             paint.setTextAlign( Paint.Align.CENTER );
             paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
             final float widthLimitedSize = button.bounds.width() / Math.max( 3.5f, button.label.length() * 0.62f );
@@ -250,7 +275,10 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( action == MotionEvent.ACTION_DOWN ) {
                 pressedButton = buttonAt( event.getX(), event.getY() );
                 if ( pressedButton != null ) {
-                    keySender.send( pressedButton.keyCode, true );
+                    pressedButton.sentSemantically = pressedButton.action != ACTION_NONE && actionSender.send( pressedButton.action );
+                    if ( !pressedButton.sentSemantically ) {
+                        keySender.send( pressedButton.keyCode, true );
+                    }
                     invalidate();
                 }
                 return true;
@@ -329,14 +357,14 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_BATTLE:
                 contextTitle = "BATTLE";
-                addAction( "SPELL", KeyEvent.KEYCODE_C );
-                addAction( "WAIT / DEFEND", KeyEvent.KEYCODE_SPACE );
-                addAction( "AUTO", KeyEvent.KEYCODE_A );
-                addAction( "QUICK COMBAT", KeyEvent.KEYCODE_Q );
-                addAction( "RETREAT", KeyEvent.KEYCODE_R );
-                addAction( "SURRENDER", KeyEvent.KEYCODE_S );
-                addAction( "OPTIONS", KeyEvent.KEYCODE_O );
-                addAction( "TURN ORDER", KeyEvent.KEYCODE_T );
+                addAction( "SPELL", ACTION_BATTLE_CAST_SPELL, KeyEvent.KEYCODE_C );
+                addAction( "WAIT / DEFEND", ACTION_BATTLE_SKIP, KeyEvent.KEYCODE_SPACE );
+                addAction( "AUTO", ACTION_BATTLE_TOGGLE_AUTO_COMBAT, KeyEvent.KEYCODE_A );
+                addAction( "QUICK COMBAT", ACTION_BATTLE_QUICK_COMBAT, KeyEvent.KEYCODE_Q );
+                addAction( "RETREAT", ACTION_BATTLE_RETREAT, KeyEvent.KEYCODE_R );
+                addAction( "SURRENDER", ACTION_BATTLE_SURRENDER, KeyEvent.KEYCODE_S );
+                addAction( "OPTIONS", ACTION_BATTLE_OPTIONS, KeyEvent.KEYCODE_O );
+                addAction( "TURN ORDER", ACTION_BATTLE_TOGGLE_TURN_ORDER, KeyEvent.KEYCODE_T );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
@@ -362,7 +390,12 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void addAction( final String label, final int keyCode )
         {
-            buttons.add( new CommandButton( label, keyCode ) );
+            addAction( label, ACTION_NONE, keyCode );
+        }
+
+        private void addAction( final String label, final int action, final int keyCode )
+        {
+            buttons.add( new CommandButton( label, action, keyCode ) );
         }
 
         private void layoutButtons( final int width, final int height )
@@ -396,17 +429,25 @@ final class ThorSecondScreenPresentation extends Presentation
         private CommandButton buttonAt( final float x, final float y )
         {
             for ( final CommandButton button : buttons ) {
-                if ( button.bounds.contains( x, y ) ) {
+                if ( button.bounds.contains( x, y ) && isEnabled( button ) ) {
                     return button;
                 }
             }
             return null;
         }
 
+        private boolean isEnabled( final CommandButton button )
+        {
+            return button.action == ACTION_NONE || ( enabledActions & ( 1L << button.action ) ) != 0;
+        }
+
         void releasePressedButton()
         {
             if ( pressedButton != null ) {
-                keySender.send( pressedButton.keyCode, false );
+                if ( !pressedButton.sentSemantically ) {
+                    keySender.send( pressedButton.keyCode, false );
+                }
+                pressedButton.sentSemantically = false;
                 pressedButton = null;
                 invalidate();
             }
@@ -416,12 +457,15 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final class CommandButton
     {
         final String label;
+        final int action;
         final int keyCode;
         final RectF bounds = new RectF();
+        boolean sentSemantically;
 
-        CommandButton( final String label, final int keyCode )
+        CommandButton( final String label, final int action, final int keyCode )
         {
             this.label = label;
+            this.action = action;
             this.keyCode = keyCode;
         }
     }

@@ -25,8 +25,37 @@ namespace fheroes2::thor
         BATTLE
     };
 
+    // Stable identifiers shared with the Android command deck. Keep existing values unchanged
+    // when adding actions so Java and native builds cannot silently disagree.
+    enum class Action : int32_t
+    {
+        NONE = 0,
+        BATTLE_CAST_SPELL,
+        BATTLE_SKIP,
+        BATTLE_TOGGLE_AUTO_COMBAT,
+        BATTLE_QUICK_COMBAT,
+        BATTLE_RETREAT,
+        BATTLE_SURRENDER,
+        BATTLE_OPTIONS,
+        BATTLE_TOGGLE_TURN_ORDER
+    };
+
+    using ActionMask = uint64_t;
+
+    constexpr ActionMask actionMask( const Action action )
+    {
+        return ActionMask{ 1 } << static_cast<int32_t>( action );
+    }
+
     UiContext getUiContext();
     void setUiContext( UiContext context );
+
+    // Android produces actions on its main thread and the game consumes them on the SDL thread.
+    // Actions are rejected when they do not belong to the currently active context.
+    bool enqueueAction( Action action );
+    Action takeAction();
+    ActionMask getEnabledActions();
+    void setEnabledActions( ActionMask actions );
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

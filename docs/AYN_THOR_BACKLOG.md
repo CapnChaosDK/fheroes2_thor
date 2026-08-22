@@ -74,12 +74,31 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 
 ## Milestone 2: semantic actions
 
-Status: `deferred`
+Status: `in progress`
 
 - Replace fragile simulated hotkeys where appropriate with a Java to native semantic-action queue.
 - Process actions on the game/SDL thread; never mutate engine state directly from the Android UI thread.
 - Add availability rules for context-specific operations such as battle wait/defend, recruitment, and army management.
 - Preserve configurable keyboard hotkeys independently of lower-screen semantic controls.
+
+### Battle-first implementation
+
+- Stable Battle action identifiers are shared by Java and C++.
+- A bounded, thread-safe native queue accepts one-shot commands from the Android main thread and is consumed only on the SDL/game thread.
+- Context changes clear queued commands, and current native availability masks reject stale or unavailable commands.
+- Battle buttons are visually muted and ignore touch when unavailable. Spell, Retreat, and Surrender availability is derived from current engine state; all Battle actions are disabled during AI turns and spell-target selection.
+- The prior SDL key-event path remains the fallback if the native bridge is not loaded. Adventure Map, Hero, Castle, menu, dialog, and fallback layouts continue using it during incremental migration.
+- Android build and lint pass. The candidate APK was installed successfully and opened the command deck on display 4.
+
+### Battle-first device validation
+
+Status: `planned`
+
+1. In a manual Battle Only match, verify Spell, Wait / Defend, Options, and Turn Order still act once per tap.
+2. Open and cancel the Auto and Quick Combat confirmations; verify Dialog context restores to Battle.
+3. Verify Retreat and Surrender act normally when available and appear muted when the engine disallows them.
+4. During an AI turn and while choosing a spell target, verify all command-deck Battle buttons are muted and ignore touches.
+5. Verify physical controls and configurable keyboard hotkeys remain unchanged.
 
 ## Milestone 3: information panel
 

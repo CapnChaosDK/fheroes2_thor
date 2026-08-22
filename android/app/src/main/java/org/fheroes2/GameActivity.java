@@ -42,6 +42,8 @@ public final class GameActivity extends SDLActivity
     private ThorSecondScreenController secondScreenController;
 
     private static native int nativeGetThorUiContext();
+    private static native boolean nativeEnqueueThorAction( int action );
+    private static native long nativeGetThorEnabledActionMask();
 
     int getThorUiContext()
     {
@@ -51,6 +53,31 @@ public final class GameActivity extends SDLActivity
         catch ( final UnsatisfiedLinkError ex ) {
             // SDL loads the native game library asynchronously during startup.
             return ThorSecondScreenPresentation.CONTEXT_FALLBACK;
+        }
+    }
+
+    boolean enqueueThorAction( final int action )
+    {
+        try {
+            // A loaded native bridge owns rejection of stale or unavailable actions. Returning
+            // true here prevents a rejected semantic action from leaking into the key fallback.
+            nativeEnqueueThorAction( action );
+            return true;
+        }
+        catch ( final UnsatisfiedLinkError ex ) {
+            // Keep the key-event fallback usable while SDL is loading the native game library.
+            return false;
+        }
+    }
+
+    long getThorEnabledActionMask()
+    {
+        try {
+            return nativeGetThorEnabledActionMask();
+        }
+        catch ( final UnsatisfiedLinkError ex ) {
+            // An older or not-yet-loaded native library can still use the key fallback.
+            return -1L;
         }
     }
 

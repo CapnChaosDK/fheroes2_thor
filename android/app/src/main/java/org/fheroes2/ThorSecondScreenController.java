@@ -44,7 +44,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         public void run()
         {
             if ( presentation instanceof ThorSecondScreenPresentation ) {
-                ( (ThorSecondScreenPresentation)presentation ).setGameContext( activity.getThorUiContext() );
+                ( (ThorSecondScreenPresentation)presentation ).setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask() );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -119,7 +119,8 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
 
         dismissPresentation();
 
-        final ThorSecondScreenPresentation newPresentation = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey );
+        final ThorSecondScreenPresentation newPresentation
+            = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction );
         newPresentation.setOnDismissListener( dialog -> {
             if ( presentation == dialog ) {
                 presentation = null;
