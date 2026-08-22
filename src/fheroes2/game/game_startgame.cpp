@@ -1108,6 +1108,47 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         resetCursor();
     };
 
+    using ThorAction = fheroes2::thor::Action;
+    const auto getEnabledThorActions = [&myKingdom]() {
+        fheroes2::thor::ActionMask actions = fheroes2::thor::actionMask( ThorAction::ADVENTURE_END_TURN )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_OPTIONS )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_PUZZLE_MAP )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_KINGDOM_SUMMARY )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_VIEW_WORLD );
+
+        const VecHeroes & heroes = myKingdom.GetHeroes();
+        if ( std::any_of( heroes.begin(), heroes.end(), []( const Heroes * hero ) {
+                 assert( hero != nullptr );
+                 return hero->MayStillMove( false, false );
+             } ) ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_NEXT_HERO );
+        }
+        if ( !myKingdom.GetCastles().empty() ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_NEXT_TOWN );
+        }
+
+        const Heroes * hero = GetFocusHeroes();
+        if ( hero != nullptr ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_DIG_ARTIFACT );
+
+            if ( hero->GetPath().isValidForMovement() ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_MOVE );
+            }
+            if ( MP2::isRevisitAllowedForObject( hero->getObjectTypeUnderHero(), hero->isShipMaster() ) ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_DEFAULT_ACTION );
+            }
+            if ( hero->HaveSpellBook() && hero->MayCastAdventureSpells() ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_CAST_SPELL );
+            }
+        }
+        else if ( GetFocusCastle() != nullptr ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_DEFAULT_ACTION );
+        }
+
+        return actions;
+    };
+
     while ( res == fheroes2::GameMode::CANCEL ) {
         if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
             if ( Game::processExitEvent() == fheroes2::GameMode::QUIT_GAME ) {
@@ -1134,18 +1175,68 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         // Pending timer events
         _statusPanel.TimerEventProcessing();
 
+        ThorAction requestedThorAction = ThorAction::NONE;
         if ( isHeroMoving ) {
+            fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::ADVENTURE_MOVE ) );
+            requestedThorAction = fheroes2::thor::takeAction();
+
             // Hero is moving, set the appropriate cursor
             cursor.SetThemes( Cursor::WAIT );
 
             // If the hero is currently moving, pressing any key or mouse button should stop him. No other actions are possible at this time.
-            if ( le.isAnyKeyPressed() || le.MouseClickLeft() || le.isMouseRightButtonPressed() ) {
+            if ( requestedThorAction == ThorAction::ADVENTURE_MOVE || le.isAnyKeyPressed() || le.MouseClickLeft() || le.isMouseRightButtonPressed() ) {
                 stopHero = true;
             }
         }
         else {
+            fheroes2::thor::setEnabledActions( getEnabledThorActions() );
+            requestedThorAction = fheroes2::thor::takeAction();
+
+            if ( requestedThorAction != ThorAction::NONE ) {
+                switch ( requestedThorAction ) {
+                case ThorAction::ADVENTURE_NEXT_HERO:
+                    EventNextHero();
+                    break;
+                case ThorAction::ADVENTURE_NEXT_TOWN:
+                    EventNextTown();
+                    break;
+                case ThorAction::ADVENTURE_MOVE:
+                    res = EventHeroMovement();
+                    break;
+                case ThorAction::ADVENTURE_DEFAULT_ACTION:
+                    res = EventDefaultAction();
+                    break;
+                case ThorAction::ADVENTURE_CAST_SPELL:
+                    EventCastSpell();
+                    break;
+                case ThorAction::ADVENTURE_END_TURN:
+                    res = EventEndTurn();
+                    break;
+                case ThorAction::ADVENTURE_OPTIONS:
+                    res = EventAdventureDialog();
+                    break;
+                case ThorAction::ADVENTURE_FILE_OPTIONS:
+                    res = EventFileDialog();
+                    break;
+                case ThorAction::ADVENTURE_PUZZLE_MAP:
+                    EventPuzzleMaps();
+                    break;
+                case ThorAction::ADVENTURE_KINGDOM_SUMMARY:
+                    EventKingdomInfo();
+                    break;
+                case ThorAction::ADVENTURE_VIEW_WORLD:
+                    EventViewWorld();
+                    break;
+                case ThorAction::ADVENTURE_DIG_ARTIFACT:
+                    res = EventDigArtifact();
+                    break;
+                case ThorAction::NONE:
+                default:
+                    break;
+                }
+            }
             // Hotkeys
-            if ( le.isAnyKeyPressed() ) {
+            else if ( le.isAnyKeyPressed() ) {
                 // Adventure map control
                 if ( HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                     res = Game::processExitEvent();
@@ -1616,6 +1707,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         }
     }
 
+    fheroes2::thor::setEnabledActions( 0 );
     return res;
 }
 

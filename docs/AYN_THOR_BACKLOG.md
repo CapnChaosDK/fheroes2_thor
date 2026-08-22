@@ -102,6 +102,24 @@ Status: `done`
 
 All five checks passed on the connected AYN Thor.
 
+### Adventure Map implementation
+
+- All twelve Adventure Map controls now use stable semantic action identifiers and execute through the native game-thread queue.
+- Enabled states mirror current engine state: Next Hero requires a movable hero, Next Town requires a castle, Spell requires a focused hero able to cast, and Move requires a plotted path.
+- Action is available for a revisitable object or focused castle, while Dig requires hero focus. Menu and summary actions remain generally available.
+- During automatic hero movement every other command is muted; tapping Move again requests a stop.
+- Android build and lint pass. The candidate APK was installed successfully and opened the command deck on display 4.
+
+### Adventure Map device validation
+
+Status: `planned`
+
+1. Verify Next Hero and Next Town select the next available owned object and mute when none exists.
+2. Verify Spell, Adventure, File, Puzzle, Kingdom, and View World each open once per tap and restore the Adventure Map layout after closing.
+3. Plot a hero path and tap Move; while the hero travels, verify every other button is muted and tapping Move stops movement.
+4. Verify Action works on a revisitable object or focused castle and is muted when no default action is possible.
+5. Verify Dig is available with hero focus, End Turn behaves normally, and physical controls remain unchanged.
+
 ### Windows build note
 
 - Always compile the Android native target through a short temporary drive mapping such as `R:`. Building from the full repository path can exceed the Windows NDK path limit and fail while creating a deeply nested `*.cflags.tmp` file.

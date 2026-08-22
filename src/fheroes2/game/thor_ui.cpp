@@ -44,6 +44,42 @@ namespace
             return false;
         }
     }
+
+    bool isAdventureAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::ADVENTURE_NEXT_HERO:
+        case Action::ADVENTURE_NEXT_TOWN:
+        case Action::ADVENTURE_MOVE:
+        case Action::ADVENTURE_DEFAULT_ACTION:
+        case Action::ADVENTURE_CAST_SPELL:
+        case Action::ADVENTURE_END_TURN:
+        case Action::ADVENTURE_OPTIONS:
+        case Action::ADVENTURE_FILE_OPTIONS:
+        case Action::ADVENTURE_PUZZLE_MAP:
+        case Action::ADVENTURE_KINGDOM_SUMMARY:
+        case Action::ADVENTURE_VIEW_WORLD:
+        case Action::ADVENTURE_DIG_ARTIFACT:
+            return true;
+        case Action::NONE:
+        default:
+            return false;
+        }
+    }
+
+    bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
+    {
+        switch ( context ) {
+        case fheroes2::thor::UiContext::BATTLE:
+            return isBattleAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_MAP:
+            return isAdventureAction( action );
+        default:
+            return false;
+        }
+    }
 }
 
 namespace fheroes2::thor
@@ -65,14 +101,16 @@ namespace fheroes2::thor
 
     bool enqueueAction( const Action action )
     {
-        if ( getUiContext() != UiContext::BATTLE || !isBattleAction( action ) || ( getEnabledActions() & actionMask( action ) ) == 0 ) {
+        const UiContext context = getUiContext();
+        if ( !isActionValidForContext( action, context ) || ( getEnabledActions() & actionMask( action ) ) == 0 ) {
             return false;
         }
 
         std::lock_guard<std::mutex> lock( actionQueueMutex );
 
         // The context may have changed while this thread was waiting for the queue lock.
-        if ( getUiContext() != UiContext::BATTLE || ( getEnabledActions() & actionMask( action ) ) == 0 ) {
+        const UiContext lockedContext = getUiContext();
+        if ( !isActionValidForContext( action, lockedContext ) || ( getEnabledActions() & actionMask( action ) ) == 0 ) {
             return false;
         }
 
@@ -112,7 +150,8 @@ namespace fheroes2::thor
     void setEnabledActions( const ActionMask actions )
     {
         std::lock_guard<std::mutex> lock( actionQueueMutex );
-        const ActionMask allowedActions = getUiContext() == UiContext::BATTLE ? actions : 0;
+        const UiContext context = getUiContext();
+        const ActionMask allowedActions = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP ? actions : 0;
         enabledActions.store( allowedActions, std::memory_order_release );
         for ( auto actionIter = actionQueue.begin(); actionIter != actionQueue.end(); ) {
             if ( ( allowedActions & actionMask( *actionIter ) ) == 0 ) {

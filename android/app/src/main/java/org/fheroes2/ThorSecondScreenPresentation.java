@@ -48,6 +48,18 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_BATTLE_SURRENDER = 6;
     private static final int ACTION_BATTLE_OPTIONS = 7;
     private static final int ACTION_BATTLE_TOGGLE_TURN_ORDER = 8;
+    private static final int ACTION_ADVENTURE_NEXT_HERO = 9;
+    private static final int ACTION_ADVENTURE_NEXT_TOWN = 10;
+    private static final int ACTION_ADVENTURE_MOVE = 11;
+    private static final int ACTION_ADVENTURE_DEFAULT_ACTION = 12;
+    private static final int ACTION_ADVENTURE_CAST_SPELL = 13;
+    private static final int ACTION_ADVENTURE_END_TURN = 14;
+    private static final int ACTION_ADVENTURE_OPTIONS = 15;
+    private static final int ACTION_ADVENTURE_FILE_OPTIONS = 16;
+    private static final int ACTION_ADVENTURE_PUZZLE_MAP = 17;
+    private static final int ACTION_ADVENTURE_KINGDOM_SUMMARY = 18;
+    private static final int ACTION_ADVENTURE_VIEW_WORLD = 19;
+    private static final int ACTION_ADVENTURE_DIG_ARTIFACT = 20;
 
     interface KeySender
     {
@@ -315,18 +327,18 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_ADVENTURE_MAP:
                 contextTitle = "ADVENTURE MAP";
-                addAction( "NEXT HERO", KeyEvent.KEYCODE_H );
-                addAction( "NEXT TOWN", KeyEvent.KEYCODE_T );
-                addAction( "MOVE", KeyEvent.KEYCODE_M );
-                addAction( "ACTION", KeyEvent.KEYCODE_SPACE );
-                addAction( "SPELL", KeyEvent.KEYCODE_C );
-                addAction( "END TURN", KeyEvent.KEYCODE_E );
-                addAction( "ADVENTURE", KeyEvent.KEYCODE_A );
-                addAction( "FILE", KeyEvent.KEYCODE_F );
-                addAction( "PUZZLE", KeyEvent.KEYCODE_P );
-                addAction( "KINGDOM", KeyEvent.KEYCODE_K );
-                addAction( "VIEW WORLD", KeyEvent.KEYCODE_V );
-                addAction( "DIG", KeyEvent.KEYCODE_D );
+                addAction( "NEXT HERO", ACTION_ADVENTURE_NEXT_HERO, KeyEvent.KEYCODE_H );
+                addAction( "NEXT TOWN", ACTION_ADVENTURE_NEXT_TOWN, KeyEvent.KEYCODE_T );
+                addAction( "MOVE", ACTION_ADVENTURE_MOVE, KeyEvent.KEYCODE_M );
+                addAction( "ACTION", ACTION_ADVENTURE_DEFAULT_ACTION, KeyEvent.KEYCODE_SPACE );
+                addAction( "SPELL", ACTION_ADVENTURE_CAST_SPELL, KeyEvent.KEYCODE_C );
+                addAction( "END TURN", ACTION_ADVENTURE_END_TURN, KeyEvent.KEYCODE_E );
+                addAction( "ADVENTURE", ACTION_ADVENTURE_OPTIONS, KeyEvent.KEYCODE_A );
+                addAction( "FILE", ACTION_ADVENTURE_FILE_OPTIONS, KeyEvent.KEYCODE_F );
+                addAction( "PUZZLE", ACTION_ADVENTURE_PUZZLE_MAP, KeyEvent.KEYCODE_P );
+                addAction( "KINGDOM", ACTION_ADVENTURE_KINGDOM_SUMMARY, KeyEvent.KEYCODE_K );
+                addAction( "VIEW WORLD", ACTION_ADVENTURE_VIEW_WORLD, KeyEvent.KEYCODE_V );
+                addAction( "DIG", ACTION_ADVENTURE_DIG_ARTIFACT, KeyEvent.KEYCODE_D );
                 break;
             case CONTEXT_HERO:
                 contextTitle = "HERO";
