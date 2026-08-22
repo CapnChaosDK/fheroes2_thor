@@ -60,6 +60,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "system.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -139,6 +140,23 @@ void Game::runMainGameLoop()
     bool isDemoVersion{ isProbablyDemoVersion() };
 
     while ( !exit ) {
+        switch ( result ) {
+        case fheroes2::GameMode::MAIN_MENU:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::MAIN_MENU );
+            break;
+        case fheroes2::GameMode::START_GAME:
+        case fheroes2::GameMode::START_BATTLE_ONLY_MODE:
+        case fheroes2::GameMode::EDITOR_MAIN_MENU:
+        case fheroes2::GameMode::EDITOR_NEW_MAP:
+        case fheroes2::GameMode::EDITOR_LOAD_MAP:
+        case fheroes2::GameMode::QUIT_GAME:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
+            break;
+        default:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
+            break;
+        }
+
         switch ( result ) {
         case fheroes2::GameMode::QUIT_GAME:
             exit = true;

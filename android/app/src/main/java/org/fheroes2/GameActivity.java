@@ -41,6 +41,19 @@ public final class GameActivity extends SDLActivity
 {
     private ThorSecondScreenController secondScreenController;
 
+    private static native int nativeGetThorUiContext();
+
+    int getThorUiContext()
+    {
+        try {
+            return nativeGetThorUiContext();
+        }
+        catch ( final UnsatisfiedLinkError ex ) {
+            // SDL loads the native game library asynchronously during startup.
+            return ThorSecondScreenPresentation.CONTEXT_FALLBACK;
+        }
+    }
+
     @Override
     protected void onCreate( final Bundle savedInstanceState )
     {

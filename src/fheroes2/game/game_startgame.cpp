@@ -80,6 +80,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_dialog.h"
 #include "ui_language.h"
@@ -287,6 +288,8 @@ void Game::DialogPlayers( const PlayerColor color, std::string title, std::strin
 
 void Game::OpenCastleDialog( Castle & castle, bool updateFocus /* = true */, const bool renderBackgroundDialog /* = true */ )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::CASTLE );
+
     // setup cursor
     const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -384,6 +387,8 @@ void Game::OpenCastleDialog( Castle & castle, bool updateFocus /* = true */, con
 
 void Game::OpenHeroesDialog( Heroes & hero, bool updateFocus, const bool renderBackgroundDialog, const bool disableDismiss /* = false */ )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::HERO );
+
     // setup cursor
     const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -1006,6 +1011,8 @@ fheroes2::GameMode Interface::AdventureMap::StartGame()
 
 fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSave )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::ADVENTURE_MAP );
+
     if ( isLoadedFromSave ) {
         updateFocus();
     }

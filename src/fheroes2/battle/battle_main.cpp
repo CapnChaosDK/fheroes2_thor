@@ -55,6 +55,7 @@
 #include "spell.h"
 #include "spell_storage.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_dialog.h"
 #include "world.h"
@@ -290,6 +291,8 @@ namespace
 
 Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const int32_t tileIndex )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::BATTLE );
+
     Result result;
 
     // Validate the arguments - check if battle should even load

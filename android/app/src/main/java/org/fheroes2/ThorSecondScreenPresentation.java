@@ -6,11 +6,6 @@
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
  ***************************************************************************/
 
 package org.fheroes2;
@@ -24,6 +19,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -32,9 +28,17 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
-/** Full-screen, touch-first command deck for the AYN Thor lower display. */
+/** Full-screen, context-sensitive command deck for the AYN Thor lower display. */
 final class ThorSecondScreenPresentation extends Presentation
 {
+    static final int CONTEXT_FALLBACK = 0;
+    private static final int CONTEXT_MAIN_MENU = 1;
+    private static final int CONTEXT_DIALOG = 2;
+    private static final int CONTEXT_ADVENTURE_MAP = 3;
+    private static final int CONTEXT_HERO = 4;
+    private static final int CONTEXT_CASTLE = 5;
+    private static final int CONTEXT_BATTLE = 6;
+
     interface KeySender
     {
         void send( int keyCode, boolean pressed );
@@ -76,20 +80,35 @@ final class ThorSecondScreenPresentation extends Presentation
         super.onStop();
     }
 
+    void setGameContext( final int context )
+    {
+        if ( commandDeckView != null ) {
+            commandDeckView.setGameContext( context );
+        }
+    }
+
     private static final class CommandDeckView extends View
     {
-        private static final int BACKGROUND_COLOR = Color.rgb( 17, 13, 9 );
-        private static final int PANEL_COLOR = Color.rgb( 53, 39, 25 );
-        private static final int BUTTON_COLOR = Color.rgb( 105, 73, 38 );
-        private static final int BUTTON_PRESSED_COLOR = Color.rgb( 166, 116, 53 );
-        private static final int BORDER_COLOR = Color.rgb( 224, 187, 103 );
+        private static final int BACKGROUND_COLOR = Color.rgb( 20, 17, 14 );
+        private static final int STONE_DARK_COLOR = Color.rgb( 47, 43, 38 );
+        private static final int STONE_LIGHT_COLOR = Color.rgb( 67, 61, 52 );
+        private static final int PANEL_COLOR = Color.rgb( 77, 57, 34 );
+        private static final int PANEL_INNER_COLOR = Color.rgb( 38, 29, 20 );
+        private static final int BUTTON_COLOR = Color.rgb( 112, 77, 38 );
+        private static final int BUTTON_PRESSED_COLOR = Color.rgb( 163, 111, 47 );
+        private static final int GOLD_COLOR = Color.rgb( 225, 188, 100 );
+        private static final int GOLD_LIGHT_COLOR = Color.rgb( 255, 230, 154 );
+        private static final int SHADOW_COLOR = Color.rgb( 30, 20, 12 );
         private static final int TEXT_COLOR = Color.rgb( 255, 239, 190 );
+        private static final int MUTED_TEXT_COLOR = Color.rgb( 190, 164, 112 );
 
         private final KeySender keySender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
         private CommandButton pressedButton;
+        private int gameContext = -1;
+        private String contextTitle = "COMMAND DECK";
 
         CommandDeckView( final Context context, final KeySender keySender )
         {
@@ -97,6 +116,21 @@ final class ThorSecondScreenPresentation extends Presentation
             this.keySender = keySender;
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
+            setGameContext( CONTEXT_FALLBACK );
+        }
+
+        void setGameContext( final int requestedContext )
+        {
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE ? requestedContext : CONTEXT_FALLBACK;
+            if ( gameContext == context ) {
+                return;
+            }
+
+            releasePressedButton();
+            gameContext = context;
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
+            invalidate();
         }
 
         @Override
@@ -110,33 +144,108 @@ final class ThorSecondScreenPresentation extends Presentation
         protected void onDraw( final Canvas canvas )
         {
             super.onDraw( canvas );
-
-            paint.setStyle( Paint.Style.FILL );
-            paint.setColor( PANEL_COLOR );
-            canvas.drawRoundRect( new RectF( 12, 12, getWidth() - 12, getHeight() - 12 ), 28, 28, paint );
+            drawStoneBackground( canvas );
+            drawReservedInformationPanel( canvas );
 
             for ( final CommandButton button : buttons ) {
-                paint.setColor( button == pressedButton ? BUTTON_PRESSED_COLOR : BUTTON_COLOR );
-                canvas.drawRoundRect( button.bounds, 22, 22, paint );
-
-                paint.setStyle( Paint.Style.STROKE );
-                paint.setStrokeWidth( 3 );
-                paint.setColor( BORDER_COLOR );
-                canvas.drawRoundRect( button.bounds, 22, 22, paint );
-
-                paint.setStyle( Paint.Style.FILL );
-                paint.setColor( TEXT_COLOR );
-                paint.setTextAlign( Paint.Align.CENTER );
-                paint.setTypeface( android.graphics.Typeface.DEFAULT_BOLD );
-                paint.setTextSize( Math.min( button.bounds.height() * 0.27f, 42f ) );
-                final float baseline = button.bounds.centerY() - ( paint.ascent() + paint.descent() ) / 2;
-                canvas.drawText( button.label, button.bounds.centerX(), baseline, paint );
+                drawButton( canvas, button );
             }
+        }
+
+        private void drawStoneBackground( final Canvas canvas )
+        {
+            canvas.drawColor( BACKGROUND_COLOR );
+            paint.setStyle( Paint.Style.FILL );
+            final int tileSize = Math.max( 80, getWidth() / 10 );
+            for ( int y = 0; y < getHeight(); y += tileSize ) {
+                final int row = y / tileSize;
+                for ( int x = -tileSize; x < getWidth(); x += tileSize ) {
+                    final int offsetX = ( row % 2 == 0 ) ? 0 : tileSize / 2;
+                    paint.setColor( ( ( x / tileSize ) + row ) % 2 == 0 ? STONE_DARK_COLOR : STONE_LIGHT_COLOR );
+                    canvas.drawRect( x + offsetX + 2, y + 2, x + offsetX + tileSize - 2, y + tileSize - 2, paint );
+                }
+            }
+        }
+
+        private void drawReservedInformationPanel( final Canvas canvas )
+        {
+            final float margin = getMargin();
+            final RectF shadow = new RectF( margin + 7, margin + 8, getWidth() - margin + 7, getHeight() * 0.235f + 8 );
+            paint.setColor( SHADOW_COLOR );
+            canvas.drawRoundRect( shadow, 18, 18, paint );
+
+            final RectF panel = new RectF( margin, margin, getWidth() - margin, getHeight() * 0.235f );
+            paint.setColor( PANEL_COLOR );
+            canvas.drawRoundRect( panel, 18, 18, paint );
+
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 5 );
+            paint.setColor( GOLD_COLOR );
+            canvas.drawRoundRect( panel, 18, 18, paint );
+
+            final RectF innerPanel = new RectF( panel.left + 14, panel.top + 14, panel.right - 14, panel.bottom - 14 );
+            paint.setStrokeWidth( 2 );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            canvas.drawRoundRect( innerPanel, 12, 12, paint );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( PANEL_INNER_COLOR );
+            canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
+
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setColor( TEXT_COLOR );
+            paint.setTextSize( Math.min( panel.height() * 0.34f, 68f ) );
+            final float titleBaseline = panel.centerY() - 8 - ( paint.ascent() + paint.descent() ) / 2;
+            canvas.drawText( contextTitle, panel.centerX(), titleBaseline, paint );
+
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+            paint.setColor( MUTED_TEXT_COLOR );
+            paint.setTextSize( Math.min( panel.height() * 0.14f, 27f ) );
+            canvas.drawText( "INFORMATION PANEL RESERVED", panel.centerX(), panel.bottom - 25, paint );
+        }
+
+        private void drawButton( final Canvas canvas, final CommandButton button )
+        {
+            final RectF shadow = new RectF( button.bounds.left + 6, button.bounds.top + 7, button.bounds.right + 6, button.bounds.bottom + 7 );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( SHADOW_COLOR );
+            canvas.drawRoundRect( shadow, 17, 17, paint );
+
+            paint.setColor( button == pressedButton ? BUTTON_PRESSED_COLOR : BUTTON_COLOR );
+            canvas.drawRoundRect( button.bounds, 17, 17, paint );
+
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 5 );
+            paint.setColor( GOLD_COLOR );
+            canvas.drawRoundRect( button.bounds, 17, 17, paint );
+
+            paint.setStrokeWidth( 2 );
+            paint.setColor( button == pressedButton ? SHADOW_COLOR : GOLD_LIGHT_COLOR );
+            final RectF inner = new RectF( button.bounds.left + 8, button.bounds.top + 8, button.bounds.right - 8, button.bounds.bottom - 8 );
+            canvas.drawRoundRect( inner, 11, 11, paint );
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( TEXT_COLOR );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            final float widthLimitedSize = button.bounds.width() / Math.max( 3.5f, button.label.length() * 0.62f );
+            paint.setTextSize( Math.min( 42f, Math.min( button.bounds.height() * 0.25f, widthLimitedSize ) ) );
+            final float maximumTextWidth = button.bounds.width() - 28;
+            final float measuredTextWidth = paint.measureText( button.label );
+            if ( measuredTextWidth > maximumTextWidth ) {
+                paint.setTextSize( paint.getTextSize() * maximumTextWidth / measuredTextWidth );
+            }
+            final float baseline = button.bounds.centerY() - ( paint.ascent() + paint.descent() ) / 2;
+            canvas.drawText( button.label, button.bounds.centerX(), baseline, paint );
         }
 
         @Override
         public boolean onTouchEvent( final MotionEvent event )
         {
+            if ( event.getActionIndex() != 0 ) {
+                return true;
+            }
+
             final int action = event.getActionMasked();
             if ( action == MotionEvent.ACTION_DOWN ) {
                 pressedButton = buttonAt( event.getX(), event.getY() );
@@ -147,52 +256,141 @@ final class ThorSecondScreenPresentation extends Presentation
                 return true;
             }
 
-            if ( action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ) {
-                if ( pressedButton != null ) {
-                    keySender.send( pressedButton.keyCode, false );
-                    pressedButton = null;
-                    invalidate();
+            if ( action == MotionEvent.ACTION_MOVE ) {
+                if ( pressedButton != null && !pressedButton.bounds.contains( event.getX(), event.getY() ) ) {
+                    releasePressedButton();
                 }
+                return true;
+            }
+
+            if ( action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ) {
+                releasePressedButton();
                 return true;
             }
 
             return true;
         }
 
-        private void layoutButtons( final int width, final int height )
+        private void rebuildActions()
         {
             buttons.clear();
 
-            final float margin = Math.max( 20, Math.min( width, height ) * 0.025f );
-            final float gap = margin * 0.55f;
-            final float availableWidth = width - 2 * margin;
-            final float availableHeight = height - 2 * margin;
-            final float columnWidth = ( availableWidth - 3 * gap ) / 4;
-            final float rowHeight = ( availableHeight - 2 * gap ) / 3;
-
-            addButton( "UP", KeyEvent.KEYCODE_DPAD_UP, 0, 0, columnWidth, rowHeight, margin, gap );
-            addButton( "LEFT", KeyEvent.KEYCODE_DPAD_LEFT, 0, 1, columnWidth, rowHeight, margin, gap );
-            addButton( "DOWN", KeyEvent.KEYCODE_DPAD_DOWN, 1, 1, columnWidth, rowHeight, margin, gap );
-            addButton( "RIGHT", KeyEvent.KEYCODE_DPAD_RIGHT, 2, 1, columnWidth, rowHeight, margin, gap );
-
-            addButton( "CONFIRM", KeyEvent.KEYCODE_ENTER, 1, 0, columnWidth, rowHeight, margin, gap );
-            addButton( "CANCEL", KeyEvent.KEYCODE_ESCAPE, 3, 1, columnWidth, rowHeight, margin, gap );
-
-            addButton( "NEXT HERO", KeyEvent.KEYCODE_H, 2, 0, columnWidth, rowHeight, margin, gap );
-            addButton( "NEXT TOWN", KeyEvent.KEYCODE_T, 0, 2, columnWidth, rowHeight, margin, gap );
-            addButton( "MOVE", KeyEvent.KEYCODE_M, 1, 2, columnWidth, rowHeight, margin, gap );
-
-            addButton( "SPELL", KeyEvent.KEYCODE_C, 3, 0, columnWidth, rowHeight, margin, gap );
-            addButton( "ACTION", KeyEvent.KEYCODE_SPACE, 2, 2, columnWidth, rowHeight, margin, gap );
-            addButton( "END TURN", KeyEvent.KEYCODE_E, 3, 2, columnWidth, rowHeight, margin, gap );
+            switch ( gameContext ) {
+            case CONTEXT_MAIN_MENU:
+                contextTitle = "MAIN MENU";
+                addAction( "NEW GAME", KeyEvent.KEYCODE_N );
+                addAction( "LOAD GAME", KeyEvent.KEYCODE_L );
+                addAction( "SETTINGS", KeyEvent.KEYCODE_T );
+                addAction( "HIGH SCORES", KeyEvent.KEYCODE_H );
+                addAction( "CREDITS", KeyEvent.KEYCODE_C );
+                addAction( "QUIT", KeyEvent.KEYCODE_Q );
+                break;
+            case CONTEXT_ADVENTURE_MAP:
+                contextTitle = "ADVENTURE MAP";
+                addAction( "NEXT HERO", KeyEvent.KEYCODE_H );
+                addAction( "NEXT TOWN", KeyEvent.KEYCODE_T );
+                addAction( "MOVE", KeyEvent.KEYCODE_M );
+                addAction( "ACTION", KeyEvent.KEYCODE_SPACE );
+                addAction( "SPELL", KeyEvent.KEYCODE_C );
+                addAction( "END TURN", KeyEvent.KEYCODE_E );
+                addAction( "ADVENTURE", KeyEvent.KEYCODE_A );
+                addAction( "FILE", KeyEvent.KEYCODE_F );
+                addAction( "PUZZLE", KeyEvent.KEYCODE_P );
+                addAction( "KINGDOM", KeyEvent.KEYCODE_K );
+                addAction( "VIEW WORLD", KeyEvent.KEYCODE_V );
+                addAction( "DIG", KeyEvent.KEYCODE_D );
+                break;
+            case CONTEXT_HERO:
+                contextTitle = "HERO";
+                addAction( "PREVIOUS", KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT", KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "DISMISS", KeyEvent.KEYCODE_D );
+                addAction( "UPGRADE", KeyEvent.KEYCODE_U );
+                addAction( "SPLIT HALF", KeyEvent.KEYCODE_SHIFT_LEFT );
+                addAction( "SPLIT ONE", KeyEvent.KEYCODE_CTRL_LEFT );
+                addAction( "JOIN", KeyEvent.KEYCODE_ALT_LEFT );
+                addAction( "SWAP", KeyEvent.KEYCODE_X );
+                addAction( "CLOSE", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_CASTLE:
+                contextTitle = "CASTLE";
+                addAction( "PREVIOUS", KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT", KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "WELL", KeyEvent.KEYCODE_W );
+                addAction( "MARKET", KeyEvent.KEYCODE_M );
+                addAction( "MAGE GUILD", KeyEvent.KEYCODE_S );
+                addAction( "SHIPYARD", KeyEvent.KEYCODE_N );
+                addAction( "THIEVES", KeyEvent.KEYCODE_T );
+                addAction( "TAVERN", KeyEvent.KEYCODE_R );
+                addAction( "BUILD", KeyEvent.KEYCODE_B );
+                addAction( "TO HERO", KeyEvent.KEYCODE_DPAD_DOWN );
+                addAction( "TO GARRISON", KeyEvent.KEYCODE_DPAD_UP );
+                addAction( "EXIT", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_BATTLE:
+                contextTitle = "BATTLE";
+                addAction( "SPELL", KeyEvent.KEYCODE_C );
+                addAction( "WAIT / DEFEND", KeyEvent.KEYCODE_SPACE );
+                addAction( "AUTO", KeyEvent.KEYCODE_A );
+                addAction( "QUICK COMBAT", KeyEvent.KEYCODE_Q );
+                addAction( "RETREAT", KeyEvent.KEYCODE_R );
+                addAction( "SURRENDER", KeyEvent.KEYCODE_S );
+                addAction( "OPTIONS", KeyEvent.KEYCODE_O );
+                addAction( "TURN ORDER", KeyEvent.KEYCODE_T );
+                break;
+            case CONTEXT_DIALOG:
+                contextTitle = "DIALOG";
+                addNavigationActions();
+                break;
+            case CONTEXT_FALLBACK:
+            default:
+                contextTitle = "COMMAND DECK";
+                addNavigationActions();
+                break;
+            }
         }
 
-        private void addButton( final String label, final int keyCode, final int column, final int row, final float columnWidth, final float rowHeight,
-                                final float margin, final float gap )
+        private void addNavigationActions()
         {
-            final float left = margin + column * ( columnWidth + gap );
-            final float top = margin + row * ( rowHeight + gap );
-            buttons.add( new CommandButton( label, keyCode, new RectF( left, top, left + columnWidth, top + rowHeight ) ) );
+            addAction( "UP", KeyEvent.KEYCODE_DPAD_UP );
+            addAction( "LEFT", KeyEvent.KEYCODE_DPAD_LEFT );
+            addAction( "DOWN", KeyEvent.KEYCODE_DPAD_DOWN );
+            addAction( "RIGHT", KeyEvent.KEYCODE_DPAD_RIGHT );
+            addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
+            addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+        }
+
+        private void addAction( final String label, final int keyCode )
+        {
+            buttons.add( new CommandButton( label, keyCode ) );
+        }
+
+        private void layoutButtons( final int width, final int height )
+        {
+            if ( width <= 0 || height <= 0 || buttons.isEmpty() ) {
+                return;
+            }
+
+            final float margin = getMargin();
+            final float gap = margin * 0.55f;
+            final float top = height * 0.265f;
+            final int columns = buttons.size() <= 6 ? 3 : 4;
+            final int rows = ( buttons.size() + columns - 1 ) / columns;
+            final float columnWidth = ( width - 2 * margin - ( columns - 1 ) * gap ) / columns;
+            final float rowHeight = ( height - top - margin - ( rows - 1 ) * gap ) / rows;
+
+            for ( int i = 0; i < buttons.size(); ++i ) {
+                final int column = i % columns;
+                final int row = i / columns;
+                final float left = margin + column * ( columnWidth + gap );
+                final float buttonTop = top + row * ( rowHeight + gap );
+                buttons.get( i ).bounds.set( left, buttonTop, left + columnWidth, buttonTop + rowHeight );
+            }
+        }
+
+        private float getMargin()
+        {
+            return Math.max( 20, Math.min( getWidth(), getHeight() ) * 0.025f );
         }
 
         private CommandButton buttonAt( final float x, final float y )
@@ -219,13 +417,12 @@ final class ThorSecondScreenPresentation extends Presentation
     {
         final String label;
         final int keyCode;
-        final RectF bounds;
+        final RectF bounds = new RectF();
 
-        CommandButton( final String label, final int keyCode, final RectF bounds )
+        CommandButton( final String label, final int keyCode )
         {
             this.label = label;
             this.keyCode = keyCode;
-            this.bounds = bounds;
         }
     }
 }

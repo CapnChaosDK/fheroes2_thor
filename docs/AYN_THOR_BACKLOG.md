@@ -15,7 +15,7 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Milestone 1: context-sensitive command deck
 
-Status: `planned`
+Status: `in progress`
 
 Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by the active game context.
 
@@ -26,7 +26,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 3. Adventure map.
 4. Hero screen.
 5. Castle screen.
-6. Battle, pending explicit confirmation for inclusion in Milestone 1.
+6. Battle, included as the primary stress test for context switching.
 7. Safe fallback layout for unclassified screens.
 
 ### Technical plan
@@ -58,6 +58,15 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 - Both panels recover after display disable/enable and app resume.
 - The existing Vita-style physical controller mapping remains unchanged.
 - Android build and lint pass, followed by testing on the connected Thor.
+
+### Current validation state
+
+- Android build and lint pass.
+- Installed successfully on a connected AYN Thor.
+- Main Menu to Dialog transition verified from a lower-screen action.
+- Dialog to Main Menu restoration verified.
+- Battle context and its eight-action layout verified in a live Battle Only match.
+- Adventure Map, Hero, Castle, and nested Battle dialog restoration still require hands-on validation.
 
 ## Milestone 2: semantic actions
 

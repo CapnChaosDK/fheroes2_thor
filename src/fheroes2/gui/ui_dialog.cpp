@@ -46,6 +46,7 @@
 #include "screen.h"
 #include "spell_info.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_constants.h"
@@ -321,6 +322,8 @@ namespace fheroes2
 
     int showStandardTextMessage( std::string headerText, std::string messageBody, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        const thor::UiContextGuard thorContextGuard( thor::UiContext::DIALOG );
+
         const Text header( std::move( headerText ), FontType::normalYellow() );
         const Text body( std::move( messageBody ), FontType::normalWhite() );
         return showMessage( header, body, buttons, elements );

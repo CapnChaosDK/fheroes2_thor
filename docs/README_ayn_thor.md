@@ -14,17 +14,18 @@ The implementation uses Android's public multi-display APIs. It does not hardcod
 
 ## Lower-screen controls
 
-| Button | fheroes2 keyboard action |
+The Heroes II-styled command deck follows the active game context. Its upper section is reserved for a future information panel; the current milestone provides controls only.
+
+| Context | Available actions |
 | --- | --- |
-| Up, Down, Left, Right | Menu navigation or adventure-map scrolling |
-| Confirm | Enter / open focus |
-| Cancel | Escape / close dialog |
-| Next Hero | `H` |
-| Next Town | `T` |
-| Move | `M` |
-| Spell | `C` |
-| Action | Space |
-| End Turn | `E` |
+| Main menu | New Game, Load Game, Settings, High Scores, Credits, Quit |
+| Dialog or fallback | Directional navigation, Confirm, Cancel |
+| Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
+| Hero | Previous, Next, Dismiss, Upgrade, Split Half, Split One, Join, Swap, Close |
+| Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Exit |
+| Battle | Spell, Wait/Defend, Auto, Quick Combat, Retreat, Surrender, Options, Turn Order |
+
+Context is published by the native game engine and polled by the Android Presentation. Temporary message dialogs override the current layout and restore the underlying context when they close.
 
 ## Physical controls
 

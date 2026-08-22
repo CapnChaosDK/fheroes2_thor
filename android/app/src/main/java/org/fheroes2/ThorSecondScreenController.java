@@ -39,8 +39,19 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private final GameActivity activity;
     private final DisplayManager displayManager;
     private final Handler mainHandler = new Handler( Looper.getMainLooper() );
+    private final Runnable contextPoller = new Runnable() {
+        @Override
+        public void run()
+        {
+            if ( presentation instanceof ThorSecondScreenPresentation ) {
+                ( (ThorSecondScreenPresentation)presentation ).setGameContext( activity.getThorUiContext() );
+            }
+            mainHandler.postDelayed( this, 100 );
+        }
+    };
 
     private Presentation presentation;
+    private boolean isStarted;
 
     ThorSecondScreenController( final GameActivity activity )
     {
@@ -56,11 +67,16 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         }
 
         displayManager.registerDisplayListener( this, mainHandler );
+        isStarted = true;
         updatePresentation();
+        mainHandler.removeCallbacks( contextPoller );
+        mainHandler.post( contextPoller );
     }
 
     void stop()
     {
+        isStarted = false;
+        mainHandler.removeCallbacks( contextPoller );
         if ( displayManager != null ) {
             displayManager.unregisterDisplayListener( this );
         }
@@ -87,6 +103,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
 
     private void updatePresentation()
     {
+        if ( !isStarted ) {
+            return;
+        }
+
         final Display targetDisplay = findSecondaryDisplay();
         if ( targetDisplay == null ) {
             dismissPresentation();
