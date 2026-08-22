@@ -27,6 +27,8 @@ The Heroes II-styled command deck follows the active game context. Its upper sec
 
 Context is published by the native game engine and polled by the Android Presentation. Temporary message dialogs override the current layout and restore the underlying context when they close.
 
+If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
+
 ## Physical controls
 
 The built-in controls use the same mapping as the PlayStation Vita port:

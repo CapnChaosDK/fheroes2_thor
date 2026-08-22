@@ -66,7 +66,10 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 - Main Menu to Dialog transition verified from a lower-screen action.
 - Dialog to Main Menu restoration verified.
 - Battle context and its eight-action layout verified in a live Battle Only match.
-- Adventure Map, Hero, Castle, and nested Battle dialog restoration still require hands-on validation.
+- Adventure Map, Hero, and Castle contexts verified by the user on the Thor.
+- Battle Spell, Wait/Defend, Turn Order, and Options actions verified by the user.
+- Nested Battle confirmation correctly switches to Dialog and restores Battle after cancellation.
+- Several long labels were reported close to their borders. Dynamic measured-text fitting is included in the latest candidate and needs a visual recheck on the device.
 
 ## Milestone 2: semantic actions
 
