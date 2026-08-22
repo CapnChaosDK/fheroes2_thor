@@ -92,13 +92,20 @@ Status: `in progress`
 
 ### Battle-first device validation
 
-Status: `planned`
+Status: `done`
 
 1. In a manual Battle Only match, verify Spell, Wait / Defend, Options, and Turn Order still act once per tap.
 2. Open and cancel the Auto and Quick Combat confirmations; verify Dialog context restores to Battle.
 3. Verify Retreat and Surrender act normally when available and appear muted when the engine disallows them.
 4. During an AI turn and while choosing a spell target, verify all command-deck Battle buttons are muted and ignore touches.
 5. Verify physical controls and configurable keyboard hotkeys remain unchanged.
+
+All five checks passed on the connected AYN Thor.
+
+### Windows build note
+
+- Always compile the Android native target through a short temporary drive mapping such as `R:`. Building from the full repository path can exceed the Windows NDK path limit and fail while creating a deeply nested `*.cflags.tmp` file.
+- The repeatable `subst` procedure and cleanup command are documented in `README_ayn_thor.md`.
 
 ## Milestone 3: information panel
 

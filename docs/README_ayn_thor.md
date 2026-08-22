@@ -56,7 +56,18 @@ Hotkeys keep their normal context-dependent behavior. For example, `C` opens the
 
 1. Install Android Studio, including Android SDK 35 and the NDK requested by the project.
 2. Run `script\\android\\install_packages.bat` from the repository root. This downloads the pinned SDL2 and native dependencies.
-3. Open the `android` directory in Android Studio and build the `app` module, or run `android\\gradlew.bat assembleDebug` after configuring `ANDROID_HOME`/`local.properties`.
+3. Map the repository to a short temporary drive before compiling. The NDK generates deeply nested object paths and can otherwise fail at a `*.cflags.tmp` file with `No such file or directory` because of the Windows path-length limit:
+
+   ```powershell
+   # Run from the repository root.
+   cmd /d /c subst R: "%CD%"
+   Push-Location R:\android
+   .\gradlew.bat --no-daemon :app:assembleDebug :app:lintDebug
+   Pop-Location
+   cmd /d /c subst R: /d
+   ```
+
+   Configure `ANDROID_HOME`, `JAVA_HOME`, or `local.properties` as usual before running Gradle. If `R:` is already occupied, use another unused drive letter consistently.
 4. Install `android\\app\\build\\outputs\\apk\\debug\\app-debug.apk` on the Thor with `adb install -r <apk>`.
 5. Enable both Thor panels before launching fheroes2. Launch the game on the top panel; the command deck will open on the other active display.
 
