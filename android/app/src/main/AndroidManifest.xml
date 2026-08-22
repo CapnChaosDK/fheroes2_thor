@@ -48,7 +48,7 @@
             android:preferMinimalPostProcessing="true"
             android:process=":GameActivityProcess"
             android:screenOrientation="sensorLandscape"
-            android:taskAffinity="org.fheroes2.GameTask"
+            android:taskAffinity="org.fheroes2.thor.GameTask"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             tools:ignore="DiscouragedApi,UnusedAttribute">
 
@@ -69,7 +69,7 @@
             android:icon="@mipmap/ic_launcher_toolset"
             android:label="@string/activity_toolset_label"
             android:launchMode="singleTask"
-            android:taskAffinity="org.fheroes2.ToolsetTask"
+            android:taskAffinity="org.fheroes2.thor.ToolsetTask"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
 
             <intent-filter>
@@ -83,7 +83,7 @@
             android:exported="false"
             android:icon="@mipmap/ic_launcher_toolset"
             android:label="@string/activity_save_file_manager_label"
-            android:taskAffinity="org.fheroes2.ToolsetTask"
+            android:taskAffinity="org.fheroes2.thor.ToolsetTask"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
 
         <activity
@@ -91,7 +91,7 @@
             android:exported="false"
             android:icon="@mipmap/ic_launcher_toolset"
             android:label="@string/activity_map_file_manager_label"
-            android:taskAffinity="org.fheroes2.ToolsetTask"
+            android:taskAffinity="org.fheroes2.thor.ToolsetTask"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
     </application>
 </manifest>

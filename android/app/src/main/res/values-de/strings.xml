@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <string name="app_label">fheroes2</string>
+    <string name="app_label">fheroes2 Thor</string>
     <string name="activity_toolset_label">fh2 Werkzeugkasten</string>
     <string name="activity_toolset_game_logo_img_content_description">fheroes2 Logo</string>
     <string name="activity_toolset_game_status_lbl_text"><b>Sie können das Spiel im Moment nicht ausführen, da einige Dateien des Originalspiels fehlen.</b>\n\nBitte kopieren Sie den Inhalt des Verzeichnisses mit dem Originalspiel Heroes of Might and Magic II (oder nur die <b>ANIM</b>, <b>DATA</b>, <b>MAPS</b> und <b>MUSIC</b> Ordner) in ein ZIP-Archiv, kopieren Sie dieses auf das Gerät, drücken Sie die \"<b>HoMM2-Assets extrahieren</b>\" Schaltfläche und wählen Sie das ZIP-Archiv.\n\nWenn Sie keine Kopie des Originalspiels haben, können Sie ein ZIP-Archiv der Demoversion herunterladen. Sobald der Download abgeschlossen ist, drücken Sie bitte die Schaltfläche \"<b>HoMM2-Assets extrahieren</b>\" und wählen Sie das neu heruntergeladene Demo-Archiv aus.</string>

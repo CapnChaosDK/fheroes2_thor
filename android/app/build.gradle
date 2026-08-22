@@ -11,7 +11,9 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'org.fheroes2'
+        // Use a separate package identity so the Thor fork can coexist with an official
+        // release signed by the fheroes2 project.
+        applicationId 'org.fheroes2.thor'
 
         minSdk 22
         targetSdk 35

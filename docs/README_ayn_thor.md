@@ -4,6 +4,8 @@ This branch adds an Android companion command deck for the AYN Thor's lower disp
 
 The APK is arm64-only, matching both the Snapdragon 865 and Snapdragon 8 Gen 2 Thor models.
 
+The fork uses the package ID `org.fheroes2.thor`, allowing it to be installed alongside the official `org.fheroes2` app without a signing-key conflict. Android keeps their imported assets, settings, and saves separate.
+
 The implementation uses Android's public multi-display APIs. It does not hardcode the Thor's model name or a display ID, so IDs changing after a reboot or after toggling a panel does not break it. On a normal single-display Android device, the game behaves exactly like the upstream build.
 
 ## Lower-screen controls

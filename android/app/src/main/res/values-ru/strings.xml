@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_label">fheroes2</string>
+    <string name="app_label">fheroes2 Thor</string>
     <string name="activity_toolset_label">fh2 инструментарий</string>
     <string name="activity_toolset_game_logo_img_content_description">Логотип fheroes2</string>
     <string name="activity_toolset_game_status_lbl_text"><b>Вы не можете запустить игру в данный момент, потому что некоторые файлы данных оригинальной игры отсутствуют.</b>\n\nПожалуйста, поместите содержимое каталога с оригинальной игрой Heroes of Might and Magic II (или только каталоги <b>ANIM</b>, <b>DATA</b>, <b>MAPS</b> и <b>MUSIC</b>) в архив ZIP, скопируйте его на это устройство, нажмите кнопку \"<b>Извлечь ресурсы HoMM2</b>\" и выберите этот архив ZIP.\n\nЕсли у вас нет копии оригинальной игры, то вы можете скачать архив ZIP демо-версии. Как только загрузка демо-версии будет завершена, нажмите кнопку \"<b>Извлечь ресурсы HoMM2</b>\" и выберите загруженный архив ZIP.</string>
