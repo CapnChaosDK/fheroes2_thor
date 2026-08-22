@@ -5770,16 +5770,29 @@ namespace
         const double scaleFactorX = static_cast<double>( display.width() ) / fheroes2::Display::DEFAULT_WIDTH;
         const double scaleFactorY = static_cast<double>( display.height() ) / fheroes2::Display::DEFAULT_HEIGHT;
 
+#if defined( TARGET_AYN_THOR )
+        // The original main-menu resources are 4:3. On Thor, stretch only these
+        // scalable background resources (and their matching button sprites) to the
+        // 16:9 game canvas so the menu fills the upper panel. Gameplay rendering is
+        // not affected by this resource-specific scaling.
+        const double imageScaleFactorX = scaleFactorX;
+        const double imageScaleFactorY = scaleFactorY;
+        const int32_t offsetX = 0;
+        const int32_t offsetY = 0;
+#else
         const double scaleFactor = std::min( scaleFactorX, scaleFactorY );
-        const int32_t resizedWidth = static_cast<int32_t>( std::lround( originalIcn.width() * scaleFactor ) );
-        const int32_t resizedHeight = static_cast<int32_t>( std::lround( originalIcn.height() * scaleFactor ) );
+        const double imageScaleFactorX = scaleFactor;
+        const double imageScaleFactorY = scaleFactor;
         const int32_t offsetX = static_cast<int32_t>( std::lround( display.width() - fheroes2::Display::DEFAULT_WIDTH * scaleFactor ) ) / 2;
         const int32_t offsetY = static_cast<int32_t>( std::lround( display.height() - fheroes2::Display::DEFAULT_HEIGHT * scaleFactor ) ) / 2;
+#endif
+        const int32_t resizedWidth = static_cast<int32_t>( std::lround( originalIcn.width() * imageScaleFactorX ) );
+        const int32_t resizedHeight = static_cast<int32_t>( std::lround( originalIcn.height() * imageScaleFactorY ) );
         assert( offsetX >= 0 && offsetY >= 0 );
 
         resizedIcn.resize( resizedWidth, resizedHeight );
-        resizedIcn.setPosition( static_cast<int32_t>( std::lround( originalIcn.x() * scaleFactor ) ) + offsetX,
-                                static_cast<int32_t>( std::lround( originalIcn.y() * scaleFactor ) ) + offsetY );
+        resizedIcn.setPosition( static_cast<int32_t>( std::lround( originalIcn.x() * imageScaleFactorX ) ) + offsetX,
+                                static_cast<int32_t>( std::lround( originalIcn.y() * imageScaleFactorY ) ) + offsetY );
 
         if ( Settings::Get().isScreenScalingTypeNearest() ) {
             Resize( originalIcn, resizedIcn );

@@ -8,6 +8,8 @@ The fork uses the package ID `org.fheroes2.thor`, allowing it to be installed al
 
 The game uses a 960 x 540 logical canvas scaled exactly 2x to the Thor top panel's 1920 x 1080 native resolution. This fills the 16:9 panel while keeping interface elements readable on the six-inch display, and overrides stale 4:3 resolution values from earlier builds.
 
+The original 4:3 main-menu artwork and its buttons are scaled to the full 16:9 canvas in the Thor build. This removes the decorative side borders without changing the aspect ratio of the adventure map or other gameplay screens.
+
 The implementation uses Android's public multi-display APIs. It does not hardcode the Thor's model name or a display ID, so IDs changing after a reboot or after toggling a panel does not break it. On a normal single-display Android device, the game behaves exactly like the upstream build.
 
 ## Lower-screen controls
