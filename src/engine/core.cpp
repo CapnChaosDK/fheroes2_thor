@@ -173,7 +173,7 @@ namespace System
     {
         std::set<SystemInitializationComponent> components{ SystemInitializationComponent::Audio, SystemInitializationComponent::Video };
 
-#if defined( TARGET_PS_VITA ) || defined( TARGET_NINTENDO_SWITCH )
+#if defined( TARGET_PS_VITA ) || defined( TARGET_NINTENDO_SWITCH ) || defined( TARGET_AYN_THOR )
         components.emplace( SystemInitializationComponent::GameController );
 #endif
 

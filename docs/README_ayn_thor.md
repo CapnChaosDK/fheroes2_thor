@@ -6,6 +6,8 @@ The APK is arm64-only, matching both the Snapdragon 865 and Snapdragon 8 Gen 2 T
 
 The fork uses the package ID `org.fheroes2.thor`, allowing it to be installed alongside the official `org.fheroes2` app without a signing-key conflict. Android keeps their imported assets, settings, and saves separate.
 
+The game uses a 960 x 540 logical canvas scaled exactly 2x to the Thor top panel's 1920 x 1080 native resolution. This fills the 16:9 panel while keeping interface elements readable on the six-inch display, and overrides stale 4:3 resolution values from earlier builds.
+
 The implementation uses Android's public multi-display APIs. It does not hardcode the Thor's model name or a display ID, so IDs changing after a reboot or after toggling a panel does not break it. On a normal single-display Android device, the game behaves exactly like the upstream build.
 
 ## Lower-screen controls
@@ -21,6 +23,27 @@ The implementation uses Android's public multi-display APIs. It does not hardcod
 | Spell | `C` |
 | Action | Space |
 | End Turn | `E` |
+
+## Physical controls
+
+The built-in controls use the same mapping as the PlayStation Vita port:
+
+| Thor control | Action |
+| --- | --- |
+| Left analog stick | Move pointer |
+| Right analog stick | Scroll map |
+| A (bottom face button) | Left mouse button |
+| B (right face button) | Right mouse button |
+| X (left face button) | End turn |
+| Y (top face button) | Open spellbook |
+| D-pad left | Next hero |
+| D-pad right | Next castle |
+| D-pad down | Revisit current object |
+| R1 | Accelerate pointer while held |
+| Select / Back | System menu |
+| Start | Enter |
+
+The mapping follows SDL's A/B/X/Y controller convention. If the Thor system settings offer Xbox and Nintendo button modes, use Xbox mode so the physical positions match the table.
 
 Hotkeys keep their normal context-dependent behavior. For example, `C` opens the campaign choice from the appropriate main menu and casts a spell on the adventure map.
 

@@ -77,6 +77,18 @@ namespace
             fheroes2::Display & display = fheroes2::Display::instance();
             fheroes2::ResolutionInfo bestResolution{ conf.currentResolutionInfo() };
 
+#if defined( TARGET_AYN_THOR )
+            // The Thor top panel is 1920x1080. A 960x540 logical canvas gives an exact
+            // integer 2x scale, fills the 16:9 panel, and keeps the UI comfortable on a
+            // six-inch handheld. Always prefer it over a stale 4:3 Android config.
+            const std::vector<fheroes2::ResolutionInfo> resolutions = fheroes2::engine().getAvailableResolutions();
+            for ( const fheroes2::ResolutionInfo & info : resolutions ) {
+                if ( info.gameWidth == 960 && info.gameHeight == 540 && info.screenWidth == 1920 && info.screenHeight == 1080 ) {
+                    bestResolution = info;
+                    break;
+                }
+            }
+#else
             if ( conf.isFirstGameRun() && System::isHandheldDevice() ) {
                 // We do not show resolution dialog for first run on handheld devices. In this case it is wise to set 'widest' resolution by default.
                 const std::vector<fheroes2::ResolutionInfo> resolutions = fheroes2::engine().getAvailableResolutions();
@@ -87,6 +99,7 @@ namespace
                     }
                 }
             }
+#endif
 
             auto & engine = fheroes2::engine();
             if ( engine.isFullScreen() != conf.FullScreen() ) {
