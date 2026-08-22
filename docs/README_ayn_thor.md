@@ -78,3 +78,5 @@ The lower display should be active and should appear either in the presentation 
 ## Current scope
 
 This first version provides a useful independent touch surface while leaving upstream rendering unchanged. Moving live engine widgets such as the radar, hero list, or kingdom status onto the lower panel will require a native engine-to-Android state/rendering bridge and is a separate follow-up milestone.
+
+The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).
