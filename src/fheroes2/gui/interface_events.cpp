@@ -67,6 +67,7 @@
 #include "spell.h"
 #include "spell_book.h"
 #include "system.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_dialog.h"
@@ -211,6 +212,8 @@ void Interface::AdventureMap::EventResetHeroPath()
 
 void Interface::AdventureMap::EventKingdomInfo() const
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     Kingdom & myKingdom = world.GetKingdom( Settings::Get().CurrentColor() );
     myKingdom.openOverviewDialog();
 
@@ -219,6 +222,8 @@ void Interface::AdventureMap::EventKingdomInfo() const
 
 void Interface::AdventureMap::EventCastSpell()
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     Heroes * hero = GetFocusHeroes();
     if ( hero == nullptr ) {
         return;
@@ -262,6 +267,8 @@ fheroes2::GameMode Interface::AdventureMap::EventEndTurn() const
 
 fheroes2::GameMode Interface::AdventureMap::EventAdventureDialog()
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     switch ( Dialog::AdventureOptions( GameFocus::HEROES == GetFocusType() ) ) {
     case Dialog::WORLD:
         EventViewWorld();
@@ -286,16 +293,22 @@ fheroes2::GameMode Interface::AdventureMap::EventAdventureDialog()
 
 void Interface::AdventureMap::EventViewWorld()
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::OnlyVisible, *this );
 }
 
 fheroes2::GameMode Interface::AdventureMap::EventFileDialog() const
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     return Dialog::FileOptions();
 }
 
 void Interface::AdventureMap::EventSystemDialog() const
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     fheroes2::showSystemOptionsDialog();
 }
 
@@ -360,6 +373,8 @@ fheroes2::GameMode Interface::AdventureMap::EventLoadGame() const
 
 void Interface::AdventureMap::EventPuzzleMaps() const
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     world.GetKingdom( Settings::Get().CurrentColor() ).PuzzleMaps().ShowMapsDialog();
 }
 
