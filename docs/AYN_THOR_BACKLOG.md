@@ -112,7 +112,7 @@ All five checks passed on the connected AYN Thor.
 
 ### Adventure Map device validation
 
-Status: `in progress`
+Status: `done`
 
 1. Verify Next Hero and Next Town select the next available owned object and mute when none exists.
 2. Verify Spell, Adventure, File, Puzzle, Kingdom, and View World each open once per tap and restore the Adventure Map layout after closing.
@@ -120,7 +120,15 @@ Status: `in progress`
 4. Verify Action works on a revisitable object or focused castle and is muted when no default action is possible.
 5. Verify Dig is available with hero focus, End Turn behaves normally, and physical controls remain unchanged.
 
-Initial device result: checks 1, 3, 4, and 5 passed. Check 2 exposed stacked menu openings because several full-screen Adventure dialogs did not publish the temporary Dialog context. The modal entry points now publish Dialog directly, clearing queued Adventure actions and restoring the map context on exit; the corrected APK is installed for a focused check 2 retest.
+Checks 1, 3, 4, and 5 passed on the initial device run. Check 2 exposed stacked menu openings because several full-screen Adventure dialogs did not publish the temporary Dialog context. The modal entry points now publish Dialog directly, clearing queued Adventure actions and restoring the map context on exit. The focused check 2 retest passed: each menu opens once and one exit restores the Adventure Map deck.
+
+### Next semantic-action slice
+
+Status: `planned`
+
+- Convert Hero controls to native semantic actions with engine-driven availability.
+- Preserve the existing key-event fallback until the Hero slice passes its device checklist.
+- Convert Castle controls after Hero validation.
 
 ### Windows build note
 
