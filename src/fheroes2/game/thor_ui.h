@@ -49,7 +49,16 @@ namespace fheroes2::thor
         ADVENTURE_PUZZLE_MAP,
         ADVENTURE_KINGDOM_SUMMARY,
         ADVENTURE_VIEW_WORLD,
-        ADVENTURE_DIG_ARTIFACT
+        ADVENTURE_DIG_ARTIFACT,
+        HERO_PREVIOUS,
+        HERO_NEXT,
+        HERO_DISMISS,
+        HERO_UPGRADE_SELECTED,
+        HERO_SPLIT_SELECTED_HALF,
+        HERO_SPLIT_SELECTED_ONE,
+        HERO_JOIN_SELECTED,
+        HERO_SWAP_ARMIES,
+        HERO_CLOSE
     };
 
     using ActionMask = uint64_t;

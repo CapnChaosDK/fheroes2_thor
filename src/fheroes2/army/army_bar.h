@@ -76,6 +76,14 @@ public:
     bool QueueEventProcessing( std::string * = nullptr );
     bool QueueEventProcessing( ArmyBar &, std::string * = nullptr );
 
+    bool canSplitSelectedTroop();
+    bool canJoinSelectedTroops();
+    bool canUpgradeSelectedTroop();
+
+    bool splitSelectedTroop( bool splitByHalf );
+    bool joinSelectedTroops();
+    bool upgradeSelectedTroop();
+
 protected:
     fheroes2::MovableSprite spcursor;
 

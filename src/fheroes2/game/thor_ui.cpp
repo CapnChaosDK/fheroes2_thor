@@ -69,6 +69,27 @@ namespace
         }
     }
 
+    bool isHeroAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::HERO_PREVIOUS:
+        case Action::HERO_NEXT:
+        case Action::HERO_DISMISS:
+        case Action::HERO_UPGRADE_SELECTED:
+        case Action::HERO_SPLIT_SELECTED_HALF:
+        case Action::HERO_SPLIT_SELECTED_ONE:
+        case Action::HERO_JOIN_SELECTED:
+        case Action::HERO_SWAP_ARMIES:
+        case Action::HERO_CLOSE:
+            return true;
+        case Action::NONE:
+        default:
+            return false;
+        }
+    }
+
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         switch ( context ) {
@@ -76,6 +97,8 @@ namespace
             return isBattleAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_MAP:
             return isAdventureAction( action );
+        case fheroes2::thor::UiContext::HERO:
+            return isHeroAction( action );
         default:
             return false;
         }
@@ -151,7 +174,7 @@ namespace fheroes2::thor
     {
         std::lock_guard<std::mutex> lock( actionQueueMutex );
         const UiContext context = getUiContext();
-        const ActionMask allowedActions = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP ? actions : 0;
+        const ActionMask allowedActions = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO ? actions : 0;
         enabledActions.store( allowedActions, std::memory_order_release );
         for ( auto actionIter = actionQueue.begin(); actionIter != actionQueue.end(); ) {
             if ( ( allowedActions & actionMask( *actionIter ) ) == 0 ) {

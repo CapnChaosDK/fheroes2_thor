@@ -60,6 +60,15 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_ADVENTURE_KINGDOM_SUMMARY = 18;
     private static final int ACTION_ADVENTURE_VIEW_WORLD = 19;
     private static final int ACTION_ADVENTURE_DIG_ARTIFACT = 20;
+    private static final int ACTION_HERO_PREVIOUS = 21;
+    private static final int ACTION_HERO_NEXT = 22;
+    private static final int ACTION_HERO_DISMISS = 23;
+    private static final int ACTION_HERO_UPGRADE_SELECTED = 24;
+    private static final int ACTION_HERO_SPLIT_SELECTED_HALF = 25;
+    private static final int ACTION_HERO_SPLIT_SELECTED_ONE = 26;
+    private static final int ACTION_HERO_JOIN_SELECTED = 27;
+    private static final int ACTION_HERO_SWAP_ARMIES = 28;
+    private static final int ACTION_HERO_CLOSE = 29;
 
     interface KeySender
     {
@@ -342,15 +351,15 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_HERO:
                 contextTitle = "HERO";
-                addAction( "PREVIOUS", KeyEvent.KEYCODE_DPAD_LEFT );
-                addAction( "NEXT", KeyEvent.KEYCODE_DPAD_RIGHT );
-                addAction( "DISMISS", KeyEvent.KEYCODE_D );
-                addAction( "UPGRADE", KeyEvent.KEYCODE_U );
-                addAction( "SPLIT HALF", KeyEvent.KEYCODE_SHIFT_LEFT );
-                addAction( "SPLIT ONE", KeyEvent.KEYCODE_CTRL_LEFT );
-                addAction( "JOIN", KeyEvent.KEYCODE_ALT_LEFT );
-                addAction( "SWAP", KeyEvent.KEYCODE_X );
-                addAction( "CLOSE", KeyEvent.KEYCODE_ESCAPE );
+                addAction( "PREVIOUS", ACTION_HERO_PREVIOUS, KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT", ACTION_HERO_NEXT, KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "DISMISS", ACTION_HERO_DISMISS, KeyEvent.KEYCODE_D );
+                addAction( "UPGRADE", ACTION_HERO_UPGRADE_SELECTED, KeyEvent.KEYCODE_U );
+                addAction( "SPLIT HALF", ACTION_HERO_SPLIT_SELECTED_HALF, KeyEvent.KEYCODE_SHIFT_LEFT );
+                addAction( "SPLIT ONE", ACTION_HERO_SPLIT_SELECTED_ONE, KeyEvent.KEYCODE_CTRL_LEFT );
+                addAction( "JOIN", ACTION_HERO_JOIN_SELECTED, KeyEvent.KEYCODE_ALT_LEFT );
+                addAction( "SWAP", ACTION_HERO_SWAP_ARMIES, KeyEvent.KEYCODE_X );
+                addAction( "CLOSE", ACTION_HERO_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_CASTLE:
                 contextTitle = "CASTLE";

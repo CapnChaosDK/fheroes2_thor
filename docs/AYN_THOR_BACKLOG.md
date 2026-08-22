@@ -124,11 +124,26 @@ Checks 1, 3, 4, and 5 passed on the initial device run. Check 2 exposed stacked 
 
 ### Next semantic-action slice
 
+Status: `in progress`
+
+- Hero navigation, dismiss, selected-troop operations, and close now use stable semantic actions consumed in the Hero dialog on the game thread.
+- Previous and Next follow the native Hero dialog's availability. Dismiss follows the native restrictions and retains its confirmation.
+- Split Half, Split One, Join, and Upgrade operate on the troop selected on the upper screen and are muted until their exact engine conditions are satisfied.
+- Swap is intentionally muted in a single-hero view because no second army exists; army exchange belongs to the later meeting or Castle context.
+- The key-event fallback remains available if the native bridge is not loaded.
+- Android build and lint pass. The candidate APK was installed successfully and opened the command deck on display 4.
+
+### Hero device validation
+
 Status: `planned`
 
-- Convert Hero controls to native semantic actions with engine-driven availability.
-- Preserve the existing key-event fallback until the Hero slice passes its device checklist.
-- Convert Castle controls after Hero validation.
+1. With at least two heroes, verify Previous and Next switch once per tap; verify Close returns to the Adventure Map deck.
+2. Tap Dismiss, cancel its confirmation, and verify the Hero deck restores once without reopening.
+3. Select a stack containing at least two creatures with a free army slot. Verify Split One and Split Half enable and perform the requested split.
+4. Select either of two matching stacks and verify Join enables and merges them. Verify these army buttons mute again when no stack is selected.
+5. In a castle with the required upgraded dwelling and enough gold, select an upgradeable stack and verify Upgrade enables and upgrades it. Verify Swap remains muted and physical controls are unchanged.
+
+After Hero validation, convert Castle controls to native semantic actions.
 
 ### Windows build note
 

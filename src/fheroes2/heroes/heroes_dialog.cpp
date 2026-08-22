@@ -57,6 +57,7 @@
 #include "skill.h"
 #include "skill_bar.h"
 #include "statusbar.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -430,12 +431,61 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
 
     bool needRedraw{ false };
     std::string message;
+    using ThorAction = fheroes2::thor::Action;
 
     // dialog menu loop
     while ( le.HandleEvents() ) {
-        if ( le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
+        fheroes2::thor::ActionMask enabledThorActions = fheroes2::thor::actionMask( ThorAction::HERO_CLOSE );
+        if ( buttonPrevHero.isEnabled() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_PREVIOUS );
+        }
+        if ( buttonNextHero.isEnabled() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_NEXT );
+        }
+        if ( buttonDismiss && buttonDismiss->isEnabled() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_DISMISS );
+        }
+        if ( !isEditor && selectArmy.canUpgradeSelectedTroop() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_UPGRADE_SELECTED );
+        }
+        if ( !isEditor && selectArmy.canSplitSelectedTroop() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_SPLIT_SELECTED_HALF )
+                                  | fheroes2::thor::actionMask( ThorAction::HERO_SPLIT_SELECTED_ONE );
+        }
+        if ( !isEditor && selectArmy.canJoinSelectedTroops() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_JOIN_SELECTED );
+        }
+        fheroes2::thor::setEnabledActions( enabledThorActions );
+
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+        if ( requestedThorAction == ThorAction::HERO_CLOSE || le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
             // Exit the dialog handling loop to close it.
             break;
+        }
+
+        bool armyChanged = false;
+        switch ( requestedThorAction ) {
+        case ThorAction::HERO_UPGRADE_SELECTED:
+            armyChanged = selectArmy.upgradeSelectedTroop();
+            break;
+        case ThorAction::HERO_SPLIT_SELECTED_HALF:
+            armyChanged = selectArmy.splitSelectedTroop( true );
+            break;
+        case ThorAction::HERO_SPLIT_SELECTED_ONE:
+            armyChanged = selectArmy.splitSelectedTroop( false );
+            break;
+        case ThorAction::HERO_JOIN_SELECTED:
+            armyChanged = selectArmy.joinSelectedTroops();
+            break;
+        default:
+            break;
+        }
+
+        if ( armyChanged ) {
+            selectArmy.Redraw( display );
+            moraleIndicator.Redraw();
+            luckIndicator.Redraw();
+            needRedraw = true;
         }
 
         buttonExit.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonExit.area() ) );
@@ -478,11 +528,13 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
         else if ( buttonDismiss && buttonDismiss->isEnabled() ) {
             buttonDismiss->drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonDismiss->area() ) || HotKeyPressEvent( Game::HotKeyEvent::ARMY_DISMISS ) );
 
-            if ( ( le.MouseClickLeft( buttonDismiss->area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::ARMY_DISMISS ) )
+            if ( ( requestedThorAction == ThorAction::HERO_DISMISS || le.MouseClickLeft( buttonDismiss->area() )
+                   || Game::HotKeyPressEvent( Game::HotKeyEvent::ARMY_DISMISS ) )
                  && Dialog::YES == fheroes2::showStandardTextMessage( GetName(), _( "Are you sure you want to dismiss this Hero?" ), Dialog::YES | Dialog::NO ) ) {
                 // Fade-out hero dialog.
                 fheroes2::fadeOutDisplay( dialogRoi, !isDefaultScreenSize );
 
+                fheroes2::thor::setEnabledActions( 0 );
                 return Dialog::DISMISS;
             }
         }
@@ -490,7 +542,9 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
         // Previous hero.
         if ( buttonPrevHero.isEnabled() ) {
             buttonPrevHero.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonPrevHero.area() ) );
-            if ( le.MouseClickLeft( buttonPrevHero.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) || timedButtonPrevHero.isDelayPassed() ) {
+            if ( requestedThorAction == ThorAction::HERO_PREVIOUS || le.MouseClickLeft( buttonPrevHero.area() )
+                 || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) || timedButtonPrevHero.isDelayPassed() ) {
+                fheroes2::thor::setEnabledActions( 0 );
                 return Dialog::PREV;
             }
         }
@@ -498,7 +552,9 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
         // Next hero.
         if ( buttonNextHero.isEnabled() ) {
             buttonNextHero.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonNextHero.area() ) );
-            if ( le.MouseClickLeft( buttonNextHero.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) || timedButtonNextHero.isDelayPassed() ) {
+            if ( requestedThorAction == ThorAction::HERO_NEXT || le.MouseClickLeft( buttonNextHero.area() )
+                 || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) || timedButtonNextHero.isDelayPassed() ) {
+                fheroes2::thor::setEnabledActions( 0 );
                 return Dialog::NEXT;
             }
         }
@@ -784,6 +840,8 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
             display.render( dialogRoi );
         }
     }
+
+    fheroes2::thor::setEnabledActions( 0 );
 
     // Disable fast scroll for resolutions where the exit button is directly above the border.
     Interface::AdventureMap::Get().getGameArea().setFastScrollStatus( false );

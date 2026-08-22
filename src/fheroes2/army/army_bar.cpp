@@ -717,6 +717,80 @@ bool ArmyBar::QueueEventProcessing( ArmyBar & bar, std::string * str )
     return res;
 }
 
+bool ArmyBar::canSplitSelectedTroop()
+{
+    const ArmyTroop * selectedTroop = isSelected() ? GetSelectedItem() : nullptr;
+    return !read_only && _army != nullptr && selectedTroop != nullptr && selectedTroop->GetCount() > 1 && _army->GetOccupiedSlotCount() < _army->Size();
+}
+
+bool ArmyBar::canJoinSelectedTroops()
+{
+    const ArmyTroop * selectedTroop = isSelected() ? GetSelectedItem() : nullptr;
+    return !read_only && _army != nullptr && selectedTroop != nullptr && selectedTroop->isValid()
+           && _army->GetCountMonsters( selectedTroop->GetMonster() ) > selectedTroop->GetCount();
+}
+
+bool ArmyBar::canUpgradeSelectedTroop()
+{
+    const ArmyTroop * selectedTroop = isSelected() ? GetSelectedItem() : nullptr;
+    if ( read_only || _army == nullptr || selectedTroop == nullptr || !selectedTroop->isAllowUpgrade() ) {
+        return false;
+    }
+
+    const Castle * castle = _army->inCastle();
+    return castle != nullptr && castle->GetRace() == selectedTroop->GetRace() && castle->isBuild( selectedTroop->GetUpgrade().GetDwelling() )
+           && world.GetKingdom( _army->GetColor() ).AllowPayment( selectedTroop->GetTotalUpgradeCost() );
+}
+
+bool ArmyBar::splitSelectedTroop( const bool splitByHalf )
+{
+    if ( !canSplitSelectedTroop() ) {
+        return false;
+    }
+
+    ArmyTroop * selectedTroop = GetSelectedItem();
+    assert( selectedTroop != nullptr );
+
+    if ( splitByHalf ) {
+        RedistributeTroopEvenly( *selectedTroop, _army );
+    }
+    else {
+        RedistributeTroopByOne( *selectedTroop, _army );
+    }
+
+    ResetSelected();
+    return true;
+}
+
+bool ArmyBar::joinSelectedTroops()
+{
+    if ( !canJoinSelectedTroops() ) {
+        return false;
+    }
+
+    ArmyTroop * selectedTroop = GetSelectedItem();
+    assert( selectedTroop != nullptr );
+
+    ResetSelected();
+    _army->JoinAllTroopsOfType( *selectedTroop );
+    return true;
+}
+
+bool ArmyBar::upgradeSelectedTroop()
+{
+    if ( !canUpgradeSelectedTroop() ) {
+        return false;
+    }
+
+    ArmyTroop * selectedTroop = GetSelectedItem();
+    assert( selectedTroop != nullptr );
+
+    world.GetKingdom( _army->GetColor() ).OddFundsResource( selectedTroop->GetTotalUpgradeCost() );
+    selectedTroop->Upgrade();
+    ResetSelected();
+    return true;
+}
+
 bool ArmyBar::AbleToRedistributeArmyOnRightMouseSingleClick( const ArmyTroop & troop )
 {
     if ( read_only ) {
