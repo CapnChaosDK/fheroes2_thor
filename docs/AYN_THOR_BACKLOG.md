@@ -74,7 +74,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 
 ## Milestone 2: semantic actions
 
-Status: `Castle/Town candidate installed; device validation pending`
+Status: `done`
 
 - Replace fragile simulated hotkeys where appropriate with a Java to native semantic-action queue.
 - Process actions on the game/SDL thread; never mutate engine state directly from the Android UI thread.
@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Battle information card passed`
+Status: `in progress`
 
 ### Snapshot bridge
 
@@ -297,11 +297,19 @@ Status: `planned`
 
 ## Fork maintenance and upstream synchronization
 
-Status: `planned`
+Status: `in progress`
 
-- Create or select a user-owned GitHub fork before publishing. The current `origin` points directly to the official `ihhub/fheroes2` repository for both fetch and push; change the final layout so `origin` is the maintained Thor fork and `upstream` is the official read-only source.
+- Maintain `origin` as the user-owned Thor repository and `upstream` as the official read-only source. Keep the upstream push URL disabled locally to prevent accidental writes.
 - Keep Thor-specific changes isolated behind `TARGET_AYN_THOR`, in focused commits and dedicated bridge/UI files where practical, to reduce conflicts with upstream gameplay work.
 - Maintain a clean upstream-tracking branch and periodically integrate `upstream/master` into `ayn-thor-dual-screen` using a documented merge or rebase policy. Never rewrite a published validated branch without an explicit decision.
 - Before each upstream integration, record the last validated Thor commit and create a recoverable tag or backup branch. Review upstream Android, SDL/controller, rendering, resolution, JNI, and dialog-event changes for overlap.
 - After integration, run Android build and lint through the short `R:` path, inspect the Thor-specific diff, install on hardware, and repeat a compact dual-screen, controller, context-transition, and save/load smoke test.
 - Add an integration log describing the upstream commit, conflicts and resolutions, APK checksum, device variant, and validation result. Consider CI for compile/lint once the fork remote is established.
+
+### Initial maintenance checkpoint
+
+- On 2026-08-23, `origin` was changed to `https://github.com/CapnChaosDK/fheroes2_thor.git` and `upstream` to the official `https://github.com/ihhub/fheroes2.git`. The upstream push URL is deliberately disabled locally to prevent accidental writes.
+- Branch `ayn-thor-dual-screen` and annotated tag `thor-m3-information-validated` were published to the Thor repository. The tag identifies hardware-validated commit `75cb5acf8`.
+- After fetching official commit `6a4b27a12`, the Thor branch was 29 commits ahead and 2 translation commits behind `upstream/master`. The Thor and upstream changes had zero overlapping files relative to merge base `20218c07c`, so the pending integration is expected to be low risk.
+- No upstream merge or rebase was performed at this checkpoint. Integration, build/lint, installation, and the compact hardware smoke test remain a separate approved operation.
+- Detailed checkpoints and future integrations are recorded in `AYN_THOR_UPSTREAM_LOG.md`.
