@@ -23,7 +23,11 @@ namespace fheroes2::thor
         ADVENTURE_MAP,
         HERO,
         CASTLE,
-        BATTLE
+        BATTLE,
+        NEW_GAME_MENU,
+        CAMPAIGN_MENU,
+        MULTIPLAYER_MENU,
+        HOT_SEAT_MENU
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -72,7 +76,21 @@ namespace fheroes2::thor
         CASTLE_TRANSFER_TO_HERO,
         CASTLE_TRANSFER_TO_GARRISON,
         CASTLE_UPGRADE_SELECTED,
-        CASTLE_CLOSE
+        CASTLE_CLOSE,
+        MENU_STANDARD_GAME,
+        MENU_CAMPAIGN_GAME,
+        MENU_MULTIPLAYER_GAME,
+        MENU_BATTLE_ONLY,
+        MENU_SETTINGS,
+        MENU_BACK,
+        MENU_ORIGINAL_CAMPAIGN,
+        MENU_EXPANSION_CAMPAIGN,
+        MENU_HOT_SEAT,
+        MENU_HOT_SEAT_2_PLAYERS,
+        MENU_HOT_SEAT_3_PLAYERS,
+        MENU_HOT_SEAT_4_PLAYERS,
+        MENU_HOT_SEAT_5_PLAYERS,
+        MENU_HOT_SEAT_6_PLAYERS
     };
 
     using ActionMask = uint64_t;

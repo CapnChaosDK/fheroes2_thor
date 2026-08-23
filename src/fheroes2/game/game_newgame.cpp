@@ -58,6 +58,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "smk_decoder.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -74,6 +75,18 @@ namespace
         = { fheroes2::GameMode::SELECT_SCENARIO_TWO_HUMAN_PLAYERS, fheroes2::GameMode::SELECT_SCENARIO_THREE_HUMAN_PLAYERS,
             fheroes2::GameMode::SELECT_SCENARIO_FOUR_HUMAN_PLAYERS, fheroes2::GameMode::SELECT_SCENARIO_FIVE_HUMAN_PLAYERS,
             fheroes2::GameMode::SELECT_SCENARIO_SIX_HUMAN_PLAYERS };
+
+    const std::array<fheroes2::thor::Action, playerCountOptions> playerCountThorActions
+        = { fheroes2::thor::Action::MENU_HOT_SEAT_2_PLAYERS, fheroes2::thor::Action::MENU_HOT_SEAT_3_PLAYERS, fheroes2::thor::Action::MENU_HOT_SEAT_4_PLAYERS,
+            fheroes2::thor::Action::MENU_HOT_SEAT_5_PLAYERS, fheroes2::thor::Action::MENU_HOT_SEAT_6_PLAYERS };
+
+    enum class NewGameMenuState : int32_t
+    {
+        ROOT,
+        CAMPAIGN,
+        MULTIPLAYER,
+        HOT_SEAT
+    };
 
     std::unique_ptr<SMKVideoSequence> getVideo( const std::string & fileName )
     {
@@ -456,7 +469,8 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
     fheroes2::ImageRestorer emptyDialog( display, background.activeArea().x, background.activeArea().y, background.activeArea().width,
                                          background.activeArea().height - buttonStandardGame.area().height - spaceBetweenButtons * 2 - 2 );
 
-    if ( !isSuccessionWarsCampaignPresent() ) {
+    const bool isSuccessionWarsPresent = isSuccessionWarsCampaignPresent();
+    if ( !isSuccessionWarsPresent ) {
         buttonCampaignGame.disable();
     }
 
@@ -487,64 +501,131 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
     buttonPriceOfLoyalty.disable();
 
     const bool isPriceOfLoyaltyPresent = isPriceOfLoyaltyCampaignPresent();
-
-    if ( isPriceOfLoyaltyPresent ) {
-        buttonSuccessionWars.setICNInfo( menuButtonsIcnIndex, 24, 25 );
-        buttonPriceOfLoyalty.setICNInfo( menuButtonsIcnIndex, 26, 27 );
-        buttonSuccessionWars.setPosition( mainModeButtons.button( 0 ).area().x, mainModeButtons.button( 0 ).area().y );
-        buttonPriceOfLoyalty.setPosition( mainModeButtons.button( 1 ).area().x, mainModeButtons.button( 1 ).area().y );
-    }
-
-    fheroes2::validateFadeInAndRender();
+    buttonSuccessionWars.setICNInfo( menuButtonsIcnIndex, 24, 25 );
+    buttonPriceOfLoyalty.setICNInfo( menuButtonsIcnIndex, 26, 27 );
+    buttonSuccessionWars.setPosition( mainModeButtons.button( 0 ).area().x, mainModeButtons.button( 0 ).area().y );
+    buttonPriceOfLoyalty.setPosition( mainModeButtons.button( 1 ).area().x, mainModeButtons.button( 1 ).area().y );
 
     LocalEvent & le = LocalEvent::Get();
 
+    using ThorAction = fheroes2::thor::Action;
+    NewGameMenuState menuState = NewGameMenuState::ROOT;
+
+    const auto showMenuState = [&]( const NewGameMenuState requestedState ) {
+        mainModeButtons.disable();
+        buttonHotSeat.disable();
+        playerCountButtons.disable();
+        buttonSuccessionWars.disable();
+        buttonPriceOfLoyalty.disable();
+        emptyDialog.restore();
+
+        fheroes2::thor::UiContext thorContext = fheroes2::thor::UiContext::NEW_GAME_MENU;
+        fheroes2::thor::ActionMask enabledThorActions = fheroes2::thor::actionMask( ThorAction::MENU_BACK );
+
+        switch ( requestedState ) {
+        case NewGameMenuState::ROOT:
+            mainModeButtons.enable();
+            if ( !isSuccessionWarsPresent ) {
+                buttonCampaignGame.disable();
+            }
+            mainModeButtons.draw();
+            mainModeButtons.drawShadows( display );
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::MENU_STANDARD_GAME ) | fheroes2::thor::actionMask( ThorAction::MENU_MULTIPLAYER_GAME )
+                                  | fheroes2::thor::actionMask( ThorAction::MENU_BATTLE_ONLY ) | fheroes2::thor::actionMask( ThorAction::MENU_SETTINGS );
+            if ( isSuccessionWarsPresent ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::MENU_CAMPAIGN_GAME );
+            }
+            outputNewMenuInTextSupportMode();
+            break;
+        case NewGameMenuState::CAMPAIGN:
+            thorContext = fheroes2::thor::UiContext::CAMPAIGN_MENU;
+            buttonSuccessionWars.enable();
+            if ( isPriceOfLoyaltyPresent ) {
+                buttonPriceOfLoyalty.enable();
+            }
+            buttonSuccessionWars.draw();
+            buttonPriceOfLoyalty.draw();
+            buttonSuccessionWars.drawShadow( display );
+            buttonPriceOfLoyalty.drawShadow( display );
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::MENU_ORIGINAL_CAMPAIGN );
+            if ( isPriceOfLoyaltyPresent ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::MENU_EXPANSION_CAMPAIGN );
+            }
+            outputNewCampaignSelectionInTextSupportMode();
+            break;
+        case NewGameMenuState::MULTIPLAYER:
+            thorContext = fheroes2::thor::UiContext::MULTIPLAYER_MENU;
+            buttonHotSeat.enable();
+            buttonHotSeat.draw();
+            buttonHotSeat.drawShadow( display );
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::MENU_HOT_SEAT );
+            break;
+        case NewGameMenuState::HOT_SEAT:
+            thorContext = fheroes2::thor::UiContext::HOT_SEAT_MENU;
+            playerCountButtons.enable();
+            playerCountButtons.draw();
+            playerCountButtons.drawShadows( display );
+            for ( const ThorAction action : playerCountThorActions ) {
+                enabledThorActions |= fheroes2::thor::actionMask( action );
+            }
+            break;
+        default:
+            assert( 0 );
+            break;
+        }
+
+        menuState = requestedState;
+        fheroes2::thor::setUiContext( thorContext );
+        fheroes2::thor::setEnabledActions( enabledThorActions );
+        display.render( emptyDialog.rect() );
+    };
+
+    showMenuState( NewGameMenuState::ROOT );
+    fheroes2::validateFadeInAndRender();
+
     if ( isProbablyDemoVersion ) {
-        fheroes2::showStandardTextMessage( _( "Warning" ),
-                                           _( "fheroes2 needs data files from the original Heroes of Might and Magic II to operate. "
-                                              "You appear to be using the demo version of Heroes of Might and Magic II for this purpose. "
-                                              "Please note that only one scenario will be available in this setup." ),
-                                           Dialog::OK );
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            fheroes2::showStandardTextMessage( _( "Warning" ),
+                                               _( "fheroes2 needs data files from the original Heroes of Might and Magic II to operate. "
+                                                  "You appear to be using the demo version of Heroes of Might and Magic II for this purpose. "
+                                                  "Please note that only one scenario will be available in this setup." ),
+                                               Dialog::OK );
+        }
+        showMenuState( NewGameMenuState::ROOT );
     }
 
     while ( le.HandleEvents() ) {
-        if ( buttonStandardGame.isEnabled() ) {
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+
+        if ( menuState == NewGameMenuState::ROOT ) {
             mainModeButtons.drawOnState( le );
 
-            if ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_STANDARD ) || le.MouseClickLeft( buttonStandardGame.area() ) ) {
+            if ( requestedThorAction == ThorAction::MENU_STANDARD_GAME || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_STANDARD )
+                 || le.MouseClickLeft( buttonStandardGame.area() ) ) {
                 return fheroes2::GameMode::NEW_STANDARD;
             }
-            if ( buttonCampaignGame.isEnabled() && ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_CAMPAIGN ) || le.MouseClickLeft( buttonCampaignGame.area() ) ) ) {
-                if ( !isPriceOfLoyaltyCampaignPresent() ) {
-                    return fheroes2::GameMode::NEW_SUCCESSION_WARS_CAMPAIGN;
-                }
-                mainModeButtons.disable();
-                emptyDialog.restore();
-                buttonSuccessionWars.enable();
-                buttonPriceOfLoyalty.enable();
-                buttonSuccessionWars.draw();
-                buttonPriceOfLoyalty.draw();
-                buttonSuccessionWars.drawShadow( display );
-                buttonPriceOfLoyalty.drawShadow( display );
-
-                outputNewCampaignSelectionInTextSupportMode();
-
-                display.render( emptyDialog.rect() );
+            if ( buttonCampaignGame.isEnabled()
+                 && ( requestedThorAction == ThorAction::MENU_CAMPAIGN_GAME || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_CAMPAIGN )
+                      || le.MouseClickLeft( buttonCampaignGame.area() ) ) ) {
+                showMenuState( NewGameMenuState::CAMPAIGN );
+                continue;
             }
-            if ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_SETTINGS ) || le.MouseClickLeft( buttonSettings.area() ) ) {
-                fheroes2::openGameSettings();
+            if ( requestedThorAction == ThorAction::MENU_SETTINGS || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_SETTINGS ) || le.MouseClickLeft( buttonSettings.area() ) ) {
+                {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+                    fheroes2::openGameSettings();
+                }
                 return fheroes2::GameMode::MAIN_MENU;
             }
-            if ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_BATTLEONLY ) || le.MouseClickLeft( buttonBattleGame.area() ) ) {
+            if ( requestedThorAction == ThorAction::MENU_BATTLE_ONLY || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_BATTLEONLY )
+                 || le.MouseClickLeft( buttonBattleGame.area() ) ) {
                 return fheroes2::GameMode::NEW_BATTLE_ONLY;
             }
-            if ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_MULTI ) || le.MouseClickLeft( buttonMultiGame.area() ) ) {
-                mainModeButtons.disable();
-                emptyDialog.restore();
-                buttonHotSeat.enable();
-                buttonHotSeat.draw();
-                buttonHotSeat.drawShadow( display );
-                display.render( emptyDialog.rect() );
+            if ( requestedThorAction == ThorAction::MENU_MULTIPLAYER_GAME || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_MULTI )
+                 || le.MouseClickLeft( buttonMultiGame.area() ) ) {
+                showMenuState( NewGameMenuState::MULTIPLAYER );
+                continue;
             }
 
             if ( le.isMouseRightButtonPressedInArea( buttonStandardGame.area() ) ) {
@@ -564,14 +645,16 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
                 fheroes2::showStandardTextMessage( _( "Game Settings" ), _( "Change language, resolution and settings of the game." ), Dialog::ZERO );
             }
         }
-        else if ( playerCountButtons.button( 0 ).isEnabled() ) {
+        else if ( menuState == NewGameMenuState::HOT_SEAT ) {
             playerCountButtons.drawOnState( le );
 
             // Loop through all player count buttons.
             for ( size_t i = 0; i < playerCountOptions; ++i ) {
                 assert( i < playerCountHotkeys.size() );
+                assert( i < playerCountThorActions.size() );
 
-                if ( le.MouseClickLeft( playerCountButtons.button( i ).area() ) || le.isKeyPressed( playerCountHotkeys[i] ) ) {
+                if ( requestedThorAction == playerCountThorActions[i] || le.MouseClickLeft( playerCountButtons.button( i ).area() )
+                     || le.isKeyPressed( playerCountHotkeys[i] ) ) {
                     return NewHotSeat( i );
                 }
             }
@@ -595,14 +678,17 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
                 fheroes2::showStandardTextMessage( _( "6 Players" ), _( "Play with 6 human players." ), Dialog::ZERO );
             }
         }
-        else if ( buttonSuccessionWars.isEnabled() ) {
+        else if ( menuState == NewGameMenuState::CAMPAIGN ) {
             buttonSuccessionWars.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonSuccessionWars.area() ) );
             buttonPriceOfLoyalty.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonPriceOfLoyalty.area() ) );
 
-            if ( le.MouseClickLeft( buttonSuccessionWars.area() ) || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_NEW_ORIGINAL_CAMPAIGN ) ) {
+            if ( requestedThorAction == ThorAction::MENU_ORIGINAL_CAMPAIGN || le.MouseClickLeft( buttonSuccessionWars.area() )
+                 || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_NEW_ORIGINAL_CAMPAIGN ) ) {
                 return fheroes2::GameMode::NEW_SUCCESSION_WARS_CAMPAIGN;
             }
-            if ( le.MouseClickLeft( buttonPriceOfLoyalty.area() ) || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_NEW_EXPANSION_CAMPAIGN ) ) {
+            if ( isPriceOfLoyaltyPresent
+                 && ( requestedThorAction == ThorAction::MENU_EXPANSION_CAMPAIGN || le.MouseClickLeft( buttonPriceOfLoyalty.area() )
+                      || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_NEW_EXPANSION_CAMPAIGN ) ) ) {
                 return fheroes2::GameMode::NEW_PRICE_OF_LOYALTY_CAMPAIGN;
             }
 
@@ -615,15 +701,10 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
                                                    Dialog::ZERO );
             }
         }
-        else {
+        else if ( menuState == NewGameMenuState::MULTIPLAYER ) {
             buttonHotSeat.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonHotSeat.area() ) );
-            if ( le.MouseClickLeft( buttonHotSeat.area() ) || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_HOTSEAT ) ) {
-                buttonHotSeat.disable();
-                emptyDialog.restore();
-                playerCountButtons.enable();
-                playerCountButtons.draw();
-                playerCountButtons.drawShadows( display );
-                display.render( emptyDialog.rect() );
+            if ( requestedThorAction == ThorAction::MENU_HOT_SEAT || le.MouseClickLeft( buttonHotSeat.area() ) || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_HOTSEAT ) ) {
+                showMenuState( NewGameMenuState::HOT_SEAT );
                 continue;
             }
 
@@ -635,12 +716,26 @@ fheroes2::GameMode Game::NewGame( const bool isProbablyDemoVersion )
         }
         buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
-        if ( HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
-            return fheroes2::GameMode::MAIN_MENU;
+        if ( requestedThorAction == ThorAction::MENU_BACK || HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
+            switch ( menuState ) {
+            case NewGameMenuState::ROOT:
+                return fheroes2::GameMode::MAIN_MENU;
+            case NewGameMenuState::CAMPAIGN:
+            case NewGameMenuState::MULTIPLAYER:
+                showMenuState( NewGameMenuState::ROOT );
+                break;
+            case NewGameMenuState::HOT_SEAT:
+                showMenuState( NewGameMenuState::MULTIPLAYER );
+                break;
+            default:
+                assert( 0 );
+                break;
+            }
+            continue;
         }
 
         if ( le.isMouseRightButtonPressedInArea( buttonCancel.area() ) ) {
-            fheroes2::showStandardTextMessage( _( "Cancel" ), _( "Cancel back to the main menu." ), Dialog::ZERO );
+            fheroes2::showStandardTextMessage( _( "Cancel" ), _( "Return to the previous menu." ), Dialog::ZERO );
         }
     }
 

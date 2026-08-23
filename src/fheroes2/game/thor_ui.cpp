@@ -118,6 +118,63 @@ namespace
         }
     }
 
+    bool isNewGameMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::MENU_STANDARD_GAME:
+        case Action::MENU_CAMPAIGN_GAME:
+        case Action::MENU_MULTIPLAYER_GAME:
+        case Action::MENU_BATTLE_ONLY:
+        case Action::MENU_SETTINGS:
+        case Action::MENU_BACK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isCampaignMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::MENU_ORIGINAL_CAMPAIGN || action == Action::MENU_EXPANSION_CAMPAIGN || action == Action::MENU_BACK;
+    }
+
+    bool isMultiplayerMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::MENU_HOT_SEAT || action == Action::MENU_BACK;
+    }
+
+    bool isHotSeatMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::MENU_HOT_SEAT_2_PLAYERS:
+        case Action::MENU_HOT_SEAT_3_PLAYERS:
+        case Action::MENU_HOT_SEAT_4_PLAYERS:
+        case Action::MENU_HOT_SEAT_5_PLAYERS:
+        case Action::MENU_HOT_SEAT_6_PLAYERS:
+        case Action::MENU_BACK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isSemanticContext( const fheroes2::thor::UiContext context )
+    {
+        using UiContext = fheroes2::thor::UiContext;
+
+        return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
+               || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
+               || context == UiContext::HOT_SEAT_MENU;
+    }
+
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         switch ( context ) {
@@ -129,6 +186,14 @@ namespace
             return isHeroAction( action );
         case fheroes2::thor::UiContext::CASTLE:
             return isCastleAction( action );
+        case fheroes2::thor::UiContext::NEW_GAME_MENU:
+            return isNewGameMenuAction( action );
+        case fheroes2::thor::UiContext::CAMPAIGN_MENU:
+            return isCampaignMenuAction( action );
+        case fheroes2::thor::UiContext::MULTIPLAYER_MENU:
+            return isMultiplayerMenuAction( action );
+        case fheroes2::thor::UiContext::HOT_SEAT_MENU:
+            return isHotSeatMenuAction( action );
         default:
             return false;
         }
@@ -210,8 +275,7 @@ namespace fheroes2::thor
     {
         std::lock_guard<std::mutex> lock( actionQueueMutex );
         const UiContext context = getUiContext();
-        const ActionMask allowedActions
-            = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE ? actions : 0;
+        const ActionMask allowedActions = isSemanticContext( context ) ? actions : 0;
         enabledActions.store( allowedActions, std::memory_order_release );
         for ( auto actionIter = actionQueue.begin(); actionIter != actionQueue.end(); ) {
             if ( ( allowedActions & actionMask( *actionIter ) ) == 0 ) {
@@ -292,7 +356,8 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
     const std::string version = std::to_string( snapshot.version );
     const std::string context = std::to_string( static_cast<int32_t>( snapshot.context ) );
     const std::string revision = std::to_string( snapshot.revision );
-    const std::string * values[fieldCount] = { &version, &context, &revision, &snapshot.title, &snapshot.category, &snapshot.detail, &snapshot.date, &snapshot.resources };
+    const std::string * values[fieldCount]
+        = { &version, &context, &revision, &snapshot.title, &snapshot.category, &snapshot.detail, &snapshot.date, &snapshot.resources };
 
     for ( jsize index = 0; index < fieldCount; ++index ) {
         jstring value = env->NewStringUTF( values[index]->c_str() );

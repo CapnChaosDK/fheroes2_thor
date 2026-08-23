@@ -38,6 +38,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_HERO = 4;
     private static final int CONTEXT_CASTLE = 5;
     private static final int CONTEXT_BATTLE = 6;
+    private static final int CONTEXT_NEW_GAME_MENU = 7;
+    private static final int CONTEXT_CAMPAIGN_MENU = 8;
+    private static final int CONTEXT_MULTIPLAYER_MENU = 9;
+    private static final int CONTEXT_HOT_SEAT_MENU = 10;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -82,6 +86,20 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_CASTLE_TRANSFER_TO_GARRISON = 40;
     private static final int ACTION_CASTLE_UPGRADE_SELECTED = 41;
     private static final int ACTION_CASTLE_CLOSE = 42;
+    private static final int ACTION_MENU_STANDARD_GAME = 43;
+    private static final int ACTION_MENU_CAMPAIGN_GAME = 44;
+    private static final int ACTION_MENU_MULTIPLAYER_GAME = 45;
+    private static final int ACTION_MENU_BATTLE_ONLY = 46;
+    private static final int ACTION_MENU_SETTINGS = 47;
+    private static final int ACTION_MENU_BACK = 48;
+    private static final int ACTION_MENU_ORIGINAL_CAMPAIGN = 49;
+    private static final int ACTION_MENU_EXPANSION_CAMPAIGN = 50;
+    private static final int ACTION_MENU_HOT_SEAT = 51;
+    private static final int ACTION_MENU_HOT_SEAT_2_PLAYERS = 52;
+    private static final int ACTION_MENU_HOT_SEAT_3_PLAYERS = 53;
+    private static final int ACTION_MENU_HOT_SEAT_4_PLAYERS = 54;
+    private static final int ACTION_MENU_HOT_SEAT_5_PLAYERS = 55;
+    private static final int ACTION_MENU_HOT_SEAT_6_PLAYERS = 56;
 
     interface KeySender
     {
@@ -182,7 +200,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE ? requestedContext : CONTEXT_FALLBACK;
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HOT_SEAT_MENU ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -335,8 +353,8 @@ final class ThorSecondScreenPresentation extends Presentation
 
             paint.setColor( GOLD_COLOR );
             paint.setStrokeWidth( 2f );
-            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.76f, panel.right - horizontalPadding,
-                             panel.top + panel.height() * 0.76f + 2f, paint );
+            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.76f, panel.right - horizontalPadding, panel.top + panel.height() * 0.76f + 2f,
+                             paint );
 
             paint.setColor( MUTED_TEXT_COLOR );
             drawFittedText( canvas, informationResources, panel.centerX(), panel.bottom - 18f, contentWidth, 25f );
@@ -372,8 +390,8 @@ final class ThorSecondScreenPresentation extends Presentation
 
             paint.setColor( GOLD_COLOR );
             paint.setStrokeWidth( 2f );
-            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.81f, panel.right - horizontalPadding,
-                             panel.top + panel.height() * 0.81f + 2f, paint );
+            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.81f, panel.right - horizontalPadding, panel.top + panel.height() * 0.81f + 2f,
+                             paint );
 
             paint.setColor( MUTED_TEXT_COLOR );
             drawFittedText( canvas, turnOrder, panel.centerX(), panel.bottom - 12f, contentWidth, 21f );
@@ -526,6 +544,35 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "SURRENDER", ACTION_BATTLE_SURRENDER, KeyEvent.KEYCODE_S );
                 addAction( "OPTIONS", ACTION_BATTLE_OPTIONS, KeyEvent.KEYCODE_O );
                 addAction( "TURN ORDER", ACTION_BATTLE_TOGGLE_TURN_ORDER, KeyEvent.KEYCODE_T );
+                break;
+            case CONTEXT_NEW_GAME_MENU:
+                contextTitle = "NEW GAME";
+                addAction( "STANDARD", ACTION_MENU_STANDARD_GAME, KeyEvent.KEYCODE_S );
+                addAction( "CAMPAIGN", ACTION_MENU_CAMPAIGN_GAME, KeyEvent.KEYCODE_C );
+                addAction( "MULTIPLAYER", ACTION_MENU_MULTIPLAYER_GAME, KeyEvent.KEYCODE_M );
+                addAction( "BATTLE ONLY", ACTION_MENU_BATTLE_ONLY, KeyEvent.KEYCODE_B );
+                addAction( "SETTINGS", ACTION_MENU_SETTINGS, KeyEvent.KEYCODE_T );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_CAMPAIGN_MENU:
+                contextTitle = "CAMPAIGN";
+                addAction( "ORIGINAL", ACTION_MENU_ORIGINAL_CAMPAIGN, KeyEvent.KEYCODE_O );
+                addAction( "EXPANSION", ACTION_MENU_EXPANSION_CAMPAIGN, KeyEvent.KEYCODE_E );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_MULTIPLAYER_MENU:
+                contextTitle = "MULTIPLAYER";
+                addAction( "HOT SEAT", ACTION_MENU_HOT_SEAT, KeyEvent.KEYCODE_H );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_HOT_SEAT_MENU:
+                contextTitle = "HOT SEAT";
+                addAction( "2 PLAYERS", ACTION_MENU_HOT_SEAT_2_PLAYERS, KeyEvent.KEYCODE_2 );
+                addAction( "3 PLAYERS", ACTION_MENU_HOT_SEAT_3_PLAYERS, KeyEvent.KEYCODE_3 );
+                addAction( "4 PLAYERS", ACTION_MENU_HOT_SEAT_4_PLAYERS, KeyEvent.KEYCODE_4 );
+                addAction( "5 PLAYERS", ACTION_MENU_HOT_SEAT_5_PLAYERS, KeyEvent.KEYCODE_5 );
+                addAction( "6 PLAYERS", ACTION_MENU_HOT_SEAT_6_PLAYERS, KeyEvent.KEYCODE_6 );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";

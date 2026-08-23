@@ -144,6 +144,9 @@ void Game::runMainGameLoop()
         case fheroes2::GameMode::MAIN_MENU:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::MAIN_MENU );
             break;
+        case fheroes2::GameMode::NEW_GAME:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::NEW_GAME_MENU );
+            break;
         case fheroes2::GameMode::START_GAME:
         case fheroes2::GameMode::START_BATTLE_ONLY_MODE:
         case fheroes2::GameMode::EDITOR_MAIN_MENU:
@@ -426,7 +429,10 @@ fheroes2::GameMode Game::MainMenu( const bool isFirstGameRun )
             }
         }
         else if ( HotKeyPressEvent( HotKeyEvent::MAIN_MENU_SETTINGS ) || le.MouseClickLeft( settingsArea ) ) {
-            fheroes2::openGameSettings();
+            {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+                fheroes2::openGameSettings();
+            }
 
             return fheroes2::GameMode::MAIN_MENU;
         }

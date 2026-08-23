@@ -270,7 +270,7 @@ Corrected checks 2 and 5 passed on the Thor. All five Battle information checks 
 
 ## Navigable menu workflows
 
-Status: `planned`
+Status: `in progress`
 
 Goal: make the lower display follow menu hierarchy so choices can be completed directly instead of falling back to generic Dialog navigation.
 
@@ -282,6 +282,16 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 - Back restores exactly one parent deck. Selecting an option emits exactly one action and clears stale queued actions when the menu state changes.
 - Publish explicit native menu states and stable semantic actions rather than inferring submenus from Java labels or reusing overlapping keyboard shortcuts.
 - Preserve upper-screen mouse, touchscreen, physical controller, configurable hotkeys, and text-support behavior.
+
+### New Game implementation and validation
+
+- Four explicit native states now represent New Game, Campaign, Multiplayer, and Hot Seat menus instead of inferring the visible submenu from enabled upper-screen buttons.
+- Stable semantic actions cover Standard, Campaign, Multiplayer, Battle Only, Settings, Original and Expansion campaigns, Hot Seat, player counts 2 through 6, and Back.
+- Back restores exactly one parent state: Hot Seat to Multiplayer, Campaign or Multiplayer to New Game, and New Game to Main Menu.
+- Campaign availability follows installed assets. Expansion remains visible but muted when Price of Loyalty data is unavailable.
+- Context changes clear stale queued taps, while the existing keyboard, mouse, touchscreen, and physical-controller paths remain available.
+- Android build and lint pass through the required short `R:` mapping. The APK installed and cold-launched successfully on the Thor. Live lower-display checks verified the New Game, Multiplayer, and Hot Seat layouts and the complete Back chain from Hot Seat to Multiplayer to New Game to Main Menu. Campaign was correctly muted for the current asset set; selection actions and the asset-dependent Campaign path remain pending manual validation.
+- User validation passed Standard, Battle Only, New Game Settings, all Hot Seat player counts, rapid-tap rejection, and physical, mouse, and touchscreen controls. Main Menu Settings initially exposed a missing temporary Dialog context; the correction scopes that settings window as Dialog and restores Main Menu on close. A live lower-display check and the focused user retest both passed Main Menu to Settings Dialog and one Cancel back to Main Menu. The New Game first slice is hardware-validated for the current asset configuration.
 
 ### Later menu slices
 
