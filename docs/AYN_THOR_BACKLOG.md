@@ -65,7 +65,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 - Installed successfully on a connected AYN Thor.
 - Main Menu to Dialog transition verified from a lower-screen action.
 - Dialog to Main Menu restoration verified.
-- Dialog deck simplification candidate installed: modal Dialog now shows only centered Confirm and Cancel actions, while the directional navigation deck remains available in the safe Fallback context. Device validation is pending.
+- Dialog deck simplification passed on the Thor: modal Dialog and safe Fallback show only centered Confirm and Cancel actions. A live lower-display capture confirmed that the redundant directional navigation deck is removed; Main Menu and planned navigable menu work remain unchanged.
 - Battle context and its eight-action layout verified in a live Battle Only match.
 - Adventure Map, Hero, and Castle contexts verified by the user on the Thor.
 - Battle Spell, Wait/Defend, Turn Order, and Options actions verified by the user.

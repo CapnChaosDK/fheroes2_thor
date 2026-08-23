@@ -534,23 +534,13 @@ final class ThorSecondScreenPresentation extends Presentation
             case CONTEXT_FALLBACK:
             default:
                 contextTitle = "COMMAND DECK";
-                addNavigationActions();
+                addDialogActions();
                 break;
             }
         }
 
         private void addDialogActions()
         {
-            addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
-            addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
-        }
-
-        private void addNavigationActions()
-        {
-            addAction( "UP", KeyEvent.KEYCODE_DPAD_UP );
-            addAction( "LEFT", KeyEvent.KEYCODE_DPAD_LEFT );
-            addAction( "DOWN", KeyEvent.KEYCODE_DPAD_DOWN );
-            addAction( "RIGHT", KeyEvent.KEYCODE_DPAD_RIGHT );
             addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
             addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
         }
