@@ -124,7 +124,7 @@ Checks 1, 3, 4, and 5 passed on the initial device run. Check 2 exposed stacked 
 
 ### Next semantic-action slice
 
-Status: `in progress`
+Status: `completed`
 
 - Hero navigation, dismiss, selected-troop operations, and close now use stable semantic actions consumed in the Hero dialog on the game thread.
 - Previous and Next follow the native Hero dialog's availability. Dismiss follows the native restrictions and retains its confirmation.
@@ -141,11 +141,13 @@ Status: `passed`
 2. Tap Dismiss, cancel its confirmation, and verify the Hero deck restores once without reopening.
 3. Select a stack containing at least two creatures with a free army slot. Verify Split One and Split Half enable and perform the requested split.
 4. Select either of two matching stacks and verify Join enables and merges them. Verify these army buttons mute again when no stack is selected.
-5. In a castle with the required upgraded dwelling and enough gold, select an upgradeable stack and verify Upgrade enables and upgrades it. Verify Swap remains muted and physical controls are unchanged.
+5. Confirm Upgrade is absent from the general Hero deck, Swap remains muted, and physical controls are unchanged.
 
 Checks 1 through 4 passed on the Thor. Upgrade was removed from the general Hero deck because creature upgrades are only available while visiting a town. Upgrade is now part of the Castle/Town semantic slice. Swap remains reserved for a later two-army exchange context.
 
 ### Castle/Town semantic controls
+
+Status: `completed`
 
 - Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves, Tavern, Build, To Hero, To Garrison, Upgrade, and Exit now use stable semantic actions consumed by the Castle dialog on the game thread.
 - Navigation follows the native town buttons. Building actions are enabled only when the corresponding building exists; Build works for either a town tent or castle construction screen.
@@ -155,13 +157,15 @@ Checks 1 through 4 passed on the Thor. Upgrade was removed from the general Hero
 
 ### Castle/Town device validation
 
-Status: `planned`
+Status: `passed`
 
 1. With at least two towns, verify Previous and Next switch once per tap; verify Exit returns to the Adventure Map deck.
 2. Verify built-building buttons open the correct screen once and one close returns to the Castle deck. Verify unbuilt-building buttons are muted.
 3. With a visiting hero and troops in both armies, test To Hero and To Garrison and verify the army bars redraw correctly.
 4. Select an upgradeable stack in either the garrison or visiting hero army. Verify Upgrade enables only when the upgraded dwelling exists and funds are sufficient, then upgrades the selected stack.
 5. Verify Build opens the construction screen in a castle and the town-upgrade screen from a tent. Confirm physical controls remain unchanged.
+
+All five Castle/Town checks passed on the Thor.
 
 ### Windows build note
 
