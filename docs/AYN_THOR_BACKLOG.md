@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Adventure Map candidate installed; device validation pending`
+Status: `Adventure Map information card passed`
 
 ### Snapshot bridge
 
@@ -192,13 +192,15 @@ Status: `Adventure Map candidate installed; device validation pending`
 
 ### Adventure information device validation
 
-Status: `planned`
+Status: `passed`
 
 1. Focus two different heroes and verify name, movement, and mana update without flicker or stale values.
 2. Move a hero or cast an Adventure spell and verify the corresponding value updates.
 3. Focus a town or castle and verify its name and type replace the hero details.
 4. Gain or spend a resource and verify the resource line and date remain readable inside the panel borders.
 5. Open and close a nested dialog, then end the turn. Verify no stale information appears during transitions and all existing lower-screen and physical controls still work.
+
+All five Adventure information checks passed on the Thor, including readability and context transitions.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Selected castle summary and available creature growth.
@@ -230,5 +232,6 @@ Status: `planned`
 
 - Context transition matrix covering main menu, nested dialogs, adventure map, hero, castle, battle, and editor paths.
 - Touch cancellation, multi-touch rejection, rapid context changes, screen sleep, rotation lock, and panel hot-plug tests.
+- Fix Thor startup cursor initialization: controller/touch initialization enables the software cursor, but the later display initializer overwrites it from the saved cursor-emulation setting. Toggling the Thor controller mode generates a controller-added event and re-enables the cursor.
 - Verify Snapdragon 865 and Snapdragon 8 Gen 2 Thor variants where hardware is available.
 - Document ADB diagnostics and capture context/action transitions under the `fheroes2-thor` log tag.
