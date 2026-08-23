@@ -17,6 +17,33 @@ You can find a complete list of all of our changes and enhancements in [**this p
     <img src="docs/images/screenshots/screenshot_castle.webp" width="410" alt="Screenshot of the castle screen">
 </p>
 
+## AYN Thor dual-screen edition
+
+This fork adds an AYN Thor-specific Android build. The game runs at 1920 x 1080 on the upper display while the lower display provides a Heroes II-styled, context-sensitive command deck and information panel. The Thor package can be installed alongside the official Android build.
+
+Download the current test APK from the [Thor releases page](https://github.com/CapnChaosDK/fheroes2_thor/releases). Build, installation, dual-screen, and diagnostic instructions are available in the [AYN Thor guide](docs/README_ayn_thor.md).
+
+### AYN Thor physical controls
+
+The built-in controls follow the PlayStation Vita port's mapping:
+
+| Thor control | Action |
+| --- | --- |
+| Left analog stick | Move pointer |
+| Right analog stick | Scroll map |
+| A (bottom face button) | Left mouse button |
+| B (right face button) | Right mouse button |
+| X (left face button) | End turn |
+| Y (top face button) | Open spellbook |
+| D-pad left | Next hero |
+| D-pad right | Next castle |
+| D-pad down | Revisit current object |
+| R1 | Accelerate pointer while held |
+| Select / Back | System menu |
+| Start | Enter |
+
+The mapping follows SDL's A/B/X/Y convention. If the Thor system settings offer Xbox and Nintendo button modes, use **Xbox mode** so the physical button positions match this table.
+
 ## Download and Install
 
 Please follow the [**installation guide**](docs/INSTALL.md) to download and install fheroes2.
