@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Battle information candidate installed; device validation pending`
+Status: `Battle information card passed`
 
 ### Snapshot bridge
 
@@ -251,7 +251,7 @@ All five Castle/Town information checks passed on the Thor, including settlement
 
 ### Battle information device validation
 
-Status: `candidate installed`
+Status: `passed`
 
 1. Start a manual battle and compare the round, acting side, active stack count, and creature name with the upper screen.
 2. Compare Attack, Defense, total damage range, speed, hit points, and remaining shots for melee and ranged stacks.
@@ -259,7 +259,9 @@ Status: `candidate installed`
 4. Take damage, lose a stack, fire a ranged attack, and apply a beneficial or harmful spell. Verify hit points, shots, effects, and turn order refresh without stale values.
 5. Open and close Battle Options, spell selection, and a confirmation dialog. Verify the Battle card restores, all text remains inside its borders, and lower-screen and physical controls remain unchanged.
 
-Checks 1, 3, and 4 passed on the Thor. Check 2 initially exposed ambiguous aggregate-only hit points; the corrected candidate shows both `UNIT HP current/full` and `STACK HP current/full`. Check 5 exposed that Battle Options did not enter the Dialog context, allowing repeated lower-screen actions to queue and stack settings windows. Battle Options now uses a scoped Dialog context, which clears queued Battle actions and restores the Battle context after one close. Corrected checks 2 and 5 are pending device validation.
+Checks 1, 3, and 4 passed on the Thor. Check 2 initially exposed ambiguous aggregate-only hit points; the corrected card shows both `UNIT HP current/full` and `STACK HP current/full`. Check 5 exposed that Battle Options did not enter the Dialog context, allowing repeated lower-screen actions to queue and stack settings windows. Battle Options now uses a scoped Dialog context, which clears queued Battle actions and restores the Battle context after one close.
+
+Corrected checks 2 and 5 passed on the Thor. All five Battle information checks are validated, including active-stack accuracy, per-creature and aggregate hit points, turn-order refresh, spell and casualty updates, single-instance Options behavior, context restoration, and control regression coverage.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Kingdom resources, player color, and current date.
