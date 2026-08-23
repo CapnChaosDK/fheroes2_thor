@@ -341,6 +341,7 @@ namespace Battle
 
         void getPendingActions( Actions & actions );
         void HumanTurn( const Unit & unit, Actions & actions );
+        void publishThorBattleInformation( const Unit & unit ) const;
 
         const fheroes2::Rect & GetArea() const
         {
@@ -551,6 +552,7 @@ namespace Battle
 
         PopupDamageInfo popup;
         TurnOrder _turnOrder;
+        std::weak_ptr<const Units> _thorOrderOfUnits;
 
         std::unique_ptr<fheroes2::StandardWindow> _background;
 

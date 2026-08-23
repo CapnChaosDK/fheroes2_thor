@@ -285,9 +285,14 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
-            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE ) && informationContext == gameContext
-                 && informationRevision >= 0 && !informationTitle.isEmpty() ) {
-                drawInformationCard( canvas, innerPanel );
+            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE )
+                 && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
+                if ( gameContext == CONTEXT_BATTLE ) {
+                    drawBattleInformationCard( canvas, innerPanel );
+                }
+                else {
+                    drawInformationCard( canvas, innerPanel );
+                }
             }
             else {
                 paint.setTextAlign( Paint.Align.CENTER );
@@ -335,6 +340,43 @@ final class ThorSecondScreenPresentation extends Presentation
 
             paint.setColor( MUTED_TEXT_COLOR );
             drawFittedText( canvas, informationResources, panel.centerX(), panel.bottom - 18f, contentWidth, 25f );
+        }
+
+        private void drawBattleInformationCard( final Canvas canvas, final RectF panel )
+        {
+            final float horizontalPadding = 26f;
+            final float contentWidth = panel.width() - horizontalPadding * 2;
+            final int lineBreak = informationResources.indexOf( '\n' );
+            final String condition = lineBreak >= 0 ? informationResources.substring( 0, lineBreak ) : informationResources;
+            final String turnOrder = lineBreak >= 0 ? informationResources.substring( lineBreak + 1 ) : "";
+
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            paint.setTextAlign( Paint.Align.LEFT );
+            drawFittedText( canvas, informationCategory, panel.left + horizontalPadding, panel.top + 35f, contentWidth * 0.55f, 26f );
+
+            paint.setTextAlign( Paint.Align.RIGHT );
+            paint.setColor( MUTED_TEXT_COLOR );
+            drawFittedText( canvas, informationDate, panel.right - horizontalPadding, panel.top + 35f, contentWidth * 0.4f, 26f );
+
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setColor( TEXT_COLOR );
+            drawFittedText( canvas, informationTitle, panel.centerX(), panel.top + panel.height() * 0.43f, contentWidth, 43f );
+
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, informationDetail, panel.centerX(), panel.top + panel.height() * 0.61f, contentWidth, 25f );
+
+            paint.setColor( MUTED_TEXT_COLOR );
+            drawFittedText( canvas, condition, panel.centerX(), panel.top + panel.height() * 0.76f, contentWidth, 23f );
+
+            paint.setColor( GOLD_COLOR );
+            paint.setStrokeWidth( 2f );
+            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.81f, panel.right - horizontalPadding,
+                             panel.top + panel.height() * 0.81f + 2f, paint );
+
+            paint.setColor( MUTED_TEXT_COLOR );
+            drawFittedText( canvas, turnOrder, panel.centerX(), panel.bottom - 12f, contentWidth, 21f );
         }
 
         private void drawFittedText( final Canvas canvas, final String text, final float x, final float baseline, final float maximumWidth, final float preferredSize )

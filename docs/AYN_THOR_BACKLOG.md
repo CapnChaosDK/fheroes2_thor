@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Castle/Town information card passed`
+Status: `Battle information candidate installed; device validation pending`
 
 ### Snapshot bridge
 
@@ -241,9 +241,26 @@ Status: `passed`
 
 All five Castle/Town information checks passed on the Thor, including settlement and visiting-hero updates, dwelling availability and growth, construction status, context restoration, and control regression coverage.
 
+### Battle information card
+
+- The Battle card shows the round, acting army color, active creature stack count and name, Attack, Defense, total damage range, current speed, stack hit points, remaining shots, and up to two active spell effects.
+- The lower line shows the next five valid stacks using the battle engine's existing turn-order calculation, including each stack's current side, count, and creature name.
+- Snapshots refresh at the start of a unit turn and after applied actions that can change the active stack or turn order. Unchanged snapshots do not redraw the Android presentation.
+- Existing Battle semantic actions, enabled states, confirmation handling, and physical controls are unchanged. Target selection and damage prediction remain outside this read-only slice.
+- Android build and lint pass through the required short `R:` mapping. The APK installed successfully and opened the command deck on display 4.
+
+### Battle information device validation
+
+Status: `candidate installed`
+
+1. Start a manual battle and compare the round, acting side, active stack count, and creature name with the upper screen.
+2. Compare Attack, Defense, total damage range, speed, hit points, and remaining shots for melee and ranged stacks.
+3. Compare the next-five-stack line with the upper turn-order display, then use Wait/Defend and advance to another round to verify ordering and round updates.
+4. Take damage, lose a stack, fire a ranged attack, and apply a beneficial or harmful spell. Verify hit points, shots, effects, and turn order refresh without stale values.
+5. Open and close Battle Options, spell selection, and a confirmation dialog. Verify the Battle card restores, all text remains inside its borders, and lower-screen and physical controls remain unchanged.
+
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Kingdom resources, player color, and current date.
-- Battle turn order and selected-unit details.
 - Explicit privacy/fog-of-war rules so the lower screen never exposes hidden information.
 
 ## Milestone 4: interactive second-screen tools

@@ -51,6 +51,7 @@
 #include "battle_troop.h"
 #include "bin_info.h"
 #include "castle.h"
+#include "color.h"
 #include "game.h"
 #include "game_assets.h"
 #include "game_hotkeys.h"
@@ -1538,7 +1539,77 @@ Battle::Interface::~Interface()
 
 void Battle::Interface::SetOrderOfUnits( const std::shared_ptr<const Units> & units )
 {
+    _thorOrderOfUnits = units;
     _turnOrder.set( _interfacePosition, units, arena.getDefendingArmyColor() );
+}
+
+void Battle::Interface::publishThorBattleInformation( const Unit & unit ) const
+{
+    fheroes2::thor::InformationSnapshot snapshot;
+    snapshot.context = fheroes2::thor::UiContext::BATTLE;
+    snapshot.category = "BATTLE     ROUND " + std::to_string( arena.GetTurnNumber() );
+    snapshot.date = StringUpper( Color::String( unit.GetCurrentOrArmyColor() ) ) + " TURN";
+    snapshot.title = std::to_string( unit.GetCount() ) + " " + StringUpper( unit.GetName() );
+    snapshot.detail = "ATTACK " + std::to_string( unit.GetAttack() ) + "     DEFENSE " + std::to_string( unit.GetDefense() ) + "     DAMAGE "
+                      + std::to_string( unit.GetDamageMin() ) + "-" + std::to_string( unit.GetDamageMax() ) + "     SPEED "
+                      + StringUpper( unit.GetSpeedString() );
+
+    const uint32_t maximumHitPoints = unit.Monster::GetHitPoints() * unit.GetCount();
+    snapshot.resources = "HP " + std::to_string( unit.GetHitPoints() ) + "/" + std::to_string( maximumHitPoints );
+    snapshot.resources += unit.isArchers() ? "     SHOTS " + std::to_string( unit.GetShots() ) : "     MELEE";
+
+    const std::vector<Spell> spellEffects = unit.getCurrentSpellEffects();
+    if ( spellEffects.empty() ) {
+        snapshot.resources += "     NO ACTIVE EFFECTS";
+    }
+    else {
+        snapshot.resources += "     EFFECTS ";
+        constexpr size_t maximumVisibleEffects = 2;
+        for ( size_t index = 0; index < std::min( spellEffects.size(), maximumVisibleEffects ); ++index ) {
+            if ( index > 0 ) {
+                snapshot.resources += ", ";
+            }
+            snapshot.resources += StringUpper( spellEffects[index].GetName() );
+        }
+        if ( spellEffects.size() > maximumVisibleEffects ) {
+            snapshot.resources += " +" + std::to_string( spellEffects.size() - maximumVisibleEffects );
+        }
+    }
+
+    snapshot.resources += "\nNEXT";
+    if ( const std::shared_ptr<const Units> order = _thorOrderOfUnits.lock(); order ) {
+        auto currentPosition = std::find( order->begin(), order->end(), &unit );
+        if ( currentPosition != order->end() ) {
+            ++currentPosition;
+        }
+        else {
+            currentPosition = order->begin();
+        }
+
+        size_t visibleUnitCount = 0;
+        for ( ; currentPosition != order->end() && visibleUnitCount < 5; ++currentPosition ) {
+            const Unit * nextUnit = *currentPosition;
+            if ( nextUnit == nullptr || !nextUnit->isValid() || nextUnit == &unit ) {
+                continue;
+            }
+
+            snapshot.resources += visibleUnitCount == 0 ? "  " : "     ";
+            snapshot.resources += StringUpper( Color::String( nextUnit->GetCurrentOrArmyColor() ) );
+            snapshot.resources += " ";
+            snapshot.resources += std::to_string( nextUnit->GetCount() );
+            snapshot.resources += " ";
+            snapshot.resources += StringUpper( nextUnit->GetName() );
+            ++visibleUnitCount;
+        }
+        if ( visibleUnitCount == 0 ) {
+            snapshot.resources += "  END OF ROUND";
+        }
+    }
+    else {
+        snapshot.resources += "  UNAVAILABLE";
+    }
+
+    fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
 }
 
 fheroes2::Point Battle::Interface::getRelativeMouseCursorPos() const

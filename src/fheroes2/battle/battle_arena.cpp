@@ -463,6 +463,10 @@ void Battle::Arena::UnitTurn( const Units & orderHistory )
 
     DEBUG_LOG( DBG_BATTLE, DBG_TRACE, _currentUnit->String( true ) )
 
+    if ( _interface ) {
+        _interface->publishThorBattleInformation( *_currentUnit );
+    }
+
     if ( _currentUnit->isAffectedByMorale() ) {
         _currentUnit->SetRandomMorale( _randomGenerator );
     }
@@ -527,6 +531,10 @@ void Battle::Arena::UnitTurn( const Units & orderHistory )
             if ( _orderOfUnits ) {
                 // Applied action could kill someone or affect the speed of some unit, update the order of units
                 UpdateOrderOfUnits( *_attackingArmy, *_defendingArmy, _currentUnit, GetOppositeColor( _currentUnit->GetArmyColor() ), orderHistory, *_orderOfUnits );
+            }
+
+            if ( _interface && _currentUnit->isValid() ) {
+                _interface->publishThorBattleInformation( *_currentUnit );
             }
 
             if ( !BattleValid() ) {
