@@ -285,8 +285,8 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
-            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO ) && informationContext == gameContext && informationRevision >= 0
-                 && !informationTitle.isEmpty() ) {
+            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE ) && informationContext == gameContext
+                 && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 drawInformationCard( canvas, innerPanel );
             }
             else {

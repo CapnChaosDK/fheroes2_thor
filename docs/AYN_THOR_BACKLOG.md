@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Hero information card passed`
+Status: `Castle/Town information candidate installed; device validation pending`
 
 ### Snapshot bridge
 
@@ -221,8 +221,25 @@ Status: `passed`
 
 All five Hero information checks passed on the Thor, including rapid hero switching, value accuracy, readability, and context restoration.
 
+### Castle/Town information card
+
+- The shared card now shows the settlement name, Town or Castle type, faction, and visiting hero while the Castle screen is active.
+- Construction status distinguishes available construction, insufficient resources, construction already used today, missing requirements, and complete or otherwise blocked states.
+- Dwelling levels I through VI show the current recruitable creature count and normal weekly growth in `current/+growth` form. Unbuilt dwellings show `--`; Well and upgraded Well growth bonuses are included.
+- Existing Castle/Town semantic controls and the validated Adventure and Hero cards are unchanged.
+- Android build and lint pass through the required short `R:` mapping. The APK installed successfully and opened the command deck on display 4.
+
+### Castle/Town information device validation
+
+Status: `candidate installed`
+
+1. Open a Town and a Castle and compare the settlement name, type, and faction with the upper screen.
+2. Move a visiting hero into and out of the settlement and verify the hero name appears and clears without stale information.
+3. Compare dwelling levels I through VI with the upper screen: current recruitable counts, normal weekly growth, Well bonuses, and `--` for unbuilt dwellings.
+4. Verify construction status changes correctly when construction is available, resources are insufficient, or construction has already been used that day.
+5. Use Previous and Next, open and close a building or construction sub-dialog, and exit to the Adventure Map. Verify the correct card restores and all lower-screen and physical controls remain unchanged.
+
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
-- Selected castle summary and available creature growth.
 - Kingdom resources, player color, and current date.
 - Battle turn order and selected-unit details.
 - Explicit privacy/fog-of-war rules so the lower screen never exposes hidden information.
@@ -254,3 +271,14 @@ Status: `planned`
 - Thor startup cursor fix passed: controller/touch initialization enabled the software cursor, but the later display initializer overwrote it from the saved cursor-emulation setting. Thor display initialization now always retains software cursor emulation, while other platforms continue honoring their saved preference. Cold-start cursor visibility, controller buttons, touchscreen input, and both displays passed on the Thor without toggling away from Follow Standard mode.
 - Verify Snapdragon 865 and Snapdragon 8 Gen 2 Thor variants where hardware is available.
 - Document ADB diagnostics and capture context/action transitions under the `fheroes2-thor` log tag.
+
+## Fork maintenance and upstream synchronization
+
+Status: `planned`
+
+- Create or select a user-owned GitHub fork before publishing. The current `origin` points directly to the official `ihhub/fheroes2` repository for both fetch and push; change the final layout so `origin` is the maintained Thor fork and `upstream` is the official read-only source.
+- Keep Thor-specific changes isolated behind `TARGET_AYN_THOR`, in focused commits and dedicated bridge/UI files where practical, to reduce conflicts with upstream gameplay work.
+- Maintain a clean upstream-tracking branch and periodically integrate `upstream/master` into `ayn-thor-dual-screen` using a documented merge or rebase policy. Never rewrite a published validated branch without an explicit decision.
+- Before each upstream integration, record the last validated Thor commit and create a recoverable tag or backup branch. Review upstream Android, SDL/controller, rendering, resolution, JNI, and dialog-event changes for overlap.
+- After integration, run Android build and lint through the short `R:` path, inspect the Thor-specific diff, install on hardware, and repeat a compact dual-screen, controller, context-transition, and save/load smoke test.
+- Add an integration log describing the upstream commit, conflicts and resolutions, APK checksum, device variant, and validation result. Consider CI for compile/lint once the fork remote is established.

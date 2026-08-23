@@ -21,6 +21,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -56,6 +57,7 @@
 #include "math_tools.h"
 #include "monster.h"
 #include "mus.h"
+#include "race.h"
 #include "screen.h"
 #include "statusbar.h"
 #include "thor_ui.h"
@@ -260,6 +262,68 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
 
     fheroes2::Image surfaceHero;
 
+    const auto publishThorInformation = [this]() {
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::CASTLE;
+        snapshot.title = GetName();
+        snapshot.category = std::string( isCastle() ? "CASTLE     " : "TOWN     " ) + Race::String( GetRace() );
+
+        if ( const Heroes * visitingHero = GetHero(); visitingHero != nullptr ) {
+            snapshot.date = "VISITING HERO  " + visitingHero->GetName();
+        }
+        else {
+            snapshot.date = "NO VISITING HERO";
+        }
+
+        const BuildingStatus constructionStatus = isCastle() ? GetAllBuildingStatus( *this ) : CheckBuyBuilding( BUILD_CASTLE );
+        switch ( constructionStatus ) {
+        case BuildingStatus::ALLOW_BUILD:
+            snapshot.detail = "CONSTRUCTION  AVAILABLE";
+            break;
+        case BuildingStatus::LACK_RESOURCES:
+            snapshot.detail = "CONSTRUCTION  NEEDS RESOURCES";
+            break;
+        case BuildingStatus::NOT_TODAY:
+            snapshot.detail = "CONSTRUCTION  ALREADY USED TODAY";
+            break;
+        case BuildingStatus::REQUIRES_BUILD:
+            snapshot.detail = "CONSTRUCTION  REQUIREMENTS MISSING";
+            break;
+        default:
+            snapshot.detail = "CONSTRUCTION  COMPLETE OR BLOCKED";
+            break;
+        }
+
+        static constexpr std::array<uint32_t, maxNumOfDwellings> dwellings
+            = { DWELLING_MONSTER1, DWELLING_MONSTER2, DWELLING_MONSTER3, DWELLING_MONSTER4, DWELLING_MONSTER5, DWELLING_MONSTER6 };
+        static constexpr std::array<const char *, maxNumOfDwellings> dwellingLabels = { "I", "II", "III", "IV", "V", "VI" };
+
+        snapshot.resources = "AVAILABLE / GROWTH";
+        for ( size_t index = 0; index < dwellings.size(); ++index ) {
+            snapshot.resources += "     ";
+            snapshot.resources += dwellingLabels[index];
+            snapshot.resources += "  ";
+            if ( !isBuild( dwellings[index] ) ) {
+                snapshot.resources += "--";
+                continue;
+            }
+
+            uint32_t growth = Monster( GetRace(), GetActualDwelling( dwellings[index] ) ).GetGrown();
+            if ( isBuild( BUILD_WELL ) ) {
+                growth += GetGrownWell();
+            }
+            if ( index == 0 && isBuild( BUILD_WEL2 ) ) {
+                growth += GetGrownWel2();
+            }
+
+            snapshot.resources += std::to_string( getMonstersInDwelling( dwellings[index] ) );
+            snapshot.resources += "/+";
+            snapshot.resources += std::to_string( growth );
+        }
+
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    };
+
     auto constructionDialogHandler = [this, &display, &dialogRoi, &fadeBuilding, &hero, &surfaceHero, &alphaHero]() {
         const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
         uint32_t build = BUILD_NOTHING;
@@ -326,6 +390,8 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
             return result;
         }
     }
+
+    publishThorInformation();
 
     const std::string currentDate = getDateString();
 
@@ -496,6 +562,8 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
     Game::passAnimationDelay( Game::DelayType::CASTLE_AROUND_DELAY );
 
     while ( le.HandleEvents() && result == CastleDialogReturnValue::DoNothing ) {
+        publishThorInformation();
+
         bool needRedraw = false;
         bool needFadeIn = false;
         using ThorAction = fheroes2::thor::Action;
