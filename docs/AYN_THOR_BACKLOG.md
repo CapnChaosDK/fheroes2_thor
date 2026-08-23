@@ -4,6 +4,15 @@ This file is the maintained backlog for Thor-specific work. Update the status an
 
 Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
+## Latest release checkpoint
+
+- `thor-v0.3.0` was published on 2026-08-23 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.3.0
+- Source commit: `e8c56affbb9581bebee357ddce6da16450afd744`.
+- APK: `fheroes2-thor-v0.3.0-debug.apk`.
+- APK SHA-256: `A41913CD3CB50BCDD30BBB135E7204F3FCD028A49B7C054A5A8F0439D2FCBB07`.
+- The release contains the hardware-validated navigable Load Game and Scenario Setup slices. The repository README documents the AYN Thor physical-control scheme.
+
 ## Agreed product decisions
 
 - The lower display will become context-sensitive.
@@ -293,7 +302,7 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 - Android build and lint pass through the required short `R:` mapping. The APK installed and cold-launched successfully on the Thor. Live lower-display checks verified the New Game, Multiplayer, and Hot Seat layouts and the complete Back chain from Hot Seat to Multiplayer to New Game to Main Menu. Campaign was correctly muted for the current asset set; selection actions and the asset-dependent Campaign path remain pending manual validation.
 - User validation passed Standard, Battle Only, New Game Settings, all Hot Seat player counts, rapid-tap rejection, and physical, mouse, and touchscreen controls. Main Menu Settings initially exposed a missing temporary Dialog context; the correction scopes that settings window as Dialog and restores Main Menu on close. A live lower-display check and the focused user retest both passed Main Menu to Settings Dialog and one Cancel back to Main Menu. The New Game first slice is hardware-validated for the current asset configuration.
 
-### Load Game implementation candidate
+### Load Game implementation and validation
 
 - Load Game is flattened to Standard, Campaign, Hot Seat, and Back on both displays; the redundant Multiplayer to Hot Seat intermediate menu has been removed.
 - The four lower-screen choices use a balanced 2 by 2 Heroes II-styled layout.
@@ -311,6 +320,15 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 - Player editing remains the next Scenario Setup slice: previous/next player, control type, faction, and handicap controls will be planned separately after this controls-and-information slice is hardware-validated.
 - Android build and lint passed through the required short `R:` mapping, and the APK installed successfully on the connected Thor. Live checks verified the Standard layout, information card, difficulty and rating refresh, action-mask handling at and beyond identifier 63, and Select Map cancellation restoring Scenario Setup exactly once.
 - User hardware validation passed all five focused checks: layout and border readability; all five difficulty choices and immediate two-screen refresh; Select Map selection, cancellation, and non-stacking restoration; Back plus Hot Seat player-count context; and single-shot Start with physical-controller, upper-touchscreen, and mouse regression coverage.
+
+### Scenario Setup player editing
+
+Status: `planned`; an incomplete, uncommitted scaffold is present in the working tree and must be preserved.
+
+- Intended controls are Previous Player, Next Player, Human/AI, Previous Faction, Next Faction, and Handicap.
+- The current scaffold only adds shared semantic identifiers, context validation, and Android button definitions. It does not yet consume these actions in Scenario Setup or implement availability, redraw, information refresh, or tests.
+- Before implementation continues, inspect the existing upper-screen `PlayersInfo` rules, propose exact Standard and Hot Seat behavior with focused acceptance tests, and obtain user approval.
+- Build, lint, installation, and Thor hardware validation are still required. Do not describe this slice as implemented or validated until those checks pass.
 
 ### Later menu slices
 
