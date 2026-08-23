@@ -323,12 +323,24 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 
 ### Scenario Setup player editing
 
-Status: `planned`; an incomplete, uncommitted scaffold is present in the working tree and must be preserved.
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-23.
 
-- Intended controls are Previous Player, Next Player, Human/AI, Previous Faction, Next Faction, and Handicap.
-- The current scaffold only adds shared semantic identifiers, context validation, and Android button definitions. It does not yet consume these actions in Scenario Setup or implement availability, redraw, information refresh, or tests.
-- Before implementation continues, inspect the existing upper-screen `PlayersInfo` rules, propose exact Standard and Hot Seat behavior with focused acceptance tests, and obtain user approval.
-- Build, lint, installation, and Thor hardware validation are still required. Do not describe this slice as implemented or validated until those checks pass.
+- Previous Player and Next Player cycle through the scenario's player positions, wrap at either end, highlight the selected upper-screen player, and refresh the lower information card.
+- In Standard games, Set Human moves the sole human assignment to the selected human-capable position and carries its handicap, matching the existing upper-screen rules. It is unavailable for the current human and computer-only positions.
+- In Hot Seat games, Select / Swap uses the existing two-position swap rules instead of independently toggling Human/AI. This preserves the chosen human-player count; selecting the same position cancels and invalid targets are muted.
+- Previous Faction and Next Faction are available only for a player position whose scenario race is changeable. Handicap cycles None, Mild, and Severe only for a human-controlled position.
+- The information card retains the map, human-player count, difficulty, and rating while adding the selected player's name, color, control, faction, and handicap. A pending Hot Seat swap identifies its source position.
+- Existing Select Map, difficulty, Start, Back, modal restoration, mouse, touchscreen, physical-controller, hotkey, and text-support paths remain in place.
+- Android build and lint pass through the required short `R:` mapping. The candidate APK installed successfully on the connected Thor and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
+- All five focused checks passed on the Thor: wrapped player navigation and synchronized upper/lower selection; Standard human-position transfer and handicap retention; fixed-count Hot Seat swapping, cancellation, and invalid-target rejection; faction and handicap availability; and regression coverage for Select Map, difficulty, Start, Back, rapid taps, physical controls, upper touchscreen, and mouse.
+
+#### Focused player-editing validation
+
+1. Cycle players in both directions, including wraparound, and verify the upper highlight and lower information always identify the same player.
+2. In Standard, transfer the human position between valid colors. Verify the current-human and computer-only targets are muted and the handicap follows the human assignment.
+3. In Hot Seat, swap a human and flexible AI position with the two-step flow. Verify the human count remains fixed, selecting the source again cancels, and invalid targets ignore input.
+4. Cycle both directions through factions on a changeable position and verify fixed-faction controls are muted. Cycle all three handicap states and verify AI positions cannot receive a handicap.
+5. Exercise Select Map, all difficulties, Start, Back, rapid taps, physical controls, upper touchscreen, and mouse to confirm the previously validated Scenario Setup behavior remains intact.
 
 ### Later menu slices
 

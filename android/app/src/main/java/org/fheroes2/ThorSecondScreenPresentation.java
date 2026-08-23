@@ -112,6 +112,12 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_SCENARIO_DIFFICULTY_EXPERT = 64;
     private static final int ACTION_SCENARIO_DIFFICULTY_IMPOSSIBLE = 65;
     private static final int ACTION_SCENARIO_START = 66;
+    private static final int ACTION_SCENARIO_PREVIOUS_PLAYER = 67;
+    private static final int ACTION_SCENARIO_NEXT_PLAYER = 68;
+    private static final int ACTION_SCENARIO_PLAYER_CONTROL = 69;
+    private static final int ACTION_SCENARIO_PREVIOUS_FACTION = 70;
+    private static final int ACTION_SCENARIO_NEXT_FACTION = 71;
+    private static final int ACTION_SCENARIO_HANDICAP = 72;
 
     interface KeySender
     {
@@ -222,7 +228,7 @@ final class ThorSecondScreenPresentation extends Presentation
             final boolean contextChanged = gameContext != context;
             gameContext = context;
             enabledActions = requestedEnabledActions;
-            if ( contextChanged ) {
+            if ( contextChanged || ( informationChanged && gameContext == CONTEXT_SCENARIO_SETUP ) ) {
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
             }
@@ -597,6 +603,13 @@ final class ThorSecondScreenPresentation extends Presentation
             case CONTEXT_SCENARIO_SETUP:
                 contextTitle = "SCENARIO SETUP";
                 addAction( "SELECT MAP", ACTION_SCENARIO_SELECT_MAP, KeyEvent.KEYCODE_M );
+                addAction( "PREV PLAYER", ACTION_SCENARIO_PREVIOUS_PLAYER, KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT PLAYER", ACTION_SCENARIO_NEXT_PLAYER, KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "HOT SEAT".equals( informationCategory ) ? "SELECT / SWAP" : "SET HUMAN", ACTION_SCENARIO_PLAYER_CONTROL,
+                           KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PREV FACTION", ACTION_SCENARIO_PREVIOUS_FACTION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT FACTION", ACTION_SCENARIO_NEXT_FACTION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "HANDICAP", ACTION_SCENARIO_HANDICAP, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "EASY", ACTION_SCENARIO_DIFFICULTY_EASY, KeyEvent.KEYCODE_1 );
                 addAction( "NORMAL", ACTION_SCENARIO_DIFFICULTY_NORMAL, KeyEvent.KEYCODE_2 );
                 addAction( "HARD", ACTION_SCENARIO_DIFFICULTY_HARD, KeyEvent.KEYCODE_3 );

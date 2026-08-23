@@ -206,7 +206,11 @@ void Interface::PlayersInfo::RedrawInfo( const bool displayInGameInfo ) const
         fheroes2::Blit( playerIconShadow, display, info.playerTypeRoi.x - 5, info.playerTypeRoi.y + 3 );
 
         fheroes2::Blit( playerIcon, display, info.playerTypeRoi.x, info.playerTypeRoi.y );
-        if ( currentSelectedPlayer != nullptr && info.player == currentSelectedPlayer ) {
+        bool isSelected = info.player == currentSelectedPlayer;
+#if defined( TARGET_AYN_THOR )
+        isSelected = isSelected || info.player == highlightedPlayer;
+#endif
+        if ( isSelected ) {
             // TODO: add an overloaded DrawBorder() function to draw a border inside an image.
             fheroes2::Image selection( playerIcon.width(), playerIcon.height() );
             selection.reset();

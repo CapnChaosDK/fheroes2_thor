@@ -56,10 +56,16 @@ namespace Interface
             currentSelectedPlayer = nullptr;
         }
 
+        void setHighlightedPlayer( Player * player )
+        {
+            highlightedPlayer = player;
+        }
+
         bool QueueEventProcessing();
 
         bool readOnlyEventProcessing();
 
         Player * currentSelectedPlayer{ nullptr };
+        Player * highlightedPlayer{ nullptr };
     };
 }

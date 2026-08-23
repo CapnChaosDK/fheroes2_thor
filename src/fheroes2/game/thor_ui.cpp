@@ -185,6 +185,12 @@ namespace
         case Action::SCENARIO_DIFFICULTY_EXPERT:
         case Action::SCENARIO_DIFFICULTY_IMPOSSIBLE:
         case Action::SCENARIO_START:
+        case Action::SCENARIO_PREVIOUS_PLAYER:
+        case Action::SCENARIO_NEXT_PLAYER:
+        case Action::SCENARIO_PLAYER_CONTROL:
+        case Action::SCENARIO_PREVIOUS_FACTION:
+        case Action::SCENARIO_NEXT_FACTION:
+        case Action::SCENARIO_HANDICAP:
         case Action::MENU_BACK:
             return true;
         default:

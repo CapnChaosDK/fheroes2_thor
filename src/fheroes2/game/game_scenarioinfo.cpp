@@ -262,6 +262,26 @@ namespace
         Interface::PlayersInfo playersInfo;
         playersInfo.UpdateInfo( players, pointOpponentInfo, pointClassInfo );
 
+        const bool isHotSeatGame = humanPlayerCount > 1;
+        Player * selectedPlayer = nullptr;
+        Player * thorSwapSource = nullptr;
+        const auto resetThorPlayerSelection = [&players, &playersInfo, &selectedPlayer, &thorSwapSource]() {
+            selectedPlayer = nullptr;
+            for ( Player * player : players ) {
+                if ( player != nullptr && player->GetControl() == CONTROL_HUMAN ) {
+                    selectedPlayer = player;
+                    break;
+                }
+            }
+            if ( selectedPlayer == nullptr && !players.empty() ) {
+                selectedPlayer = players.front();
+            }
+
+            thorSwapSource = nullptr;
+            playersInfo.setHighlightedPlayer( selectedPlayer );
+        };
+        resetThorPlayerSelection();
+
         DrawScenarioStaticInfo( roi );
         RedrawDifficultyInfo( pointDifficultyInfo );
 
@@ -330,27 +350,106 @@ namespace
         levelCursor.redraw();
 
         using ThorAction = fheroes2::thor::Action;
-        constexpr fheroes2::thor::ActionMask scenarioThorActions
+        constexpr fheroes2::thor::ActionMask baseScenarioThorActions
             = fheroes2::thor::actionMask( ThorAction::SCENARIO_SELECT_MAP ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_EASY )
               | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_NORMAL ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_HARD )
               | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_EXPERT ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_IMPOSSIBLE )
               | fheroes2::thor::actionMask( ThorAction::SCENARIO_START ) | fheroes2::thor::actionMask( ThorAction::MENU_BACK );
 
-        const auto publishThorInformation = [&conf, humanPlayerCount]() {
+        const auto isValidHotSeatSwap = [&conf]( const Player * source, const Player * target ) {
+            if ( source == nullptr || target == nullptr ) {
+                return false;
+            }
+            if ( source == target || source->isControlAI() == target->isControlAI() ) {
+                return true;
+            }
+
+            const PlayerColorsSet flexibleColors = conf.getCurrentMapInfo().AllowCompHumanColors();
+            return ( flexibleColors & source->GetColor() ) && ( flexibleColors & target->GetColor() );
+        };
+
+        const auto getScenarioThorActions = [&conf, &isValidHotSeatSwap, &players, &selectedPlayer, &thorSwapSource, isHotSeatGame]() {
+            fheroes2::thor::ActionMask actions = baseScenarioThorActions;
+            if ( players.size() > 1 ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::SCENARIO_PREVIOUS_PLAYER )
+                           | fheroes2::thor::actionMask( ThorAction::SCENARIO_NEXT_PLAYER );
+            }
+
+            if ( selectedPlayer == nullptr ) {
+                return actions;
+            }
+
+            if ( isHotSeatGame ) {
+                if ( players.size() > 1 && ( thorSwapSource == nullptr || isValidHotSeatSwap( thorSwapSource, selectedPlayer ) ) ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::SCENARIO_PLAYER_CONTROL );
+                }
+            }
+            else if ( selectedPlayer->GetControl() != CONTROL_HUMAN && ( conf.getCurrentMapInfo().colorsAvailableForHumans & selectedPlayer->GetColor() ) ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::SCENARIO_PLAYER_CONTROL );
+            }
+
+            if ( conf.getCurrentMapInfo().AllowChangeRace( selectedPlayer->GetColor() ) ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::SCENARIO_PREVIOUS_FACTION )
+                           | fheroes2::thor::actionMask( ThorAction::SCENARIO_NEXT_FACTION );
+            }
+            if ( !selectedPlayer->isControlAI() ) {
+                actions |= fheroes2::thor::actionMask( ThorAction::SCENARIO_HANDICAP );
+            }
+
+            return actions;
+        };
+
+        const auto getHandicapName = []( const Player::HandicapStatus status ) {
+            switch ( status ) {
+            case Player::HandicapStatus::NONE:
+                return "NO HANDICAP";
+            case Player::HandicapStatus::MILD:
+                return "MILD HANDICAP";
+            case Player::HandicapStatus::SEVERE:
+                return "SEVERE HANDICAP";
+            default:
+                assert( 0 );
+                return "UNKNOWN HANDICAP";
+            }
+        };
+
+        const auto publishThorInformation = [&conf, &getHandicapName, &selectedPlayer, &thorSwapSource, humanPlayerCount, isHotSeatGame]() {
             fheroes2::thor::InformationSnapshot snapshot;
             snapshot.context = fheroes2::thor::UiContext::SCENARIO_SETUP;
-            snapshot.category = "SCENARIO";
-            snapshot.title = conf.getCurrentMapInfo().name;
-            snapshot.detail
-                = std::to_string( humanPlayerCount ) + ( humanPlayerCount == 1 ? " PLAYER" : " PLAYERS" ) + "     " + Difficulty::String( Game::getDifficulty() );
+            snapshot.category = isHotSeatGame ? "HOT SEAT" : "STANDARD";
             snapshot.date = "RATING  " + std::to_string( Game::GetRating() ) + "%";
-            snapshot.resources = "SELECT MAP OR ADJUST DIFFICULTY";
+
+            if ( selectedPlayer != nullptr ) {
+                snapshot.title = selectedPlayer->GetName() + " - " + Color::String( selectedPlayer->GetColor() );
+                snapshot.detail = std::string( selectedPlayer->GetControl() == CONTROL_HUMAN ? "HUMAN" : "AI" ) + "     "
+                                  + Race::String( selectedPlayer->GetRace() ) + "     " + getHandicapName( selectedPlayer->getHandicapStatus() );
+                if ( thorSwapSource != nullptr ) {
+                    snapshot.detail += "     SWAP FROM " + std::string( Color::String( thorSwapSource->GetColor() ) );
+                }
+            }
+            else {
+                snapshot.title = conf.getCurrentMapInfo().name;
+            }
+
+            snapshot.resources = conf.getCurrentMapInfo().name + "     " + Difficulty::String( Game::getDifficulty() ) + "     "
+                                 + std::to_string( humanPlayerCount ) + ( humanPlayerCount == 1 ? " PLAYER" : " PLAYERS" );
             fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
         };
 
-        const auto restoreThorScenarioContext = [&publishThorInformation]() {
+        const auto redrawThorPlayerInfo = [&display, &getScenarioThorActions, &handicapArea, &opponentsArea, &classArea, &playersInfo, &publishThorInformation,
+                                           &roi]() {
+            opponentsArea.restore();
+            classArea.restore();
+            handicapArea.restore();
+            playersInfo.RedrawInfo( false );
+            display.render( roi );
+            fheroes2::thor::setEnabledActions( getScenarioThorActions() );
+            publishThorInformation();
+        };
+
+        const auto restoreThorScenarioContext = [&getScenarioThorActions, &publishThorInformation]() {
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::SCENARIO_SETUP );
-            fheroes2::thor::setEnabledActions( scenarioThorActions );
+            fheroes2::thor::setEnabledActions( getScenarioThorActions() );
             publishThorInformation();
         };
 
@@ -428,6 +527,7 @@ namespace
                     playersInfo.UpdateInfo( players, pointOpponentInfo, pointClassInfo );
 
                     playersInfo.resetSelection();
+                    resetThorPlayerSelection();
                     playersInfo.RedrawInfo( false );
 
                     ratingRoi = RedrawRatingInfo( roi.getPosition(), roi.width );
@@ -454,6 +554,80 @@ namespace
                 // Fade-out screen before starting a scenario.
                 fheroes2::fadeOutDisplay();
                 break;
+            }
+
+            bool redrawPlayerInfo = false;
+            if ( requestedThorAction == ThorAction::SCENARIO_PREVIOUS_PLAYER || requestedThorAction == ThorAction::SCENARIO_NEXT_PLAYER ) {
+                const auto selectedIter = std::find( players.begin(), players.end(), selectedPlayer );
+                const size_t selectedIndex = selectedIter == players.end() ? 0 : static_cast<size_t>( selectedIter - players.begin() );
+                if ( !players.empty() ) {
+                    const size_t nextIndex = requestedThorAction == ThorAction::SCENARIO_PREVIOUS_PLAYER
+                                                 ? ( selectedIndex + players.size() - 1 ) % players.size()
+                                                 : ( selectedIndex + 1 ) % players.size();
+                    selectedPlayer = players[nextIndex];
+                    playersInfo.setHighlightedPlayer( selectedPlayer );
+                    redrawPlayerInfo = true;
+                }
+            }
+            else if ( requestedThorAction == ThorAction::SCENARIO_PLAYER_CONTROL && selectedPlayer != nullptr ) {
+                if ( isHotSeatGame ) {
+                    if ( thorSwapSource == nullptr ) {
+                        thorSwapSource = selectedPlayer;
+                    }
+                    else if ( thorSwapSource == selectedPlayer ) {
+                        thorSwapSource = nullptr;
+                    }
+                    else if ( isValidHotSeatSwap( thorSwapSource, selectedPlayer ) && playersInfo.SwapPlayers( *thorSwapSource, *selectedPlayer ) ) {
+                        thorSwapSource = nullptr;
+                    }
+                }
+                else if ( selectedPlayer->GetControl() != CONTROL_HUMAN
+                          && ( conf.getCurrentMapInfo().colorsAvailableForHumans & selectedPlayer->GetColor() ) ) {
+                    const PlayerColorsSet humanColors = players.GetColors( CONTROL_HUMAN, true );
+                    if ( Color::Count( humanColors ) == 1 ) {
+                        const PlayerColor currentColor = static_cast<PlayerColor>( humanColors );
+                        Player * currentPlayer = Players::Get( currentColor );
+                        assert( currentPlayer != nullptr );
+
+                        const Player::HandicapStatus handicap = currentPlayer->getHandicapStatus();
+                        Players::SetPlayerControl( currentColor, CONTROL_AI | CONTROL_HUMAN );
+                        Players::SetPlayerControl( selectedPlayer->GetColor(), CONTROL_HUMAN );
+                        selectedPlayer->setHandicapStatus( handicap );
+                        currentPlayer->setHandicapStatus( Player::HandicapStatus::NONE );
+                    }
+                }
+                redrawPlayerInfo = true;
+            }
+            else if ( requestedThorAction == ThorAction::SCENARIO_PREVIOUS_FACTION && selectedPlayer != nullptr
+                      && conf.getCurrentMapInfo().AllowChangeRace( selectedPlayer->GetColor() ) ) {
+                selectedPlayer->SetRace( Race::getPreviousRace( selectedPlayer->GetRace() ) );
+                redrawPlayerInfo = true;
+            }
+            else if ( requestedThorAction == ThorAction::SCENARIO_NEXT_FACTION && selectedPlayer != nullptr
+                      && conf.getCurrentMapInfo().AllowChangeRace( selectedPlayer->GetColor() ) ) {
+                selectedPlayer->SetRace( Race::getNextRace( selectedPlayer->GetRace() ) );
+                redrawPlayerInfo = true;
+            }
+            else if ( requestedThorAction == ThorAction::SCENARIO_HANDICAP && selectedPlayer != nullptr && !selectedPlayer->isControlAI() ) {
+                switch ( selectedPlayer->getHandicapStatus() ) {
+                case Player::HandicapStatus::NONE:
+                    selectedPlayer->setHandicapStatus( Player::HandicapStatus::MILD );
+                    break;
+                case Player::HandicapStatus::MILD:
+                    selectedPlayer->setHandicapStatus( Player::HandicapStatus::SEVERE );
+                    break;
+                case Player::HandicapStatus::SEVERE:
+                    selectedPlayer->setHandicapStatus( Player::HandicapStatus::NONE );
+                    break;
+                default:
+                    assert( 0 );
+                    break;
+                }
+                redrawPlayerInfo = true;
+            }
+
+            if ( redrawPlayerInfo ) {
+                redrawThorPlayerInfo();
             }
 
             int32_t requestedDifficulty = -1;
@@ -489,25 +663,36 @@ namespace
                     selectDifficulty( index );
                 }
                 // playersInfo
-                else if ( playersInfo.QueueEventProcessing() ) {
-                    opponentsArea.restore();
-                    classArea.restore();
-                    handicapArea.restore();
-                    playersInfo.RedrawInfo( false );
+                else {
+                    Player * clickedPlayer = playersInfo.GetFromOpponentClick( le.getMouseCursorPos() );
+                    if ( clickedPlayer == nullptr ) {
+                        clickedPlayer = playersInfo.GetFromOpponentNameClick( le.getMouseCursorPos() );
+                    }
+                    if ( clickedPlayer == nullptr ) {
+                        clickedPlayer = playersInfo.GetFromClassClick( le.getMouseCursorPos() );
+                    }
+                    if ( clickedPlayer == nullptr ) {
+                        clickedPlayer = playersInfo.getPlayerFromHandicapRoi( le.getMouseCursorPos() );
+                    }
 
-                    display.render( roi );
-                    publishThorInformation();
+                    if ( playersInfo.QueueEventProcessing() ) {
+                        if ( clickedPlayer != nullptr ) {
+                            selectedPlayer = clickedPlayer;
+                            thorSwapSource = nullptr;
+                            playersInfo.setHighlightedPlayer( selectedPlayer );
+                        }
+                        redrawThorPlayerInfo();
+                    }
                 }
             }
             else if ( ( le.isMouseWheelUp() || le.isMouseWheelDown() ) && playersInfo.QueueEventProcessing() ) {
+                if ( Player * hoveredPlayer = playersInfo.GetFromClassClick( le.getMouseCursorPos() ) ) {
+                    selectedPlayer = hoveredPlayer;
+                    thorSwapSource = nullptr;
+                    playersInfo.setHighlightedPlayer( selectedPlayer );
+                }
                 playersInfo.resetSelection();
-                opponentsArea.restore();
-                classArea.restore();
-                handicapArea.restore();
-                playersInfo.RedrawInfo( false );
-
-                display.render( roi );
-                publishThorInformation();
+                redrawThorPlayerInfo();
             }
 
             if ( le.isMouseRightButtonPressedInArea( roi ) ) {
