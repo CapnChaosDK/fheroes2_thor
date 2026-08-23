@@ -74,7 +74,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 
 ## Milestone 2: semantic actions
 
-Status: `Castle/Town candidate built; device validation pending`
+Status: `Castle/Town candidate installed; device validation pending`
 
 - Replace fragile simulated hotkeys where appropriate with a Java to native semantic-action queue.
 - Process actions on the game/SDL thread; never mutate engine state directly from the Android UI thread.
@@ -151,7 +151,7 @@ Checks 1 through 4 passed on the Thor. Upgrade was removed from the general Hero
 - Navigation follows the native town buttons. Building actions are enabled only when the corresponding building exists; Build works for either a town tent or castle construction screen.
 - Army transfers require a visiting hero and a non-empty source army. Upgrade requires selecting an eligible garrison or visiting-hero stack, the matching upgraded dwelling, and sufficient funds.
 - Opening a building or construction sub-screen temporarily switches the command deck to Dialog, preventing queued Castle actions from firing after that sub-screen closes.
-- Android build and lint pass through the required short `R:` drive mapping.
+- Android build and lint pass through the required short `R:` drive mapping. The candidate installed successfully on the paired Thor and opened the command deck on display 4.
 
 ### Castle/Town device validation
 
