@@ -1555,7 +1555,8 @@ void Battle::Interface::publishThorBattleInformation( const Unit & unit ) const
                       + StringUpper( unit.GetSpeedString() );
 
     const uint32_t maximumHitPoints = unit.Monster::GetHitPoints() * unit.GetCount();
-    snapshot.resources = "HP " + std::to_string( unit.GetHitPoints() ) + "/" + std::to_string( maximumHitPoints );
+    snapshot.resources = "UNIT HP " + std::to_string( unit.GetHitPointsLeft() ) + "/" + std::to_string( unit.Monster::GetHitPoints() ) + "     STACK HP "
+                         + std::to_string( unit.GetHitPoints() ) + "/" + std::to_string( maximumHitPoints );
     snapshot.resources += unit.isArchers() ? "     SHOTS " + std::to_string( unit.GetShots() ) : "     MELEE";
 
     const std::vector<Spell> spellEffects = unit.getCurrentSpellEffects();
@@ -3697,6 +3698,8 @@ void Battle::Interface::FadeArena( const bool clearMessageLog )
 
 void Battle::Interface::_openBattleSettingsDialog()
 {
+    const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     const Settings & conf = Settings::Get();
     const bool showGrid = conf.BattleShowGrid();
     const bool isTurnOrderInsideWindow{ TurnOrder::isRenderingInsideBattlefieldWindow( border.GetRect() ) };

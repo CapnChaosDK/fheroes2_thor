@@ -243,7 +243,7 @@ All five Castle/Town information checks passed on the Thor, including settlement
 
 ### Battle information card
 
-- The Battle card shows the round, acting army color, active creature stack count and name, Attack, Defense, total damage range, current speed, stack hit points, remaining shots, and up to two active spell effects.
+- The Battle card shows the round, acting army color, active creature stack count and name, Attack, Defense, total damage range, current speed, the wounded/front creature's hit points, aggregate surviving-stack hit points, remaining shots, and up to two active spell effects.
 - The lower line shows the next five valid stacks using the battle engine's existing turn-order calculation, including each stack's current side, count, and creature name.
 - Snapshots refresh at the start of a unit turn and after applied actions that can change the active stack or turn order. Unchanged snapshots do not redraw the Android presentation.
 - Existing Battle semantic actions, enabled states, confirmation handling, and physical controls are unchanged. Target selection and damage prediction remain outside this read-only slice.
@@ -258,6 +258,8 @@ Status: `candidate installed`
 3. Compare the next-five-stack line with the upper turn-order display, then use Wait/Defend and advance to another round to verify ordering and round updates.
 4. Take damage, lose a stack, fire a ranged attack, and apply a beneficial or harmful spell. Verify hit points, shots, effects, and turn order refresh without stale values.
 5. Open and close Battle Options, spell selection, and a confirmation dialog. Verify the Battle card restores, all text remains inside its borders, and lower-screen and physical controls remain unchanged.
+
+Checks 1, 3, and 4 passed on the Thor. Check 2 initially exposed ambiguous aggregate-only hit points; the corrected candidate shows both `UNIT HP current/full` and `STACK HP current/full`. Check 5 exposed that Battle Options did not enter the Dialog context, allowing repeated lower-screen actions to queue and stack settings windows. Battle Options now uses a scoped Dialog context, which clears queued Battle actions and restores the Battle context after one close. Corrected checks 2 and 5 are pending device validation.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Kingdom resources, player color, and current date.
