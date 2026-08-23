@@ -285,8 +285,9 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
-            if ( gameContext == CONTEXT_ADVENTURE_MAP && informationContext == CONTEXT_ADVENTURE_MAP && informationRevision >= 0 && !informationTitle.isEmpty() ) {
-                drawAdventureInformation( canvas, innerPanel );
+            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO ) && informationContext == gameContext && informationRevision >= 0
+                 && !informationTitle.isEmpty() ) {
+                drawInformationCard( canvas, innerPanel );
             }
             else {
                 paint.setTextAlign( Paint.Align.CENTER );
@@ -303,7 +304,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
         }
 
-        private void drawAdventureInformation( final Canvas canvas, final RectF panel )
+        private void drawInformationCard( final Canvas canvas, final RectF panel )
         {
             final float horizontalPadding = 26f;
             final float contentWidth = panel.width() - horizontalPadding * 2;

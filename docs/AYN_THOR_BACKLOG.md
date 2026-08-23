@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Adventure Map information card passed`
+Status: `Hero information candidate installed; device validation pending`
 
 ### Snapshot bridge
 
@@ -201,6 +201,23 @@ Status: `passed`
 5. Open and close a nested dialog, then end the turn. Verify no stale information appears during transitions and all existing lower-screen and physical controls still work.
 
 All five Adventure information checks passed on the Thor, including readability and context transitions.
+
+### Hero information card
+
+- The shared card now shows hero name, level and class, Attack, Defense, Power, Knowledge, movement, mana, morale, and luck while the Hero screen is active.
+- A snapshot is published before the Hero dialog fade-in and refreshed when values change, preventing the previous hero's information from lingering when Previous or Next switches heroes.
+- Existing Hero semantic controls and the validated Adventure card are unchanged. Portrait, army, and artifact rendering remain deferred because this text-only slice does not transfer proprietary artwork.
+- Android build and lint pass through the required short `R:` mapping. The APK installed successfully and opened the command deck on display 4.
+
+### Hero information device validation
+
+Status: `planned`
+
+1. Open a Hero and compare name, level/class, and all four primary skills with the upper screen.
+2. Use Previous and Next repeatedly and verify every value switches once without showing stale information from the prior hero.
+3. Compare movement and mana with the Adventure card, including a hero whose values are not full.
+4. Verify positive, neutral, or negative morale and luck values match the upper Hero screen and all text remains inside the panel borders.
+5. Close and reopen the Hero screen and verify the Adventure and Hero cards restore correctly while all lower-screen and physical controls remain unchanged.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Selected castle summary and available creature growth.

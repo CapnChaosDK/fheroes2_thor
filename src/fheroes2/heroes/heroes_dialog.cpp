@@ -80,6 +80,21 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
     // or from the Game Area that will set the appropriate cursor after this dialog is closed.
     Cursor::Get().SetThemes( Cursor::POINTER );
 
+    const auto publishThorInformation = [this]() {
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::HERO;
+        snapshot.title = GetName();
+        snapshot.category = "LEVEL  " + std::to_string( GetLevel() ) + "     " + Race::String( GetRace() );
+        snapshot.date = "ATTACK  " + std::to_string( GetAttack() ) + "     DEFENSE  " + std::to_string( GetDefense() ) + "     POWER  "
+                        + std::to_string( GetPower() ) + "     KNOWLEDGE  " + std::to_string( GetKnowledge() );
+        snapshot.detail = "MOVEMENT  " + std::to_string( GetMovePoints() ) + " / " + std::to_string( GetMaxMovePoints() ) + "     MANA  "
+                          + std::to_string( GetSpellPoints() ) + " / " + std::to_string( GetMaxSpellPoints() );
+        snapshot.resources = "MORALE  " + std::to_string( GetMorale() ) + "     LUCK  " + std::to_string( GetLuck() );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    };
+
+    publishThorInformation();
+
     fheroes2::Display & display = fheroes2::Display::instance();
 
     fheroes2::Rect dialogRoi;
@@ -435,6 +450,8 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
 
     // dialog menu loop
     while ( le.HandleEvents() ) {
+        publishThorInformation();
+
         fheroes2::thor::ActionMask enabledThorActions = fheroes2::thor::actionMask( ThorAction::HERO_CLOSE );
         if ( buttonPrevHero.isEnabled() ) {
             enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_PREVIOUS );
