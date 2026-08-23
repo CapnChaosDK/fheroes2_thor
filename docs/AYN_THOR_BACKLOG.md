@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Castle/Town information candidate installed; device validation pending`
+Status: `Castle/Town information card passed`
 
 ### Snapshot bridge
 
@@ -231,13 +231,15 @@ All five Hero information checks passed on the Thor, including rapid hero switch
 
 ### Castle/Town information device validation
 
-Status: `candidate installed`
+Status: `passed`
 
 1. Open a Town and a Castle and compare the settlement name, type, and faction with the upper screen.
 2. Move a visiting hero into and out of the settlement and verify the hero name appears and clears without stale information.
 3. Compare dwelling levels I through VI with the upper screen: current recruitable counts, normal weekly growth, Well bonuses, and `--` for unbuilt dwellings.
 4. Verify construction status changes correctly when construction is available, resources are insufficient, or construction has already been used that day.
 5. Use Previous and Next, open and close a building or construction sub-dialog, and exit to the Adventure Map. Verify the correct card restores and all lower-screen and physical controls remain unchanged.
+
+All five Castle/Town information checks passed on the Thor, including settlement and visiting-hero updates, dwelling availability and growth, construction status, context restoration, and control regression coverage.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Kingdom resources, player color, and current date.
