@@ -14,19 +14,23 @@ The implementation uses Android's public multi-display APIs. It does not hardcod
 
 ## Lower-screen controls
 
-The Heroes II-styled command deck follows the active game context. Its upper section is reserved for a future information panel; the current milestone provides controls only.
+The Heroes II-styled command deck follows the active game context. Its upper information panel shows game-visible summaries for the Adventure Map, Hero, Castle/Town, Battle, and Scenario Setup contexts.
 
 | Context | Available actions |
 | --- | --- |
 | Main menu | New Game, Load Game, Settings, High Scores, Credits, Quit |
-| Scenario setup | Select Map, five difficulty levels, Start, Back |
+| New Game menus | Standard, Campaign, Multiplayer, Battle Only, Settings, campaign type, Hot Seat player count, Back |
+| Load Game | Standard, Campaign, Hot Seat, Back; unavailable categories are muted |
+| Scenario setup | Select Map, player navigation and assignment, faction, handicap, five difficulty levels, Start, Back |
 | Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
-| Hero | Previous, Next, Dismiss, Upgrade, Split Half, Split One, Join, Swap, Close |
-| Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Exit |
+| Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
+| Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Upgrade, Exit |
 | Battle | Spell, Wait/Defend, Auto, Quick Combat, Retreat, Surrender, Options, Turn Order |
 
 Context is published by the native game engine and polled by the Android Presentation. Temporary message dialogs override the current layout and restore the underlying context when they close.
+
+Scenario Setup player editing follows the native game rules. Standard games retain exactly one human position. Hot Seat uses a two-step Select/Swap flow so the chosen number of human players cannot change. Faction and handicap actions are muted when the selected map or player does not allow them.
 
 If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
 
@@ -92,6 +96,6 @@ The lower display should be active and should appear either in the presentation 
 
 ## Current scope
 
-This first version provides a useful independent touch surface while leaving upstream rendering unchanged. Moving live engine widgets such as the radar, hero list, or kingdom status onto the lower panel will require a native engine-to-Android state/rendering bridge and is a separate follow-up milestone.
+The current version provides semantic controls and read-only information cards while leaving upstream rendering unchanged. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

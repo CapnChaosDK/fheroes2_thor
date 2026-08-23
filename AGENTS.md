@@ -11,27 +11,25 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.3.0`.
-- Release source commit: `e8c56affbb9581bebee357ddce6da16450afd744`.
-- Release APK SHA-256: `A41913CD3CB50BCDD30BBB135E7204F3FCD028A49B7C054A5A8F0439D2FCBB07`.
-- v0.3.0 contains hardware-validated navigable Load Game and Scenario Setup workflows. The main README includes the AYN Thor physical-control scheme.
+- Latest published release: `thor-v0.4.0`.
+- Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
+- Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
+- v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- At this handoff, three source files contain pre-existing, uncommitted Player Setup scaffold changes. Preserve them:
-  - `android/app/src/main/java/org/fheroes2/ThorSecondScreenPresentation.java`
-  - `src/fheroes2/game/thor_ui.cpp`
-  - `src/fheroes2/game/thor_ui.h`
-- The scaffold adds semantic identifiers and lower-screen buttons for previous/next player, control type, previous/next faction, and handicap.
-- It is incomplete and unvalidated: native Scenario Setup event processing, availability rules, upper-screen changes, information refresh, build/install, and device tests have not been completed.
-- Inspect the diff before planning further work. Do not commit the scaffold merely because it exists.
+- The working tree is clean at this handoff. There are no known uncommitted source changes to preserve.
+- Scenario Setup player editing is complete and hardware-validated: player navigation, Standard human-position transfer, fixed-count Hot Seat seat swapping, faction changes, handicap changes, upper-screen highlighting, lower information refresh, and regression coverage all passed.
+- Validated implementation commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
+- The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned.
 
 ## Next recommended planning point
 
-- Finish planning the Scenario Setup Player Editing slice: player selection, Human/AI control, faction selection, and handicap.
-- Confirm how these lower-screen actions map to the existing upper-screen `PlayersInfo` behavior, especially which choices are mutable for Standard versus Hot Seat games.
-- Retain Start, Back, Select Map, difficulty controls, modal restoration, and all physical controls without regression.
+- Plan the Battle Only setup workflow, the next locally testable navigable-menu slice.
+- Inspect the existing upper-screen Battle Only setup controls and availability rules before proposing the lower-screen behavior and focused acceptance tests.
+- Obtain user approval before implementation. Retain the validated New Game, Load Game, Scenario Setup, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Campaign selection remains deferred until compatible campaign assets are available for full device validation.
 
 ## Android build and device workflow
 

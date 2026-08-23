@@ -6,12 +6,12 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.3.0` was published on 2026-08-23 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.3.0
-- Source commit: `e8c56affbb9581bebee357ddce6da16450afd744`.
-- APK: `fheroes2-thor-v0.3.0-debug.apk`.
-- APK SHA-256: `A41913CD3CB50BCDD30BBB135E7204F3FCD028A49B7C054A5A8F0439D2FCBB07`.
-- The release contains the hardware-validated navigable Load Game and Scenario Setup slices. The repository README documents the AYN Thor physical-control scheme.
+- `thor-v0.4.0` was published on 2026-08-23 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.4.0
+- Source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
+- APK: `fheroes2-thor-v0.4.0-debug.apk`.
+- APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
+- The release adds the hardware-validated Scenario Setup player-editing workflow: player navigation, Standard human-position transfer, fixed-count Hot Seat seat swapping, faction selection, handicap selection, synchronized upper highlighting, and lower information refresh.
 
 ## Agreed product decisions
 
@@ -344,7 +344,9 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 ### Later menu slices
 
-- Campaign selection, Scenario Setup player editing, Battle Only setup, High Scores variants, Settings, and Editor menus.
+- Battle Only setup is the next recommended planning slice because it is locally available for full Thor validation.
+- Campaign selection remains deferred until compatible campaign assets are available for full device validation.
+- Later slices include High Scores variants, Settings, and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria
