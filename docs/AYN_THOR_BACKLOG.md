@@ -65,6 +65,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 - Installed successfully on a connected AYN Thor.
 - Main Menu to Dialog transition verified from a lower-screen action.
 - Dialog to Main Menu restoration verified.
+- Dialog deck simplification candidate installed: modal Dialog now shows only centered Confirm and Cancel actions, while the directional navigation deck remains available in the safe Fallback context. Device validation is pending.
 - Battle context and its eight-action layout verified in a live Battle Only match.
 - Adventure Map, Hero, and Castle contexts verified by the user on the Thor.
 - Battle Spell, Wait/Defend, Turn Order, and Options actions verified by the user.
@@ -266,6 +267,35 @@ Corrected checks 2 and 5 passed on the Thor. All five Battle information checks 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Kingdom resources, player color, and current date.
 - Explicit privacy/fog-of-war rules so the lower screen never exposes hidden information.
+
+## Navigable menu workflows
+
+Status: `planned`
+
+Goal: make the lower display follow menu hierarchy so choices can be completed directly instead of falling back to generic Dialog navigation.
+
+### New Game first slice
+
+- When New Game opens, replace the Main Menu deck with Standard, Campaign, Multiplayer, Battle Only, Settings, and Back.
+- Campaign opens an available-assets-aware choice between Original and Expansion, plus Back.
+- Multiplayer opens Hot Seat and Back. Hot Seat then opens 2, 3, 4, 5, and 6 Players plus Back.
+- Back restores exactly one parent deck. Selecting an option emits exactly one action and clears stale queued actions when the menu state changes.
+- Publish explicit native menu states and stable semantic actions rather than inferring submenus from Java labels or reusing overlapping keyboard shortcuts.
+- Preserve upper-screen mouse, touchscreen, physical controller, configurable hotkeys, and text-support behavior.
+
+### Later menu slices
+
+- Load Game: Standard, Campaign, Hot Seat, and Back, with unavailable save categories visibly muted.
+- Campaign selection, scenario selection, player setup, Battle Only setup, High Scores variants, Settings, and Editor menus.
+- A safe Menu fallback for an unknown or newly added upstream menu state.
+
+### Acceptance criteria
+
+- The lower deck always matches the visible upper-screen menu and exposes only valid choices.
+- Nested choices and Back restore the correct parent without stacked menus or duplicate actions.
+- Missing campaign assets and unavailable load categories are reflected in native enabled-action masks.
+- Dialog remains reserved for modal Confirm and Cancel. Menu choices use dedicated menu states.
+- Build/lint pass through the short `R:` path, followed by a full New Game hierarchy test on the Thor.
 
 ## Milestone 4: interactive second-screen tools
 

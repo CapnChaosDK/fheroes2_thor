@@ -529,7 +529,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
-                addNavigationActions();
+                addDialogActions();
                 break;
             case CONTEXT_FALLBACK:
             default:
@@ -537,6 +537,12 @@ final class ThorSecondScreenPresentation extends Presentation
                 addNavigationActions();
                 break;
             }
+        }
+
+        private void addDialogActions()
+        {
+            addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
+            addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
         }
 
         private void addNavigationActions()
@@ -568,7 +574,7 @@ final class ThorSecondScreenPresentation extends Presentation
             final float margin = getMargin();
             final float gap = margin * 0.55f;
             final float top = height * 0.265f;
-            final int columns = buttons.size() <= 6 ? 3 : 4;
+            final int columns = buttons.size() <= 2 ? 2 : ( buttons.size() <= 6 ? 3 : 4 );
             final int rows = ( buttons.size() + columns - 1 ) / columns;
             final float columnWidth = ( width - 2 * margin - ( columns - 1 ) * gap ) / columns;
             final float rowHeight = ( height - top - margin - ( rows - 1 ) * gap ) / rows;
