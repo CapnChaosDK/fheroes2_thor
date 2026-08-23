@@ -54,6 +54,7 @@
 #include "players.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -328,6 +329,44 @@ namespace
 
         levelCursor.redraw();
 
+        using ThorAction = fheroes2::thor::Action;
+        constexpr fheroes2::thor::ActionMask scenarioThorActions
+            = fheroes2::thor::actionMask( ThorAction::SCENARIO_SELECT_MAP ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_EASY )
+              | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_NORMAL ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_HARD )
+              | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_EXPERT ) | fheroes2::thor::actionMask( ThorAction::SCENARIO_DIFFICULTY_IMPOSSIBLE )
+              | fheroes2::thor::actionMask( ThorAction::SCENARIO_START ) | fheroes2::thor::actionMask( ThorAction::MENU_BACK );
+
+        const auto publishThorInformation = [&conf, humanPlayerCount]() {
+            fheroes2::thor::InformationSnapshot snapshot;
+            snapshot.context = fheroes2::thor::UiContext::SCENARIO_SETUP;
+            snapshot.category = "SCENARIO";
+            snapshot.title = conf.getCurrentMapInfo().name;
+            snapshot.detail
+                = std::to_string( humanPlayerCount ) + ( humanPlayerCount == 1 ? " PLAYER" : " PLAYERS" ) + "     " + Difficulty::String( Game::getDifficulty() );
+            snapshot.date = "RATING  " + std::to_string( Game::GetRating() ) + "%";
+            snapshot.resources = "SELECT MAP OR ADJUST DIFFICULTY";
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+        };
+
+        const auto restoreThorScenarioContext = [&publishThorInformation]() {
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::SCENARIO_SETUP );
+            fheroes2::thor::setEnabledActions( scenarioThorActions );
+            publishThorInformation();
+        };
+
+        const auto selectDifficulty = [&coordDifficulty, &levelCursor, &ratingArea, &ratingRoi, &roi, &display, &publishThorInformation]( const int32_t index ) {
+            assert( index >= Difficulty::EASY && index <= Difficulty::IMPOSSIBLE );
+            levelCursor.setPosition( coordDifficulty[index].x - levelCursorOffset, coordDifficulty[index].y - levelCursorOffset );
+            levelCursor.redraw();
+            Game::saveDifficulty( index );
+            ratingArea.restore();
+            ratingRoi = RedrawRatingInfo( roi.getPosition(), roi.width );
+            display.render( roi );
+            publishThorInformation();
+        };
+
+        restoreThorScenarioContext();
+
         fheroes2::validateFadeInAndRender();
 
         fheroes2::GameMode result = fheroes2::GameMode::QUIT_GAME;
@@ -347,14 +386,21 @@ namespace
                 continue;
             }
 
+            const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+
             // press button
             buttonSelectMaps.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonSelectMaps.area() ) );
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
             // click select
-            if ( HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_SELECT_MAP ) || le.MouseClickLeft( buttonSelectMaps.area() ) ) {
-                const Maps::FileInfo * fi = Dialog::SelectScenario( lists, false );
+            if ( requestedThorAction == ThorAction::SCENARIO_SELECT_MAP || HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_SELECT_MAP )
+                 || le.MouseClickLeft( buttonSelectMaps.area() ) ) {
+                const Maps::FileInfo * fi = nullptr;
+                {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+                    fi = Dialog::SelectScenario( lists, false );
+                }
                 if ( lists.empty() ) {
                     // This can happen if all maps have been deleted.
                     result = fheroes2::GameMode::MAIN_MENU;
@@ -390,14 +436,18 @@ namespace
                 }
                 display.render();
 
+                restoreThorScenarioContext();
+
                 outputNewGameInTextSupportMode();
             }
-            else if ( Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
+            else if ( requestedThorAction == ThorAction::MENU_BACK || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL )
+                      || le.MouseClickLeft( buttonCancel.area() ) ) {
                 result = fheroes2::GameMode::MAIN_MENU;
                 break;
             }
 
-            if ( Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) || le.MouseClickLeft( buttonOk.area() ) ) {
+            if ( requestedThorAction == ThorAction::SCENARIO_START || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY )
+                 || le.MouseClickLeft( buttonOk.area() ) ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "select maps: " << conf.getCurrentMapInfo().filename << ", difficulty: " << Difficulty::String( Game::getDifficulty() ) )
                 result = fheroes2::GameMode::START_GAME;
 
@@ -406,18 +456,37 @@ namespace
                 break;
             }
 
+            int32_t requestedDifficulty = -1;
+            switch ( requestedThorAction ) {
+            case ThorAction::SCENARIO_DIFFICULTY_EASY:
+                requestedDifficulty = Difficulty::EASY;
+                break;
+            case ThorAction::SCENARIO_DIFFICULTY_NORMAL:
+                requestedDifficulty = Difficulty::NORMAL;
+                break;
+            case ThorAction::SCENARIO_DIFFICULTY_HARD:
+                requestedDifficulty = Difficulty::HARD;
+                break;
+            case ThorAction::SCENARIO_DIFFICULTY_EXPERT:
+                requestedDifficulty = Difficulty::EXPERT;
+                break;
+            case ThorAction::SCENARIO_DIFFICULTY_IMPOSSIBLE:
+                requestedDifficulty = Difficulty::IMPOSSIBLE;
+                break;
+            default:
+                break;
+            }
+
+            if ( requestedDifficulty >= 0 ) {
+                selectDifficulty( requestedDifficulty );
+            }
+
             if ( le.MouseClickLeft( roi ) ) {
                 const int32_t index = GetRectIndex( coordDifficulty, le.getMouseCursorPos() );
 
                 // select difficulty
                 if ( 0 <= index ) {
-                    levelCursor.setPosition( coordDifficulty[index].x - levelCursorOffset, coordDifficulty[index].y - levelCursorOffset );
-                    levelCursor.redraw();
-                    Game::saveDifficulty( index );
-                    ratingArea.restore();
-                    ratingRoi = RedrawRatingInfo( roi.getPosition(), roi.width );
-
-                    display.render( roi );
+                    selectDifficulty( index );
                 }
                 // playersInfo
                 else if ( playersInfo.QueueEventProcessing() ) {
@@ -427,6 +496,7 @@ namespace
                     playersInfo.RedrawInfo( false );
 
                     display.render( roi );
+                    publishThorInformation();
                 }
             }
             else if ( ( le.isMouseWheelUp() || le.isMouseWheelDown() ) && playersInfo.QueueEventProcessing() ) {
@@ -437,6 +507,7 @@ namespace
                 playersInfo.RedrawInfo( false );
 
                 display.render( roi );
+                publishThorInformation();
             }
 
             if ( le.isMouseRightButtonPressedInArea( roi ) ) {
@@ -510,6 +581,7 @@ fheroes2::GameMode Game::SelectScenario( const uint8_t humanPlayerCount )
 
     MapsFileInfoList maps = Maps::getAllMapFileInfos( humanPlayerCount );
     if ( maps.empty() ) {
+        const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
         fheroes2::showStandardTextMessage( _( "Warning" ), _( "No maps available!" ), Dialog::OK );
         return fheroes2::GameMode::MAIN_MENU;
     }

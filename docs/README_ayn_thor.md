@@ -19,7 +19,8 @@ The Heroes II-styled command deck follows the active game context. Its upper sec
 | Context | Available actions |
 | --- | --- |
 | Main menu | New Game, Load Game, Settings, High Scores, Credits, Quit |
-| Dialog or fallback | Directional navigation, Confirm, Cancel |
+| Scenario setup | Select Map, five difficulty levels, Start, Back |
+| Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
 | Hero | Previous, Next, Dismiss, Upgrade, Split Half, Split One, Join, Swap, Close |
 | Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Exit |

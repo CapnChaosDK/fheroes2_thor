@@ -43,6 +43,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_MULTIPLAYER_MENU = 9;
     private static final int CONTEXT_HOT_SEAT_MENU = 10;
     private static final int CONTEXT_LOAD_GAME_MENU = 11;
+    private static final int CONTEXT_SCENARIO_SETUP = 12;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -104,6 +105,13 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_MENU_LOAD_STANDARD = 57;
     private static final int ACTION_MENU_LOAD_CAMPAIGN = 58;
     private static final int ACTION_MENU_LOAD_HOT_SEAT = 59;
+    private static final int ACTION_SCENARIO_SELECT_MAP = 60;
+    private static final int ACTION_SCENARIO_DIFFICULTY_EASY = 61;
+    private static final int ACTION_SCENARIO_DIFFICULTY_NORMAL = 62;
+    private static final int ACTION_SCENARIO_DIFFICULTY_HARD = 63;
+    private static final int ACTION_SCENARIO_DIFFICULTY_EXPERT = 64;
+    private static final int ACTION_SCENARIO_DIFFICULTY_IMPOSSIBLE = 65;
+    private static final int ACTION_SCENARIO_START = 66;
 
     interface KeySender
     {
@@ -204,7 +212,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_LOAD_GAME_MENU ? requestedContext : CONTEXT_FALLBACK;
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SCENARIO_SETUP ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -307,7 +315,8 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
-            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE )
+            if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
+                   || gameContext == CONTEXT_SCENARIO_SETUP )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
                     drawBattleInformationCard( canvas, innerPanel );
@@ -585,6 +594,17 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "HOT SEAT", ACTION_MENU_LOAD_HOT_SEAT, KeyEvent.KEYCODE_H );
                 addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
+            case CONTEXT_SCENARIO_SETUP:
+                contextTitle = "SCENARIO SETUP";
+                addAction( "SELECT MAP", ACTION_SCENARIO_SELECT_MAP, KeyEvent.KEYCODE_M );
+                addAction( "EASY", ACTION_SCENARIO_DIFFICULTY_EASY, KeyEvent.KEYCODE_1 );
+                addAction( "NORMAL", ACTION_SCENARIO_DIFFICULTY_NORMAL, KeyEvent.KEYCODE_2 );
+                addAction( "HARD", ACTION_SCENARIO_DIFFICULTY_HARD, KeyEvent.KEYCODE_3 );
+                addAction( "EXPERT", ACTION_SCENARIO_DIFFICULTY_EXPERT, KeyEvent.KEYCODE_4 );
+                addAction( "IMPOSSIBLE", ACTION_SCENARIO_DIFFICULTY_IMPOSSIBLE, KeyEvent.KEYCODE_5 );
+                addAction( "START", ACTION_SCENARIO_START, KeyEvent.KEYCODE_ENTER );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
                 addDialogActions();
@@ -653,7 +673,18 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private boolean isEnabled( final CommandButton button )
         {
-            return button.action == ACTION_NONE || ( enabledActions & ( 1L << button.action ) ) != 0;
+            return button.action == ACTION_NONE || ( enabledActions & actionMask( button.action ) ) != 0;
+        }
+
+        private static long actionMask( final int action )
+        {
+            if ( action <= 0 ) {
+                return 0;
+            }
+
+            final int usableBitCount = 63;
+            final int bit = action <= usableBitCount ? action : ( ( action - 1 ) % usableBitCount ) + 1;
+            return 1L << bit;
         }
 
         void releasePressedButton()

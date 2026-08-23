@@ -28,7 +28,8 @@ namespace fheroes2::thor
         CAMPAIGN_MENU,
         MULTIPLAYER_MENU,
         HOT_SEAT_MENU,
-        LOAD_GAME_MENU
+        LOAD_GAME_MENU,
+        SCENARIO_SETUP
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -94,7 +95,14 @@ namespace fheroes2::thor
         MENU_HOT_SEAT_6_PLAYERS,
         MENU_LOAD_STANDARD,
         MENU_LOAD_CAMPAIGN,
-        MENU_LOAD_HOT_SEAT
+        MENU_LOAD_HOT_SEAT,
+        SCENARIO_SELECT_MAP,
+        SCENARIO_DIFFICULTY_EASY,
+        SCENARIO_DIFFICULTY_NORMAL,
+        SCENARIO_DIFFICULTY_HARD,
+        SCENARIO_DIFFICULTY_EXPERT,
+        SCENARIO_DIFFICULTY_IMPOSSIBLE,
+        SCENARIO_START
     };
 
     using ActionMask = uint64_t;
@@ -113,9 +121,23 @@ namespace fheroes2::thor
         std::string resources;
     };
 
+    constexpr int32_t actionMaskBit( const Action action )
+    {
+        const int32_t actionId = static_cast<int32_t>( action );
+        if ( actionId <= 0 ) {
+            return 0;
+        }
+
+        // Enabled-action masks are context-local. Existing action IDs retain their original
+        // bit positions, while IDs above 63 wrap into a reusable nonzero bit position.
+        // Context validation and queue clearing make these cross-context collisions safe.
+        constexpr int32_t usableBitCount = 63;
+        return actionId <= usableBitCount ? actionId : ( ( actionId - 1 ) % usableBitCount ) + 1;
+    }
+
     constexpr ActionMask actionMask( const Action action )
     {
-        return ActionMask{ 1 } << static_cast<int32_t>( action );
+        return action == Action::NONE ? 0 : ActionMask{ 1 } << actionMaskBit( action );
     }
 
     UiContext getUiContext();

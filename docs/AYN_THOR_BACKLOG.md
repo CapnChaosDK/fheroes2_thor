@@ -302,9 +302,19 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 - Mouse, touchscreen, physical controller, configurable hotkeys, and text-support behavior remain available.
 - Android build and lint pass through the required short `R:` mapping. The APK installed and cold-launched successfully on the Thor. Live lower-display checks verified the balanced Load Game layout, Standard enabled, Campaign and Hot Seat muted for the current save and asset set, Back restoration to Main Menu, Standard save-browser Dialog context, and exact Load Game restoration after one Cancel. Focused user validation passed the layout, muted-action rejection, Standard browser and restoration, Back, rapid-tap protection, and physical, mouse, and touchscreen controls. The Load Game slice is hardware-validated for the current save and asset configuration.
 
+### Scenario Setup implementation and validation
+
+- Standard and Hot Seat scenario setup expose Select Map, all five difficulty levels, Start, and Back directly on the lower display.
+- The reserved information card shows the selected map, human-player count, current difficulty, and rating. Difficulty changes refresh both displays immediately.
+- Select Map temporarily uses the modal Dialog deck and restores Scenario Setup exactly once after closing. Stable semantic actions run on the game thread and retain the existing mouse, touchscreen, physical-controller, hotkey, and text-support paths.
+- Enabled-action masks now use context-local bit positions after stable action identifier 63. This preserves existing identifiers while allowing later menu contexts to grow without widening the JNI mask.
+- Player editing remains the next Scenario Setup slice: previous/next player, control type, faction, and handicap controls will be planned separately after this controls-and-information slice is hardware-validated.
+- Android build and lint passed through the required short `R:` mapping, and the APK installed successfully on the connected Thor. Live checks verified the Standard layout, information card, difficulty and rating refresh, action-mask handling at and beyond identifier 63, and Select Map cancellation restoring Scenario Setup exactly once.
+- User hardware validation passed all five focused checks: layout and border readability; all five difficulty choices and immediate two-screen refresh; Select Map selection, cancellation, and non-stacking restoration; Back plus Hot Seat player-count context; and single-shot Start with physical-controller, upper-touchscreen, and mouse regression coverage.
+
 ### Later menu slices
 
-- Campaign selection, scenario selection, player setup, Battle Only setup, High Scores variants, Settings, and Editor menus.
+- Campaign selection, Scenario Setup player editing, Battle Only setup, High Scores variants, Settings, and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria

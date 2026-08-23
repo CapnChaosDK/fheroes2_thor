@@ -173,13 +173,32 @@ namespace
         return action == Action::MENU_LOAD_STANDARD || action == Action::MENU_LOAD_CAMPAIGN || action == Action::MENU_LOAD_HOT_SEAT || action == Action::MENU_BACK;
     }
 
+    bool isScenarioSetupAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::SCENARIO_SELECT_MAP:
+        case Action::SCENARIO_DIFFICULTY_EASY:
+        case Action::SCENARIO_DIFFICULTY_NORMAL:
+        case Action::SCENARIO_DIFFICULTY_HARD:
+        case Action::SCENARIO_DIFFICULTY_EXPERT:
+        case Action::SCENARIO_DIFFICULTY_IMPOSSIBLE:
+        case Action::SCENARIO_START:
+        case Action::MENU_BACK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
 
         return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
-               || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU;
+               || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -203,6 +222,8 @@ namespace
             return isHotSeatMenuAction( action );
         case fheroes2::thor::UiContext::LOAD_GAME_MENU:
             return isLoadGameMenuAction( action );
+        case fheroes2::thor::UiContext::SCENARIO_SETUP:
+            return isScenarioSetupAction( action );
         default:
             return false;
         }

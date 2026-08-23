@@ -150,6 +150,14 @@ void Game::runMainGameLoop()
         case fheroes2::GameMode::LOAD_GAME:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::LOAD_GAME_MENU );
             break;
+        case fheroes2::GameMode::SELECT_SCENARIO_ONE_HUMAN_PLAYER:
+        case fheroes2::GameMode::SELECT_SCENARIO_TWO_HUMAN_PLAYERS:
+        case fheroes2::GameMode::SELECT_SCENARIO_THREE_HUMAN_PLAYERS:
+        case fheroes2::GameMode::SELECT_SCENARIO_FOUR_HUMAN_PLAYERS:
+        case fheroes2::GameMode::SELECT_SCENARIO_FIVE_HUMAN_PLAYERS:
+        case fheroes2::GameMode::SELECT_SCENARIO_SIX_HUMAN_PLAYERS:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::SCENARIO_SETUP );
+            break;
         case fheroes2::GameMode::START_GAME:
         case fheroes2::GameMode::START_BATTLE_ONLY_MODE:
         case fheroes2::GameMode::EDITOR_MAIN_MENU:
