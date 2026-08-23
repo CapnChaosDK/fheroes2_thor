@@ -47,4 +47,6 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - Device: AYN Thor, Android device model `kalama`
 - Installation: passed on `192.168.68.84:40669`
 - Cold launch: passed; game process started and the command deck opened on display 4
-- User hardware smoke test: pending
+- User hardware smoke test: passed on 2026-08-23
+- Smoke coverage: cold-start dual displays and input, Hero/Castle context and information restoration, Battle information and single-instance Options behavior, save/load context restoration, and display sleep/wake recovery
+- Integration status: hardware validated
