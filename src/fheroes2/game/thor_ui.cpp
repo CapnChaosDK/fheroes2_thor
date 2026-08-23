@@ -90,6 +90,31 @@ namespace
         }
     }
 
+    bool isCastleAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::CASTLE_PREVIOUS:
+        case Action::CASTLE_NEXT:
+        case Action::CASTLE_WELL:
+        case Action::CASTLE_MARKETPLACE:
+        case Action::CASTLE_MAGE_GUILD:
+        case Action::CASTLE_SHIPYARD:
+        case Action::CASTLE_THIEVES_GUILD:
+        case Action::CASTLE_TAVERN:
+        case Action::CASTLE_CONSTRUCTION:
+        case Action::CASTLE_TRANSFER_TO_HERO:
+        case Action::CASTLE_TRANSFER_TO_GARRISON:
+        case Action::CASTLE_UPGRADE_SELECTED:
+        case Action::CASTLE_CLOSE:
+            return true;
+        case Action::NONE:
+        default:
+            return false;
+        }
+    }
+
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         switch ( context ) {
@@ -99,6 +124,8 @@ namespace
             return isAdventureAction( action );
         case fheroes2::thor::UiContext::HERO:
             return isHeroAction( action );
+        case fheroes2::thor::UiContext::CASTLE:
+            return isCastleAction( action );
         default:
             return false;
         }
@@ -174,7 +201,8 @@ namespace fheroes2::thor
     {
         std::lock_guard<std::mutex> lock( actionQueueMutex );
         const UiContext context = getUiContext();
-        const ActionMask allowedActions = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO ? actions : 0;
+        const ActionMask allowedActions
+            = context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE ? actions : 0;
         enabledActions.store( allowedActions, std::memory_order_release );
         for ( auto actionIter = actionQueue.begin(); actionIter != actionQueue.end(); ) {
             if ( ( allowedActions & actionMask( *actionIter ) ) == 0 ) {

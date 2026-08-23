@@ -58,6 +58,7 @@
 #include "mus.h"
 #include "screen.h"
 #include "statusbar.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -260,6 +261,7 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
     fheroes2::Image surfaceHero;
 
     auto constructionDialogHandler = [this, &display, &dialogRoi, &fadeBuilding, &hero, &surfaceHero, &alphaHero]() {
+        const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
         uint32_t build = BUILD_NOTHING;
         const Castle::ConstructionDialogResult result = _openConstructionDialog( build );
 
@@ -295,6 +297,7 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
     };
 
     auto mageGuildDialogHandler = [this]( const Heroes * visitingHero ) {
+        const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
         const auto result = _openMageGuild( visitingHero );
         switch ( result ) {
         case MageGuildDialogResult::NextMageGuildWindow:
@@ -312,12 +315,14 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
     if ( openConstructionWindow && isBuild( BUILD_CASTLE ) ) {
         const CastleDialogReturnValue constructionResult = constructionDialogHandler();
         if ( constructionResult != CastleDialogReturnValue::DoNothing ) {
+            fheroes2::thor::setEnabledActions( 0 );
             return constructionResult;
         }
     }
     else if ( openMageGuildWindow && isBuild( BUILD_MAGEGUILD ) ) {
         const auto result = mageGuildDialogHandler( hero );
         if ( result != CastleDialogReturnValue::DoNothing ) {
+            fheroes2::thor::setEnabledActions( 0 );
             return result;
         }
     }
@@ -493,6 +498,50 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
     while ( le.HandleEvents() && result == CastleDialogReturnValue::DoNothing ) {
         bool needRedraw = false;
         bool needFadeIn = false;
+        using ThorAction = fheroes2::thor::Action;
+
+        fheroes2::thor::ActionMask enabledThorActions = 0;
+        if ( alphaHero >= 255 && fadeBuilding.isFadeDone() ) {
+            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_CLOSE );
+            if ( buttonPrevCastle.isEnabled() ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_PREVIOUS );
+            }
+            if ( buttonNextCastle.isEnabled() ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_NEXT );
+            }
+            if ( isBuild( BUILD_WELL ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_WELL );
+            }
+            if ( isBuild( BUILD_MARKETPLACE ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_MARKETPLACE );
+            }
+            if ( isBuild( BUILD_MAGEGUILD ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_MAGE_GUILD );
+            }
+            if ( isBuild( BUILD_SHIPYARD ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_SHIPYARD );
+            }
+            if ( isBuild( BUILD_THIEVESGUILD ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_THIEVES_GUILD );
+            }
+            if ( isBuild( BUILD_TAVERN ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_TAVERN );
+            }
+            if ( isBuild( BUILD_CASTLE ) || isBuild( BUILD_TENT ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_CONSTRUCTION );
+            }
+            if ( hero != nullptr && GetArmy().isValid() ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_TRANSFER_TO_HERO );
+            }
+            if ( hero != nullptr && hero->GetArmy().isValid() ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_TRANSFER_TO_GARRISON );
+            }
+            if ( topArmyBar.canUpgradeSelectedTroop() || ( bottomArmyBar.isValid() && bottomArmyBar.canUpgradeSelectedTroop() ) ) {
+                enabledThorActions |= fheroes2::thor::actionMask( ThorAction::CASTLE_UPGRADE_SELECTED );
+            }
+        }
+        fheroes2::thor::setEnabledActions( enabledThorActions );
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
 
         // During hero purchase or building construction skip any interaction with the dialog.
         if ( alphaHero >= 255 && fadeBuilding.isFadeDone() ) {
@@ -506,7 +555,7 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
             buttonExit.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonExit.area() ) );
 
             // Check buttons for closing this castle's window.
-            if ( le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
+            if ( requestedThorAction == ThorAction::CASTLE_CLOSE || le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
                 result = CastleDialogReturnValue::Close;
 
                 // Disable fast scroll for resolutions where the exit button is directly above the border.
@@ -517,12 +566,14 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
                 break;
             }
             if ( buttonPrevCastle.isEnabled()
-                 && ( le.MouseClickLeft( buttonPrevCastle.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) || timedButtonPrevCastle.isDelayPassed() ) ) {
+                 && ( requestedThorAction == ThorAction::CASTLE_PREVIOUS
+                      || le.MouseClickLeft( buttonPrevCastle.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) || timedButtonPrevCastle.isDelayPassed() ) ) {
                 result = CastleDialogReturnValue::PreviousCastle;
                 break;
             }
             if ( buttonNextCastle.isEnabled()
-                 && ( le.MouseClickLeft( buttonNextCastle.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) || timedButtonNextCastle.isDelayPassed() ) ) {
+                 && ( requestedThorAction == ThorAction::CASTLE_NEXT
+                      || le.MouseClickLeft( buttonNextCastle.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) || timedButtonNextCastle.isDelayPassed() ) ) {
                 result = CastleDialogReturnValue::NextCastle;
                 break;
             }
@@ -578,11 +629,12 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
                     keep = bottomArmyBar.GetSelectedItem();
                 }
 
-                if ( HotKeyPressEvent( Game::HotKeyEvent::TOWN_MERGE_TROOPS_WITH_HERO ) ) {
+                if ( requestedThorAction == ThorAction::CASTLE_TRANSFER_TO_HERO || HotKeyPressEvent( Game::HotKeyEvent::TOWN_MERGE_TROOPS_WITH_HERO ) ) {
                     hero->GetArmy().MoveTroops( GetArmy(), keep ? keep->GetID() : Monster::UNKNOWN );
                     isArmyActionPerformed = true;
                 }
-                else if ( HotKeyPressEvent( Game::HotKeyEvent::TOWN_MERGE_TROOPS_WITH_GARRISON ) ) {
+                else if ( requestedThorAction == ThorAction::CASTLE_TRANSFER_TO_GARRISON
+                          || HotKeyPressEvent( Game::HotKeyEvent::TOWN_MERGE_TROOPS_WITH_GARRISON ) ) {
                     GetArmy().MoveTroops( hero->GetArmy(), keep ? keep->GetID() : Monster::UNKNOWN );
                     isArmyActionPerformed = true;
                 }
@@ -600,6 +652,12 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
                 }
             }
 
+            if ( requestedThorAction == ThorAction::CASTLE_UPGRADE_SELECTED ) {
+                if ( topArmyBar.upgradeSelectedTroop() || ( bottomArmyBar.isValid() && bottomArmyBar.upgradeSelectedTroop() ) ) {
+                    needRedraw = true;
+                }
+            }
+
             if ( hero && le.MouseClickLeft( rectSign2 ) ) {
                 // View hero.
                 openHeroDialog( topArmyBar, bottomArmyBar, *hero );
@@ -609,7 +667,32 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
             }
 
             // Get pressed hotkey.
-            const BuildingType hotKeyBuilding = getPressedBuildingHotkey();
+            BuildingType hotKeyBuilding = getPressedBuildingHotkey();
+            switch ( requestedThorAction ) {
+            case ThorAction::CASTLE_WELL:
+                hotKeyBuilding = BUILD_WELL;
+                break;
+            case ThorAction::CASTLE_MARKETPLACE:
+                hotKeyBuilding = BUILD_MARKETPLACE;
+                break;
+            case ThorAction::CASTLE_MAGE_GUILD:
+                hotKeyBuilding = BUILD_MAGEGUILD;
+                break;
+            case ThorAction::CASTLE_SHIPYARD:
+                hotKeyBuilding = BUILD_SHIPYARD;
+                break;
+            case ThorAction::CASTLE_THIEVES_GUILD:
+                hotKeyBuilding = BUILD_THIEVESGUILD;
+                break;
+            case ThorAction::CASTLE_TAVERN:
+                hotKeyBuilding = BUILD_TAVERN;
+                break;
+            case ThorAction::CASTLE_CONSTRUCTION:
+                hotKeyBuilding = isBuild( BUILD_CASTLE ) ? BUILD_CASTLE : BUILD_TENT;
+                break;
+            default:
+                break;
+            }
 
             // Interaction with buildings.
             // Animation queue starts from the lowest by Z-value buildings which means that they draw first and most likely overlap by the top buildings in the queue.
@@ -656,6 +739,8 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
                 }
 
                 if ( isBuildingClicked ) {
+                    const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
+
                     if ( topArmyBar.isSelected() ) {
                         topArmyBar.ResetSelected();
                     }
@@ -673,6 +758,7 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
 
                         const auto mageGuildResult = mageGuildDialogHandler( hero );
                         if ( mageGuildResult != CastleDialogReturnValue::DoNothing ) {
+                            fheroes2::thor::setEnabledActions( 0 );
                             return mageGuildResult;
                         }
                     }
@@ -855,5 +941,6 @@ Castle::CastleDialogReturnValue Castle::OpenDialog( const bool openConstructionW
 
     Game::SetUpdateSoundsOnFocusUpdate( true );
 
+    fheroes2::thor::setEnabledActions( 0 );
     return result;
 }

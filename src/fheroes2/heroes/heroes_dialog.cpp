@@ -445,9 +445,6 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
         if ( buttonDismiss && buttonDismiss->isEnabled() ) {
             enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_DISMISS );
         }
-        if ( !isEditor && selectArmy.canUpgradeSelectedTroop() ) {
-            enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_UPGRADE_SELECTED );
-        }
         if ( !isEditor && selectArmy.canSplitSelectedTroop() ) {
             enabledThorActions |= fheroes2::thor::actionMask( ThorAction::HERO_SPLIT_SELECTED_HALF )
                                   | fheroes2::thor::actionMask( ThorAction::HERO_SPLIT_SELECTED_ONE );
@@ -465,9 +462,6 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
 
         bool armyChanged = false;
         switch ( requestedThorAction ) {
-        case ThorAction::HERO_UPGRADE_SELECTED:
-            armyChanged = selectArmy.upgradeSelectedTroop();
-            break;
         case ThorAction::HERO_SPLIT_SELECTED_HALF:
             armyChanged = selectArmy.splitSelectedTroop( true );
             break;

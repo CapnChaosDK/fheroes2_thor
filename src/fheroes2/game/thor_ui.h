@@ -58,7 +58,20 @@ namespace fheroes2::thor
         HERO_SPLIT_SELECTED_ONE,
         HERO_JOIN_SELECTED,
         HERO_SWAP_ARMIES,
-        HERO_CLOSE
+        HERO_CLOSE,
+        CASTLE_PREVIOUS,
+        CASTLE_NEXT,
+        CASTLE_WELL,
+        CASTLE_MARKETPLACE,
+        CASTLE_MAGE_GUILD,
+        CASTLE_SHIPYARD,
+        CASTLE_THIEVES_GUILD,
+        CASTLE_TAVERN,
+        CASTLE_CONSTRUCTION,
+        CASTLE_TRANSFER_TO_HERO,
+        CASTLE_TRANSFER_TO_GARRISON,
+        CASTLE_UPGRADE_SELECTED,
+        CASTLE_CLOSE
     };
 
     using ActionMask = uint64_t;

@@ -69,6 +69,19 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_HERO_JOIN_SELECTED = 27;
     private static final int ACTION_HERO_SWAP_ARMIES = 28;
     private static final int ACTION_HERO_CLOSE = 29;
+    private static final int ACTION_CASTLE_PREVIOUS = 30;
+    private static final int ACTION_CASTLE_NEXT = 31;
+    private static final int ACTION_CASTLE_WELL = 32;
+    private static final int ACTION_CASTLE_MARKETPLACE = 33;
+    private static final int ACTION_CASTLE_MAGE_GUILD = 34;
+    private static final int ACTION_CASTLE_SHIPYARD = 35;
+    private static final int ACTION_CASTLE_THIEVES_GUILD = 36;
+    private static final int ACTION_CASTLE_TAVERN = 37;
+    private static final int ACTION_CASTLE_CONSTRUCTION = 38;
+    private static final int ACTION_CASTLE_TRANSFER_TO_HERO = 39;
+    private static final int ACTION_CASTLE_TRANSFER_TO_GARRISON = 40;
+    private static final int ACTION_CASTLE_UPGRADE_SELECTED = 41;
+    private static final int ACTION_CASTLE_CLOSE = 42;
 
     interface KeySender
     {
@@ -354,7 +367,6 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "PREVIOUS", ACTION_HERO_PREVIOUS, KeyEvent.KEYCODE_DPAD_LEFT );
                 addAction( "NEXT", ACTION_HERO_NEXT, KeyEvent.KEYCODE_DPAD_RIGHT );
                 addAction( "DISMISS", ACTION_HERO_DISMISS, KeyEvent.KEYCODE_D );
-                addAction( "UPGRADE", ACTION_HERO_UPGRADE_SELECTED, KeyEvent.KEYCODE_U );
                 addAction( "SPLIT HALF", ACTION_HERO_SPLIT_SELECTED_HALF, KeyEvent.KEYCODE_SHIFT_LEFT );
                 addAction( "SPLIT ONE", ACTION_HERO_SPLIT_SELECTED_ONE, KeyEvent.KEYCODE_CTRL_LEFT );
                 addAction( "JOIN", ACTION_HERO_JOIN_SELECTED, KeyEvent.KEYCODE_ALT_LEFT );
@@ -363,18 +375,19 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_CASTLE:
                 contextTitle = "CASTLE";
-                addAction( "PREVIOUS", KeyEvent.KEYCODE_DPAD_LEFT );
-                addAction( "NEXT", KeyEvent.KEYCODE_DPAD_RIGHT );
-                addAction( "WELL", KeyEvent.KEYCODE_W );
-                addAction( "MARKET", KeyEvent.KEYCODE_M );
-                addAction( "MAGE GUILD", KeyEvent.KEYCODE_S );
-                addAction( "SHIPYARD", KeyEvent.KEYCODE_N );
-                addAction( "THIEVES", KeyEvent.KEYCODE_T );
-                addAction( "TAVERN", KeyEvent.KEYCODE_R );
-                addAction( "BUILD", KeyEvent.KEYCODE_B );
-                addAction( "TO HERO", KeyEvent.KEYCODE_DPAD_DOWN );
-                addAction( "TO GARRISON", KeyEvent.KEYCODE_DPAD_UP );
-                addAction( "EXIT", KeyEvent.KEYCODE_ESCAPE );
+                addAction( "PREVIOUS", ACTION_CASTLE_PREVIOUS, KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT", ACTION_CASTLE_NEXT, KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "WELL", ACTION_CASTLE_WELL, KeyEvent.KEYCODE_W );
+                addAction( "MARKET", ACTION_CASTLE_MARKETPLACE, KeyEvent.KEYCODE_M );
+                addAction( "MAGE GUILD", ACTION_CASTLE_MAGE_GUILD, KeyEvent.KEYCODE_S );
+                addAction( "SHIPYARD", ACTION_CASTLE_SHIPYARD, KeyEvent.KEYCODE_N );
+                addAction( "THIEVES", ACTION_CASTLE_THIEVES_GUILD, KeyEvent.KEYCODE_T );
+                addAction( "TAVERN", ACTION_CASTLE_TAVERN, KeyEvent.KEYCODE_R );
+                addAction( "BUILD", ACTION_CASTLE_CONSTRUCTION, KeyEvent.KEYCODE_B );
+                addAction( "TO HERO", ACTION_CASTLE_TRANSFER_TO_HERO, KeyEvent.KEYCODE_DPAD_DOWN );
+                addAction( "TO GARRISON", ACTION_CASTLE_TRANSFER_TO_GARRISON, KeyEvent.KEYCODE_DPAD_UP );
+                addAction( "UPGRADE", ACTION_CASTLE_UPGRADE_SELECTED, KeyEvent.KEYCODE_U );
+                addAction( "EXIT", ACTION_CASTLE_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_BATTLE:
                 contextTitle = "BATTLE";

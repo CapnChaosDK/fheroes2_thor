@@ -74,7 +74,7 @@ Goal: replace the fixed 12-button deck with Heroes II-styled layouts selected by
 
 ## Milestone 2: semantic actions
 
-Status: `in progress`
+Status: `Castle/Town candidate built; device validation pending`
 
 - Replace fragile simulated hotkeys where appropriate with a Java to native semantic-action queue.
 - Process actions on the game/SDL thread; never mutate engine state directly from the Android UI thread.
@@ -128,14 +128,14 @@ Status: `in progress`
 
 - Hero navigation, dismiss, selected-troop operations, and close now use stable semantic actions consumed in the Hero dialog on the game thread.
 - Previous and Next follow the native Hero dialog's availability. Dismiss follows the native restrictions and retains its confirmation.
-- Split Half, Split One, Join, and Upgrade operate on the troop selected on the upper screen and are muted until their exact engine conditions are satisfied.
+- Split Half, Split One, and Join operate on the troop selected on the upper screen and are muted until their exact engine conditions are satisfied.
 - Swap is intentionally muted in a single-hero view because no second army exists; army exchange belongs to the later meeting or Castle context.
 - The key-event fallback remains available if the native bridge is not loaded.
 - Android build and lint pass. The candidate APK was installed successfully and opened the command deck on display 4.
 
 ### Hero device validation
 
-Status: `planned`
+Status: `passed`
 
 1. With at least two heroes, verify Previous and Next switch once per tap; verify Close returns to the Adventure Map deck.
 2. Tap Dismiss, cancel its confirmation, and verify the Hero deck restores once without reopening.
@@ -143,7 +143,25 @@ Status: `planned`
 4. Select either of two matching stacks and verify Join enables and merges them. Verify these army buttons mute again when no stack is selected.
 5. In a castle with the required upgraded dwelling and enough gold, select an upgradeable stack and verify Upgrade enables and upgrades it. Verify Swap remains muted and physical controls are unchanged.
 
-After Hero validation, convert Castle controls to native semantic actions.
+Checks 1 through 4 passed on the Thor. Upgrade was removed from the general Hero deck because creature upgrades are only available while visiting a town. Upgrade is now part of the Castle/Town semantic slice. Swap remains reserved for a later two-army exchange context.
+
+### Castle/Town semantic controls
+
+- Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves, Tavern, Build, To Hero, To Garrison, Upgrade, and Exit now use stable semantic actions consumed by the Castle dialog on the game thread.
+- Navigation follows the native town buttons. Building actions are enabled only when the corresponding building exists; Build works for either a town tent or castle construction screen.
+- Army transfers require a visiting hero and a non-empty source army. Upgrade requires selecting an eligible garrison or visiting-hero stack, the matching upgraded dwelling, and sufficient funds.
+- Opening a building or construction sub-screen temporarily switches the command deck to Dialog, preventing queued Castle actions from firing after that sub-screen closes.
+- Android build and lint pass through the required short `R:` drive mapping.
+
+### Castle/Town device validation
+
+Status: `planned`
+
+1. With at least two towns, verify Previous and Next switch once per tap; verify Exit returns to the Adventure Map deck.
+2. Verify built-building buttons open the correct screen once and one close returns to the Castle deck. Verify unbuilt-building buttons are muted.
+3. With a visiting hero and troops in both armies, test To Hero and To Garrison and verify the army bars redraw correctly.
+4. Select an upgradeable stack in either the garrison or visiting hero army. Verify Upgrade enables only when the upgraded dwelling exists and funds are sufficient, then upgrades the selected stack.
+5. Verify Build opens the construction screen in a castle and the town-upgrade screen from a tent. Confirm physical controls remain unchanged.
 
 ### Windows build note
 
