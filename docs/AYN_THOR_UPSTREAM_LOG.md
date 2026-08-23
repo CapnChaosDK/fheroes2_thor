@@ -20,7 +20,7 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - Build/lint: not required because no source integration occurred
 - APK/device validation: existing Milestones 1-3 hardware validation remains represented by the recovery tag
 
-### Next integration procedure
+### Standard integration procedure
 
 1. Confirm the working tree is clean and create a new recovery tag or backup branch.
 2. Fetch `upstream` and recalculate divergence and changed-file overlap.
@@ -30,3 +30,21 @@ Use this log for every official-upstream assessment or integration. Keep validat
 6. Record the APK SHA-256 checksum and install it on the Thor.
 7. Run the compact dual-screen, cursor/controller, context restoration, information-card, and save/load smoke test.
 8. Record the integrated upstream commit, conflicts, resolutions, device variant, and validation result here.
+
+## 2026-08-23: integrate upstream through 6a4b27a12
+
+- Pre-integration Thor commit: `943b7d33cecbdd6daba416f4fdb4aa95ff7db86f`
+- Recovery tag: `thor-pre-upstream-6a4b27a12`
+- Integrated upstream commit: `6a4b27a12d07c47c0e2c924e96d0e6e1001a9e4f`
+- Merge commit: `f151f77b889ce23175609c786194f68cf00ad86e`
+- Integration method: non-fast-forward merge; published Thor history was not rewritten
+- Upstream changes: 26 translation files from commits `cd10174a4` and `6a4b27a12`
+- Conflicts: none
+- Thor-file overlap: none
+- Post-merge divergence: 0 upstream-only commits and 31 Thor-only commits
+- Android build and lint: passed through the short `R:` drive mapping
+- APK SHA-256: `F1149CFCE9C1C4731B2197DD09BA66CC30D58DE208E53483B939CB432AB2910B`
+- Device: AYN Thor, Android device model `kalama`
+- Installation: passed on `192.168.68.84:40669`
+- Cold launch: passed; game process started and the command deck opened on display 4
+- User hardware smoke test: pending
