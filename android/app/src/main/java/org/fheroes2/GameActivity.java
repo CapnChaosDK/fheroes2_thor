@@ -44,6 +44,7 @@ public final class GameActivity extends SDLActivity
     private static native int nativeGetThorUiContext();
     private static native boolean nativeEnqueueThorAction( int action );
     private static native long nativeGetThorEnabledActionMask();
+    private static native String[] nativeGetThorInformationSnapshot( long knownRevision );
 
     int getThorUiContext()
     {
@@ -78,6 +79,16 @@ public final class GameActivity extends SDLActivity
         catch ( final UnsatisfiedLinkError ex ) {
             // An older or not-yet-loaded native library can still use the key fallback.
             return -1L;
+        }
+    }
+
+    String[] getThorInformationSnapshot( final long knownRevision )
+    {
+        try {
+            return nativeGetThorInformationSnapshot( knownRevision );
+        }
+        catch ( final UnsatisfiedLinkError ex ) {
+            return null;
         }
     }
 

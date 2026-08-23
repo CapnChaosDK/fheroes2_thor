@@ -44,7 +44,17 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         public void run()
         {
             if ( presentation instanceof ThorSecondScreenPresentation ) {
-                ( (ThorSecondScreenPresentation)presentation ).setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask() );
+                final String[] informationSnapshot = activity.getThorInformationSnapshot( informationRevision );
+                if ( informationSnapshot != null && informationSnapshot.length >= 3 ) {
+                    try {
+                        informationRevision = Long.parseLong( informationSnapshot[2] );
+                    }
+                    catch ( final NumberFormatException ex ) {
+                        Log.w( LOG_TAG, "Ignoring an invalid information snapshot revision.", ex );
+                    }
+                }
+                ( (ThorSecondScreenPresentation)presentation )
+                    .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -52,6 +62,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
 
     private Presentation presentation;
     private boolean isStarted;
+    private long informationRevision = -1;
 
     ThorSecondScreenController( final GameActivity activity )
     {
@@ -121,6 +132,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
 
         final ThorSecondScreenPresentation newPresentation
             = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction );
+        informationRevision = -1;
         newPresentation.setOnDismissListener( dialog -> {
             if ( presentation == dialog ) {
                 presentation = null;
@@ -167,6 +179,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
             presentation.dismiss();
             presentation = null;
         }
+        informationRevision = -1;
     }
 
     private void sendKey( final int keyCode, final boolean pressed )

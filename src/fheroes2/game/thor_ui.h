@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace fheroes2::thor
 {
@@ -76,6 +77,20 @@ namespace fheroes2::thor
 
     using ActionMask = uint64_t;
 
+    struct InformationSnapshot
+    {
+        static constexpr int32_t currentVersion = 1;
+
+        int32_t version{ currentVersion };
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        std::string title;
+        std::string category;
+        std::string detail;
+        std::string date;
+        std::string resources;
+    };
+
     constexpr ActionMask actionMask( const Action action )
     {
         return ActionMask{ 1 } << static_cast<int32_t>( action );
@@ -90,6 +105,8 @@ namespace fheroes2::thor
     Action takeAction();
     ActionMask getEnabledActions();
     void setEnabledActions( ActionMask actions );
+    InformationSnapshot getInformationSnapshot();
+    void publishInformationSnapshot( InformationSnapshot snapshot );
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

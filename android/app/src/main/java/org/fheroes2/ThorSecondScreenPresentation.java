@@ -131,10 +131,10 @@ final class ThorSecondScreenPresentation extends Presentation
         super.onStop();
     }
 
-    void setGameState( final int context, final long enabledActions )
+    void setGameState( final int context, final long enabledActions, final String[] informationSnapshot )
     {
         if ( commandDeckView != null ) {
-            commandDeckView.setGameState( context, enabledActions );
+            commandDeckView.setGameState( context, enabledActions, informationSnapshot );
         }
     }
 
@@ -162,6 +162,13 @@ final class ThorSecondScreenPresentation extends Presentation
         private int gameContext = -1;
         private long enabledActions = -1L;
         private String contextTitle = "COMMAND DECK";
+        private int informationContext = -1;
+        private long informationRevision = -1;
+        private String informationTitle = "";
+        private String informationCategory = "";
+        private String informationDetail = "";
+        private String informationDate = "";
+        private String informationResources = "";
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender )
         {
@@ -170,13 +177,14 @@ final class ThorSecondScreenPresentation extends Presentation
             this.actionSender = actionSender;
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L );
+            setGameState( CONTEXT_FALLBACK, -1L, null );
         }
 
-        void setGameState( final int requestedContext, final long requestedEnabledActions )
+        void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE ? requestedContext : CONTEXT_FALLBACK;
-            if ( gameContext == context && enabledActions == requestedEnabledActions ) {
+            final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
+            if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
             }
 
@@ -189,6 +197,34 @@ final class ThorSecondScreenPresentation extends Presentation
                 layoutButtons( getWidth(), getHeight() );
             }
             invalidate();
+        }
+
+        private boolean applyInformationSnapshot( final String[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 8 ) {
+                return false;
+            }
+
+            try {
+                final int version = Integer.parseInt( snapshot[0] );
+                final int context = Integer.parseInt( snapshot[1] );
+                final long revision = Long.parseLong( snapshot[2] );
+                if ( version != 1 || revision == informationRevision ) {
+                    return false;
+                }
+
+                informationContext = context;
+                informationRevision = revision;
+                informationTitle = snapshot[3] == null ? "" : snapshot[3];
+                informationCategory = snapshot[4] == null ? "" : snapshot[4];
+                informationDetail = snapshot[5] == null ? "" : snapshot[5];
+                informationDate = snapshot[6] == null ? "" : snapshot[6];
+                informationResources = snapshot[7] == null ? "" : snapshot[7];
+                return true;
+            }
+            catch ( final NumberFormatException ex ) {
+                return false;
+            }
         }
 
         @Override
@@ -249,17 +285,65 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
+            if ( gameContext == CONTEXT_ADVENTURE_MAP && informationContext == CONTEXT_ADVENTURE_MAP && informationRevision >= 0 && !informationTitle.isEmpty() ) {
+                drawAdventureInformation( canvas, innerPanel );
+            }
+            else {
+                paint.setTextAlign( Paint.Align.CENTER );
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+                paint.setColor( TEXT_COLOR );
+                paint.setTextSize( Math.min( panel.height() * 0.34f, 68f ) );
+                final float titleBaseline = panel.centerY() - 8 - ( paint.ascent() + paint.descent() ) / 2;
+                canvas.drawText( contextTitle, panel.centerX(), titleBaseline, paint );
+
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+                paint.setColor( MUTED_TEXT_COLOR );
+                paint.setTextSize( Math.min( panel.height() * 0.14f, 27f ) );
+                canvas.drawText( "INFORMATION PANEL RESERVED", panel.centerX(), panel.bottom - 25, paint );
+            }
+        }
+
+        private void drawAdventureInformation( final Canvas canvas, final RectF panel )
+        {
+            final float horizontalPadding = 26f;
+            final float contentWidth = panel.width() - horizontalPadding * 2;
+
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            paint.setTextSize( 27f );
+            paint.setTextAlign( Paint.Align.LEFT );
+            canvas.drawText( informationCategory, panel.left + horizontalPadding, panel.top + 39f, paint );
+
+            paint.setTextAlign( Paint.Align.RIGHT );
+            paint.setColor( MUTED_TEXT_COLOR );
+            drawFittedText( canvas, informationDate, panel.right - horizontalPadding, panel.top + 39f, contentWidth * 0.55f, 27f );
+
             paint.setTextAlign( Paint.Align.CENTER );
             paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
             paint.setColor( TEXT_COLOR );
-            paint.setTextSize( Math.min( panel.height() * 0.34f, 68f ) );
-            final float titleBaseline = panel.centerY() - 8 - ( paint.ascent() + paint.descent() ) / 2;
-            canvas.drawText( contextTitle, panel.centerX(), titleBaseline, paint );
+            drawFittedText( canvas, informationTitle, panel.centerX(), panel.top + panel.height() * 0.48f, contentWidth, 48f );
 
             paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, informationDetail, panel.centerX(), panel.top + panel.height() * 0.68f, contentWidth, 28f );
+
+            paint.setColor( GOLD_COLOR );
+            paint.setStrokeWidth( 2f );
+            canvas.drawRect( panel.left + horizontalPadding, panel.top + panel.height() * 0.76f, panel.right - horizontalPadding,
+                             panel.top + panel.height() * 0.76f + 2f, paint );
+
             paint.setColor( MUTED_TEXT_COLOR );
-            paint.setTextSize( Math.min( panel.height() * 0.14f, 27f ) );
-            canvas.drawText( "INFORMATION PANEL RESERVED", panel.centerX(), panel.bottom - 25, paint );
+            drawFittedText( canvas, informationResources, panel.centerX(), panel.bottom - 18f, contentWidth, 25f );
+        }
+
+        private void drawFittedText( final Canvas canvas, final String text, final float x, final float baseline, final float maximumWidth, final float preferredSize )
+        {
+            paint.setTextSize( preferredSize );
+            final float measuredWidth = paint.measureText( text );
+            if ( measuredWidth > maximumWidth && measuredWidth > 0 ) {
+                paint.setTextSize( preferredSize * maximumWidth / measuredWidth );
+            }
+            canvas.drawText( text, x, baseline, paint );
         }
 
         private void drawButton( final Canvas canvas, final CommandButton button )

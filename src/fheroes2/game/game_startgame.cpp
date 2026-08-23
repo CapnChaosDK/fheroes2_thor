@@ -1149,6 +1149,38 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         return actions;
     };
 
+    const auto publishThorInformation = [&myKingdom]() {
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::ADVENTURE_MAP;
+        snapshot.date = world.DateString();
+
+        if ( const Heroes * hero = GetFocusHeroes(); hero != nullptr ) {
+            snapshot.title = hero->GetName();
+            snapshot.category = "HERO";
+            snapshot.detail = "MOVEMENT  " + std::to_string( hero->GetMovePoints() ) + " / " + std::to_string( hero->GetMaxMovePoints() ) + "     MANA  "
+                              + std::to_string( hero->GetSpellPoints() ) + " / " + std::to_string( hero->GetMaxSpellPoints() );
+        }
+        else if ( const Castle * castle = GetFocusCastle(); castle != nullptr ) {
+            snapshot.title = castle->GetName();
+            snapshot.category = castle->isCastle() ? "CASTLE" : "TOWN";
+            snapshot.detail = "SELECTED SETTLEMENT";
+        }
+        else {
+            snapshot.title = "KINGDOM";
+            snapshot.category = "ADVENTURE MAP";
+            snapshot.detail = "NO HERO OR TOWN SELECTED";
+        }
+
+        const Funds & funds = myKingdom.GetFunds();
+        snapshot.resources = "GOLD  " + std::to_string( funds.gold ) + "     WOOD  " + std::to_string( funds.wood ) + "     ORE  " + std::to_string( funds.ore )
+                             + "     MERCURY  " + std::to_string( funds.mercury ) + "     SULFUR  " + std::to_string( funds.sulfur ) + "     CRYSTAL  "
+                             + std::to_string( funds.crystal ) + "     GEMS  " + std::to_string( funds.gems );
+
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    };
+
+    publishThorInformation();
+
     while ( res == fheroes2::GameMode::CANCEL ) {
         if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
             if ( Game::processExitEvent() == fheroes2::GameMode::QUIT_GAME ) {
@@ -1159,6 +1191,8 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
 
             continue;
         }
+
+        publishThorInformation();
 
 #if defined( WITH_DEBUG )
         {

@@ -174,7 +174,31 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `deferred`
+Status: `Adventure Map candidate installed; device validation pending`
+
+### Snapshot bridge
+
+- A versioned, revisioned information snapshot now carries read-only game-visible data from the game thread through JNI to the Android presentation.
+- The existing 100 ms context poll requests a snapshot by revision. Native code returns no payload when values are unchanged, and Android redraws only for a new revision.
+- Context transitions publish an empty snapshot before changing screens, preventing stale information from another context or hot-seat player from remaining visible.
+- The first slice uses text and generated stone, parchment-brown, and gold UI primitives; it does not bundle proprietary Heroes II artwork.
+
+### Adventure Map information card
+
+- The reserved panel shows the focused hero or settlement name and type, current date, all seven kingdom resources, and hero movement and mana when a hero is focused.
+- With no hero or settlement focused, it shows a neutral Kingdom/Adventure Map summary.
+- Existing Adventure semantic controls, enabled states, physical controls, and fallback behavior are unchanged.
+- Android build and lint pass through the required short `R:` mapping. The APK installed successfully and opened the command deck on display 4.
+
+### Adventure information device validation
+
+Status: `planned`
+
+1. Focus two different heroes and verify name, movement, and mana update without flicker or stale values.
+2. Move a hero or cast an Adventure spell and verify the corresponding value updates.
+3. Focus a town or castle and verify its name and type replace the hero details.
+4. Gain or spend a resource and verify the resource line and date remain readable inside the panel borders.
+5. Open and close a nested dialog, then end the turn. Verify no stale information appears during transitions and all existing lower-screen and physical controls still work.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Selected castle summary and available creature growth.

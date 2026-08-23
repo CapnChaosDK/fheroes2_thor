@@ -13,6 +13,7 @@
 #include <atomic>
 #include <deque>
 #include <mutex>
+#include <utility>
 
 #if defined( ANDROID ) && defined( TARGET_AYN_THOR )
 #include <jni.h>
@@ -24,6 +25,8 @@ namespace
     std::atomic<fheroes2::thor::ActionMask> enabledActions{ 0 };
     std::mutex actionQueueMutex;
     std::deque<fheroes2::thor::Action> actionQueue;
+    std::mutex informationMutex;
+    fheroes2::thor::InformationSnapshot informationSnapshot;
 
     bool isBattleAction( const fheroes2::thor::Action action )
     {
@@ -146,6 +149,12 @@ namespace fheroes2::thor
         if ( previousContext != context ) {
             enabledActions.store( 0, std::memory_order_release );
             actionQueue.clear();
+
+            std::lock_guard<std::mutex> informationLock( informationMutex );
+            InformationSnapshot emptySnapshot;
+            emptySnapshot.context = context;
+            emptySnapshot.revision = informationSnapshot.revision + 1;
+            informationSnapshot = std::move( emptySnapshot );
         }
     }
 
@@ -214,6 +223,25 @@ namespace fheroes2::thor
         }
     }
 
+    InformationSnapshot getInformationSnapshot()
+    {
+        std::lock_guard<std::mutex> lock( informationMutex );
+        return informationSnapshot;
+    }
+
+    void publishInformationSnapshot( InformationSnapshot snapshot )
+    {
+        std::lock_guard<std::mutex> lock( informationMutex );
+        if ( informationSnapshot.version == snapshot.version && informationSnapshot.context == snapshot.context && informationSnapshot.title == snapshot.title
+             && informationSnapshot.category == snapshot.category && informationSnapshot.detail == snapshot.detail && informationSnapshot.date == snapshot.date
+             && informationSnapshot.resources == snapshot.resources ) {
+            return;
+        }
+
+        snapshot.revision = informationSnapshot.revision + 1;
+        informationSnapshot = std::move( snapshot );
+    }
+
     UiContextGuard::UiContextGuard( const UiContext context )
         : _previousContext( getUiContext() )
     {
@@ -240,5 +268,43 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
 extern "C" JNIEXPORT jlong JNICALL Java_org_fheroes2_GameActivity_nativeGetThorEnabledActionMask( JNIEnv *, jclass )
 {
     return static_cast<jlong>( fheroes2::thor::getEnabledActions() );
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorInformationSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    const fheroes2::thor::InformationSnapshot snapshot = fheroes2::thor::getInformationSnapshot();
+    if ( snapshot.revision == static_cast<uint64_t>( knownRevision ) ) {
+        return nullptr;
+    }
+
+    jclass stringClass = env->FindClass( "java/lang/String" );
+    if ( stringClass == nullptr ) {
+        return nullptr;
+    }
+
+    constexpr jsize fieldCount = 8;
+    jobjectArray fields = env->NewObjectArray( fieldCount, stringClass, nullptr );
+    if ( fields == nullptr ) {
+        env->DeleteLocalRef( stringClass );
+        return nullptr;
+    }
+
+    const std::string version = std::to_string( snapshot.version );
+    const std::string context = std::to_string( static_cast<int32_t>( snapshot.context ) );
+    const std::string revision = std::to_string( snapshot.revision );
+    const std::string * values[fieldCount] = { &version, &context, &revision, &snapshot.title, &snapshot.category, &snapshot.detail, &snapshot.date, &snapshot.resources };
+
+    for ( jsize index = 0; index < fieldCount; ++index ) {
+        jstring value = env->NewStringUTF( values[index]->c_str() );
+        if ( value == nullptr ) {
+            env->DeleteLocalRef( stringClass );
+            return nullptr;
+        }
+        env->SetObjectArrayElement( fields, index, value );
+        env->DeleteLocalRef( value );
+    }
+
+    env->DeleteLocalRef( stringClass );
+    return fields;
 }
 #endif
