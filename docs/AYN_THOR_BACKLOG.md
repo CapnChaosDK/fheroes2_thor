@@ -174,7 +174,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `Hero information candidate installed; device validation pending`
+Status: `Hero information card passed`
 
 ### Snapshot bridge
 
@@ -211,13 +211,15 @@ All five Adventure information checks passed on the Thor, including readability 
 
 ### Hero information device validation
 
-Status: `planned`
+Status: `passed`
 
 1. Open a Hero and compare name, level/class, and all four primary skills with the upper screen.
 2. Use Previous and Next repeatedly and verify every value switches once without showing stale information from the prior hero.
 3. Compare movement and mana with the Adventure card, including a hero whose values are not full.
 4. Verify positive, neutral, or negative morale and luck values match the upper Hero screen and all text remains inside the panel borders.
 5. Close and reopen the Hero screen and verify the Adventure and Hero cards restore correctly while all lower-screen and physical controls remain unchanged.
+
+All five Hero information checks passed on the Thor, including rapid hero switching, value accuracy, readability, and context restoration.
 
 - Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
 - Selected castle summary and available creature growth.
