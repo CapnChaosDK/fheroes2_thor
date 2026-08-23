@@ -112,7 +112,14 @@ namespace
             engine.setTitle( appCaption );
 
             auto & cursor = fheroes2::cursor();
+#if defined( TARGET_AYN_THOR )
+            // The Thor's built-in controller drives the engine's emulated pointer, while Android does not provide a usable hardware
+            // cursor for it. Controller initialization enables software emulation earlier in startup, but applying the generic saved
+            // cursor preference here can disable it again.
+            cursor.enableSoftwareEmulation( true );
+#else
             cursor.enableSoftwareEmulation( conf.isSoftwareEmulationEnabled() );
+#endif
             cursor.show( false );
 
             fheroes2::RenderProcessor & renderProcessor = fheroes2::RenderProcessor::instance();
