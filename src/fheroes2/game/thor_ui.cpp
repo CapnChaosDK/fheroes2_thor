@@ -166,13 +166,20 @@ namespace
         }
     }
 
+    bool isLoadGameMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::MENU_LOAD_STANDARD || action == Action::MENU_LOAD_CAMPAIGN || action == Action::MENU_LOAD_HOT_SEAT || action == Action::MENU_BACK;
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
 
         return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
-               || context == UiContext::HOT_SEAT_MENU;
+               || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -194,6 +201,8 @@ namespace
             return isMultiplayerMenuAction( action );
         case fheroes2::thor::UiContext::HOT_SEAT_MENU:
             return isHotSeatMenuAction( action );
+        case fheroes2::thor::UiContext::LOAD_GAME_MENU:
+            return isLoadGameMenuAction( action );
         default:
             return false;
         }

@@ -27,7 +27,8 @@ namespace fheroes2::thor
         NEW_GAME_MENU,
         CAMPAIGN_MENU,
         MULTIPLAYER_MENU,
-        HOT_SEAT_MENU
+        HOT_SEAT_MENU,
+        LOAD_GAME_MENU
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -90,7 +91,10 @@ namespace fheroes2::thor
         MENU_HOT_SEAT_3_PLAYERS,
         MENU_HOT_SEAT_4_PLAYERS,
         MENU_HOT_SEAT_5_PLAYERS,
-        MENU_HOT_SEAT_6_PLAYERS
+        MENU_HOT_SEAT_6_PLAYERS,
+        MENU_LOAD_STANDARD,
+        MENU_LOAD_CAMPAIGN,
+        MENU_LOAD_HOT_SEAT
     };
 
     using ActionMask = uint64_t;

@@ -293,9 +293,17 @@ Goal: make the lower display follow menu hierarchy so choices can be completed d
 - Android build and lint pass through the required short `R:` mapping. The APK installed and cold-launched successfully on the Thor. Live lower-display checks verified the New Game, Multiplayer, and Hot Seat layouts and the complete Back chain from Hot Seat to Multiplayer to New Game to Main Menu. Campaign was correctly muted for the current asset set; selection actions and the asset-dependent Campaign path remain pending manual validation.
 - User validation passed Standard, Battle Only, New Game Settings, all Hot Seat player counts, rapid-tap rejection, and physical, mouse, and touchscreen controls. Main Menu Settings initially exposed a missing temporary Dialog context; the correction scopes that settings window as Dialog and restores Main Menu on close. A live lower-display check and the focused user retest both passed Main Menu to Settings Dialog and one Cancel back to Main Menu. The New Game first slice is hardware-validated for the current asset configuration.
 
+### Load Game implementation candidate
+
+- Load Game is flattened to Standard, Campaign, Hot Seat, and Back on both displays; the redundant Multiplayer to Hot Seat intermediate menu has been removed.
+- The four lower-screen choices use a balanced 2 by 2 Heroes II-styled layout.
+- Standard, Campaign, and Hot Seat availability is derived before rendering from compatible saves and installed campaign assets. Empty categories remain visible but muted and ignore touch or hotkeys.
+- Stable semantic Load Game actions execute on the game thread. Back returns directly to Main Menu, while closing a category's existing save browser restores the Load Game deck.
+- Mouse, touchscreen, physical controller, configurable hotkeys, and text-support behavior remain available.
+- Android build and lint pass through the required short `R:` mapping. The APK installed and cold-launched successfully on the Thor. Live lower-display checks verified the balanced Load Game layout, Standard enabled, Campaign and Hot Seat muted for the current save and asset set, Back restoration to Main Menu, Standard save-browser Dialog context, and exact Load Game restoration after one Cancel. Focused user validation passed the layout, muted-action rejection, Standard browser and restoration, Back, rapid-tap protection, and physical, mouse, and touchscreen controls. The Load Game slice is hardware-validated for the current save and asset configuration.
+
 ### Later menu slices
 
-- Load Game: Standard, Campaign, Hot Seat, and Back, with unavailable save categories visibly muted.
 - Campaign selection, scenario selection, player setup, Battle Only setup, High Scores variants, Settings, and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 

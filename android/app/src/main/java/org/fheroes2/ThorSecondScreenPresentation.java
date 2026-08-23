@@ -42,6 +42,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_CAMPAIGN_MENU = 8;
     private static final int CONTEXT_MULTIPLAYER_MENU = 9;
     private static final int CONTEXT_HOT_SEAT_MENU = 10;
+    private static final int CONTEXT_LOAD_GAME_MENU = 11;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -100,6 +101,9 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_MENU_HOT_SEAT_4_PLAYERS = 54;
     private static final int ACTION_MENU_HOT_SEAT_5_PLAYERS = 55;
     private static final int ACTION_MENU_HOT_SEAT_6_PLAYERS = 56;
+    private static final int ACTION_MENU_LOAD_STANDARD = 57;
+    private static final int ACTION_MENU_LOAD_CAMPAIGN = 58;
+    private static final int ACTION_MENU_LOAD_HOT_SEAT = 59;
 
     interface KeySender
     {
@@ -200,7 +204,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HOT_SEAT_MENU ? requestedContext : CONTEXT_FALLBACK;
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_LOAD_GAME_MENU ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -574,6 +578,13 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "6 PLAYERS", ACTION_MENU_HOT_SEAT_6_PLAYERS, KeyEvent.KEYCODE_6 );
                 addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
+            case CONTEXT_LOAD_GAME_MENU:
+                contextTitle = "LOAD GAME";
+                addAction( "STANDARD", ACTION_MENU_LOAD_STANDARD, KeyEvent.KEYCODE_S );
+                addAction( "CAMPAIGN", ACTION_MENU_LOAD_CAMPAIGN, KeyEvent.KEYCODE_C );
+                addAction( "HOT SEAT", ACTION_MENU_LOAD_HOT_SEAT, KeyEvent.KEYCODE_H );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
                 addDialogActions();
@@ -611,7 +622,7 @@ final class ThorSecondScreenPresentation extends Presentation
             final float margin = getMargin();
             final float gap = margin * 0.55f;
             final float top = height * 0.265f;
-            final int columns = buttons.size() <= 2 ? 2 : ( buttons.size() <= 6 ? 3 : 4 );
+            final int columns = buttons.size() <= 2 || buttons.size() == 4 ? 2 : ( buttons.size() <= 6 ? 3 : 4 );
             final int rows = ( buttons.size() + columns - 1 ) / columns;
             final float columnWidth = ( width - 2 * margin - ( columns - 1 ) * gap ) / columns;
             final float rowHeight = ( height - top - margin - ( rows - 1 ) * gap ) / rows;

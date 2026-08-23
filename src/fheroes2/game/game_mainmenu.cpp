@@ -147,6 +147,9 @@ void Game::runMainGameLoop()
         case fheroes2::GameMode::NEW_GAME:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::NEW_GAME_MENU );
             break;
+        case fheroes2::GameMode::LOAD_GAME:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::LOAD_GAME_MENU );
+            break;
         case fheroes2::GameMode::START_GAME:
         case fheroes2::GameMode::START_BATTLE_ONLY_MODE:
         case fheroes2::GameMode::EDITOR_MAIN_MENU:
