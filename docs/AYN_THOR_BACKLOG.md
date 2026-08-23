@@ -232,6 +232,6 @@ Status: `planned`
 
 - Context transition matrix covering main menu, nested dialogs, adventure map, hero, castle, battle, and editor paths.
 - Touch cancellation, multi-touch rejection, rapid context changes, screen sleep, rotation lock, and panel hot-plug tests.
-- Thor startup cursor candidate installed: controller/touch initialization enabled the software cursor, but the later display initializer overwrote it from the saved cursor-emulation setting. Thor display initialization now always retains software cursor emulation, while other platforms continue honoring their saved preference. Build, lint, installation, and cold startup pass; visual device validation remains pending.
+- Thor startup cursor fix passed: controller/touch initialization enabled the software cursor, but the later display initializer overwrote it from the saved cursor-emulation setting. Thor display initialization now always retains software cursor emulation, while other platforms continue honoring their saved preference. Cold-start cursor visibility, controller buttons, touchscreen input, and both displays passed on the Thor without toggling away from Follow Standard mode.
 - Verify Snapdragon 865 and Snapdragon 8 Gen 2 Thor variants where hardware is available.
 - Document ADB diagnostics and capture context/action transitions under the `fheroes2-thor` log tag.
