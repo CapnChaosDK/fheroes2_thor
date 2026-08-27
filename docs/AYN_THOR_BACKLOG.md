@@ -379,11 +379,31 @@ Status: `passed`; behavior and focused acceptance tests approved and hardware-va
 4. Make either active army invalid with the upper editor and verify Start mutes; restore a valid army and verify Start enables. Confirm upper army and loadout editing leaves the information card synchronized.
 5. Test Reset, Exit, rapid taps, and Start. Verify Start launches exactly one battle and switches to the validated Battle deck; confirm physical controls, mouse, and upper touchscreen remain intact.
 
+### High Scores workflow
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- Standard and Campaign tables use dedicated lower-screen contexts. Main Menu entry continues to open Standard first.
+- Standard exposes Campaign and Exit; Campaign exposes Standard and Exit. The lower title identifies the active table without duplicating the ten upper-screen score entries.
+- Campaign availability mirrors the upper screen and requires the complete Succession Wars campaign files. The current Thor has compatible campaign assets installed, so both directions can be validated.
+- Stable semantic actions execute on the game thread. Context changes clear queued taps, Exit returns directly to Main Menu, and High Scores help dialogs restore the active table and its enabled actions.
+- Existing score loading, default entries, post-victory name entry, new-score highlighting, mouse, touchscreen, keyboard, hotkey, and physical-controller paths remain unchanged.
+- Android build and lint pass through the required short `R:` mapping. The candidate APK installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; SHA-256: `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`.
+- All five focused checks passed on the Thor: initial Standard synchronization, two-way Standard/Campaign switching with the installed assets, direct Exit from both variants, rapid-tap rejection, help-dialog restoration, and physical-controller, upper-touchscreen, mouse, and keyboard-close regression coverage.
+
+#### Focused High Scores validation
+
+1. Open High Scores and verify Standard appears on both screens, with Campaign and Exit on the lower display.
+2. Switch Standard to Campaign and back to Standard. Verify both screens identify the same table after each single tap.
+3. Use Exit from both variants and verify it returns directly to Main Menu exactly once.
+4. Rapidly tap the table switch and Exit controls. Verify there are no stacked transitions, delayed actions, or incorrect restored contexts.
+5. Verify upper touchscreen, mouse, physical controls, and keyboard close behavior remain intact. Open and close a High Scores help dialog and verify the correct lower deck restores.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
-- Campaign selection remains deferred until compatible campaign assets are available for full device validation.
-- High Scores is the next recommended small, asset-independent navigable-menu slice. Inspect its upper-screen variants and exit behavior, then propose lower-screen behavior and focused manual acceptance tests for approval.
+- Compatible Succession Wars campaign assets are now installed on the Thor. Campaign selection is the next recommended planning point as a separate slice with its own behavior and focused tests.
+- High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Later slices include Settings and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 

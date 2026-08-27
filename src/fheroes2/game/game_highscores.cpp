@@ -53,6 +53,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "system.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -77,6 +78,23 @@ namespace
     fheroes2::HighScoreDataContainer highScoreDataContainer;
     const int32_t initialHighScoreEntryOffsetY = 72;
     const int32_t highScoreEntryStepY = 40;
+
+    void setThorHighScoresState( const bool isCampaign, const bool isCampaignAvailable )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::HIGH_SCORES_EXIT );
+        if ( isCampaign ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::HIGH_SCORES_VIEW_STANDARD );
+        }
+        else if ( isCampaignAvailable ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::HIGH_SCORES_VIEW_CAMPAIGN );
+        }
+
+        fheroes2::thor::setUiContext( isCampaign ? fheroes2::thor::UiContext::HIGH_SCORES_CAMPAIGN
+                                                  : fheroes2::thor::UiContext::HIGH_SCORES_STANDARD );
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
 
     const int32_t playerNameOffset = 88;
     const int32_t scenarioNameOffset = 244;
@@ -376,10 +394,13 @@ namespace
         fheroes2::Button buttonExit( top.x + back.width() - 36, top.y + 315,
                                      isEvilInterface ? ICN::BUTTON_HSCORES_VERTICAL_EXIT_EVIL : ICN::BUTTON_HSCORES_VERTICAL_EXIT_GOOD, 0, 1 );
 
-        if ( !Game::isSuccessionWarsCampaignPresent() ) {
+        const bool isCampaignAvailable = Game::isSuccessionWarsCampaignPresent();
+        if ( !isCampaignAvailable ) {
             // Disable the game mode switch button if The Succession Wars campaign files are not present.
             buttonOtherHighScore.disable();
         }
+
+        setThorHighScoresState( isCampaign, isCampaignAvailable );
 
         buttonOtherHighScore.draw();
         buttonExit.draw();
@@ -401,7 +422,10 @@ namespace
 
         LocalEvent & le = LocalEvent::Get();
         while ( le.HandleEvents() ) {
-            if ( le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+
+            if ( requestedThorAction == fheroes2::thor::Action::HIGH_SCORES_EXIT || le.MouseClickLeft( buttonExit.area() )
+                 || Game::HotKeyCloseWindow() ) {
                 if ( isAfterGameCompletion || isDefaultScreenSize ) {
                     fheroes2::fadeOutDisplay();
                     Game::setDisplayFadeIn();
@@ -413,7 +437,10 @@ namespace
                 return fheroes2::GameMode::MAIN_MENU;
             }
 
-            if ( buttonOtherHighScore.isEnabled() && le.MouseClickLeft( buttonOtherHighScore.area() ) ) {
+            const fheroes2::thor::Action expectedSwitchAction
+                = isCampaign ? fheroes2::thor::Action::HIGH_SCORES_VIEW_STANDARD : fheroes2::thor::Action::HIGH_SCORES_VIEW_CAMPAIGN;
+            if ( buttonOtherHighScore.isEnabled()
+                 && ( requestedThorAction == expectedSwitchAction || le.MouseClickLeft( buttonOtherHighScore.area() ) ) ) {
                 return isCampaign ? fheroes2::GameMode::HIGHSCORES_STANDARD : fheroes2::GameMode::HIGHSCORES_CAMPAIGN;
             }
 
@@ -425,6 +452,7 @@ namespace
 
             if ( le.isMouseRightButtonPressedInArea( buttonExit.area() ) ) {
                 fheroes2::showStandardTextMessage( _( "Exit" ), _( "Exit this menu." ), Dialog::ZERO );
+                setThorHighScoresState( isCampaign, isCampaignAvailable );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonOtherHighScore.area() ) ) {
                 if ( isCampaign ) {
@@ -433,6 +461,7 @@ namespace
                 else {
                     fheroes2::showStandardTextMessage( _( "Campaign" ), _( "View High Scores for Campaigns." ), Dialog::ZERO );
                 }
+                setThorHighScoresState( isCampaign, isCampaignAvailable );
             }
 
             if ( Game::validateAnimationDelay( Game::DelayType::MAPS_DELAY ) ) {

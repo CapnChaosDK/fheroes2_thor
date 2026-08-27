@@ -30,7 +30,9 @@ namespace fheroes2::thor
         HOT_SEAT_MENU,
         LOAD_GAME_MENU,
         SCENARIO_SETUP,
-        BATTLE_ONLY_SETUP
+        BATTLE_ONLY_SETUP,
+        HIGH_SCORES_STANDARD,
+        HIGH_SCORES_CAMPAIGN
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -117,7 +119,10 @@ namespace fheroes2::thor
         BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL,
         BATTLE_ONLY_RESET,
         BATTLE_ONLY_START,
-        BATTLE_ONLY_EXIT
+        BATTLE_ONLY_EXIT,
+        HIGH_SCORES_VIEW_STANDARD,
+        HIGH_SCORES_VIEW_CAMPAIGN,
+        HIGH_SCORES_EXIT
     };
 
     using ActionMask = uint64_t;

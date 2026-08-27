@@ -217,6 +217,20 @@ namespace
         }
     }
 
+    bool isHighScoresStandardAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::HIGH_SCORES_VIEW_CAMPAIGN || action == Action::HIGH_SCORES_EXIT;
+    }
+
+    bool isHighScoresCampaignAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::HIGH_SCORES_VIEW_STANDARD || action == Action::HIGH_SCORES_EXIT;
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
@@ -224,7 +238,8 @@ namespace
         return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
-               || context == UiContext::BATTLE_ONLY_SETUP;
+               || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
+               || context == UiContext::HIGH_SCORES_CAMPAIGN;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -252,6 +267,10 @@ namespace
             return isScenarioSetupAction( action );
         case fheroes2::thor::UiContext::BATTLE_ONLY_SETUP:
             return isBattleOnlySetupAction( action );
+        case fheroes2::thor::UiContext::HIGH_SCORES_STANDARD:
+            return isHighScoresStandardAction( action );
+        case fheroes2::thor::UiContext::HIGH_SCORES_CAMPAIGN:
+            return isHighScoresCampaignAction( action );
         default:
             return false;
         }

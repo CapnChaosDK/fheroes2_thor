@@ -45,6 +45,8 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_LOAD_GAME_MENU = 11;
     private static final int CONTEXT_SCENARIO_SETUP = 12;
     private static final int CONTEXT_BATTLE_ONLY_SETUP = 13;
+    private static final int CONTEXT_HIGH_SCORES_STANDARD = 14;
+    private static final int CONTEXT_HIGH_SCORES_CAMPAIGN = 15;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -127,6 +129,9 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_BATTLE_ONLY_RESET = 78;
     private static final int ACTION_BATTLE_ONLY_START = 79;
     private static final int ACTION_BATTLE_ONLY_EXIT = 80;
+    private static final int ACTION_HIGH_SCORES_VIEW_STANDARD = 81;
+    private static final int ACTION_HIGH_SCORES_VIEW_CAMPAIGN = 82;
+    private static final int ACTION_HIGH_SCORES_EXIT = 83;
 
     interface KeySender
     {
@@ -227,7 +232,8 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE_ONLY_SETUP ? requestedContext : CONTEXT_FALLBACK;
+            final int context
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HIGH_SCORES_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -637,6 +643,16 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "RESET", ACTION_BATTLE_ONLY_RESET, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "START", ACTION_BATTLE_ONLY_START, KeyEvent.KEYCODE_ENTER );
                 addAction( "EXIT", ACTION_BATTLE_ONLY_EXIT, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_HIGH_SCORES_STANDARD:
+                contextTitle = "HIGH SCORES — STANDARD";
+                addAction( "CAMPAIGN", ACTION_HIGH_SCORES_VIEW_CAMPAIGN, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "EXIT", ACTION_HIGH_SCORES_EXIT, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_HIGH_SCORES_CAMPAIGN:
+                contextTitle = "HIGH SCORES — CAMPAIGN";
+                addAction( "STANDARD", ACTION_HIGH_SCORES_VIEW_STANDARD, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "EXIT", ACTION_HIGH_SCORES_EXIT, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
