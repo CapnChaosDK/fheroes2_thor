@@ -13,27 +13,27 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.4.0`.
-- Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
-- Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
-- v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
-- Latest hardware-validated source commit: `d7212d69f`.
-- This checkpoint adds the navigable in-map Editor Map Specifications workflow on top of the validated Editor pre-entry, File Options, System Options, menu, gameplay-control, and information-card workflows. Its final debug APK SHA-256 is `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
+- Latest published release: `thor-v0.5.0`.
+- Release source commit: `601eb7ef5139a9922426417e27b1c5f60e061db3`.
+- Release APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- v0.5.0 contains the hardware-validated Battle Only setup, High Scores, both campaign selectors, Game Settings, and complete Map Editor workflow: pre-entry, map creation/loading, File Options, System Options, transactional Map Specifications, and all nine Editor Tools.
+- Latest hardware-validated source commit: `601eb7ef5`.
+- This checkpoint adds the navigable in-map Editor Tools hierarchy on top of every previously validated menu, gameplay-control, information-card, and Editor workflow. Its final debug APK SHA-256 is `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- Editor pre-entry, in-map File Options, System Options, Map Specifications, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, live information synchronization, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
-- The latest hardware-validated source implementation is `d7212d69f`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
+- Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, all nine native tool modes, terrain and brush selection, object selectors and placement, Detail Edit/Move/Copy, erase filters, Magnify, live Undo/Redo availability, information synchronization, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
+- The latest hardware-validated source implementation is `601eb7ef5`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is Editor tools. Treat richer map information as a separate later slice.
-- Inspect the existing Editor tool hierarchy and plan stable lower-screen entry/actions and availability without duplicating editor-owned placement, erasure, selection, or validation logic.
+- The next focused feature planning point is richer map information.
+- Inspect the existing Editor map state and information-card bridge, then plan a focused read-only lower-screen information slice without duplicating editor-owned state, validation, or rendering logic.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated Editor pre-entry, File Options, System Options, Map Specifications, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Retain the validated Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 

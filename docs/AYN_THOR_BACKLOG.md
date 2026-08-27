@@ -6,16 +6,16 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.4.0` was published on 2026-08-23 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.4.0
-- Source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
-- APK: `fheroes2-thor-v0.4.0-debug.apk`.
-- APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
-- The release adds the hardware-validated Scenario Setup player-editing workflow: player navigation, Standard human-position transfer, fixed-count Hot Seat seat swapping, faction selection, handicap selection, synchronized upper highlighting, and lower information refresh.
+- `thor-v0.5.0` was published on 2026-08-27 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.5.0
+- Source commit: `601eb7ef5139a9922426417e27b1c5f60e061db3`.
+- APK: `fheroes2-thor-v0.5.0-debug.apk`.
+- APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- The release adds the hardware-validated Battle Only setup, High Scores, both campaign selectors, Game Settings, and complete Map Editor workflow: pre-entry, creation/loading, File Options, System Options, transactional Map Specifications, and all nine native Editor Tools.
 
 ## Latest validated development checkpoint
 
-- Commit `601eb7ef5` is the latest hardware-validated source checkpoint. It adds in-map Editor Tools on top of the validated Editor pre-entry hierarchy, File Options, System Options, Map Specifications, Game Settings, both campaign selectors, Battle Only setup, High Scores, and `thor-v0.4.0`.
+- Commit `601eb7ef5` is the latest hardware-validated source checkpoint and the source of `thor-v0.5.0`. It adds in-map Editor Tools on top of the validated Editor pre-entry hierarchy, File Options, System Options, Map Specifications, Game Settings, both campaign selectors, Battle Only setup, High Scores, and earlier releases.
 - Editor Tools exposes all nine native tool modes, their terrain, brush, object, Detail, and Erase options, Magnify, and live Undo/Redo availability while keeping placement, dragging, area selection, editing, moving, copying, validation, erasure, and history engine-owned.
 - Debug APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
 - Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused tool synchronization, placement, history, selector-restoration, rapid-tap, input, and regression checks.
