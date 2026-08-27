@@ -6,9 +6,9 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.4.0` at `503ef2318ca254329748ce443ee69271bcc2bf41`
-- Latest hardware-validated source commit: `d7212d69f`
-- Development APK SHA-256: `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`
-- Editor pre-entry, File Options, System Options, Map Specifications, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is Editor tools; richer map information remains a later slice.
+- Latest hardware-validated source commit: `601eb7ef5`
+- Development APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`
+- Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is richer map information.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

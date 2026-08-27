@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `d7212d69f` is the latest hardware-validated source checkpoint. It adds in-map Editor Map Specifications on top of the validated Editor pre-entry hierarchy, File Options, System Options, Game Settings, both campaign selectors, Battle Only setup, High Scores, and `thor-v0.4.0`.
-- Map Specifications exposes transactional map text, player setup, difficulty, victory/loss conditions and metadata, rumors, events, language, creator notes, exact nested restoration, and Okay/Back history behavior while preserving engine-owned validation.
-- Debug APK SHA-256: `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused specifications, alliance-prerequisite, dialog-restoration, rapid-tap, input, and regression checks.
+- Commit `601eb7ef5` is the latest hardware-validated source checkpoint. It adds in-map Editor Tools on top of the validated Editor pre-entry hierarchy, File Options, System Options, Map Specifications, Game Settings, both campaign selectors, Battle Only setup, High Scores, and `thor-v0.4.0`.
+- Editor Tools exposes all nine native tool modes, their terrain, brush, object, Detail, and Erase options, Magnify, and live Undo/Redo availability while keeping placement, dragging, area selection, editing, moving, copying, validation, erasure, and history engine-owned.
+- Debug APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused tool synchronization, placement, history, selector-restoration, rapid-tap, input, and regression checks.
 
 ## Agreed product decisions
 

@@ -123,8 +123,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest hardware-validated source checkpoint is `d7212d69f`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the Editor pre-entry, File Options, System Options, and Map Specifications workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
+The latest hardware-validated source checkpoint is `601eb7ef5`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the Editor pre-entry, File Options, System Options, Map Specifications, and Editor Tools workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
 
-The next focused feature planning point is Editor tools. Richer map information, touch radar, hero quick-selection, and drag-and-drop army management remain separate later milestones.
+The next focused feature planning point is richer map information. Touch radar, hero quick-selection, and drag-and-drop army management remain separate later milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).
