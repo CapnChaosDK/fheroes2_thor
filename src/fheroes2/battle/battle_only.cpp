@@ -55,6 +55,7 @@
 #include "skill.h"
 #include "skill_bar.h"
 #include "spell_book.h"
+#include "thor_ui.h"
 #include "til.h"
 #include "tools.h"
 #include "translations.h"
@@ -264,6 +265,9 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
 {
     resetBattleSetup = false;
 
+    using ThorAction = fheroes2::thor::Action;
+    const fheroes2::thor::UiContextGuard thorSetupContext( fheroes2::thor::UiContext::BATTLE_ONLY_SETUP );
+
     // setup cursor
     const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -360,8 +364,12 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
     fheroes2::addGradientShadow( Assets::getImage( buttonStartIcn, 0 ), display, buttonStart.area().getPosition(), shadowOffset );
     fheroes2::addGradientShadow( Assets::getImage( buttonExitIcn, 0 ), display, buttonExit.area().getPosition(), shadowOffset );
 
-    auto updateStartButton = [&buttonStart]( const Army & first, const Army & second ) {
-        const bool isArmyValid = ( first.isValid() && second.isValid() );
+    const auto getActiveArmy = []( const ArmyInfo & info ) -> const Army & { return info.hero != nullptr ? info.hero->GetArmy() : info.monster; };
+    const auto isBattleSetupValid
+        = [&getActiveArmy, this]() { return getActiveArmy( armyInfo[0] ).isValid() && getActiveArmy( armyInfo[1] ).isValid(); };
+
+    auto updateStartButton = [&buttonStart, &isBattleSetupValid]() {
+        const bool isArmyValid = isBattleSetupValid();
         if ( isArmyValid && !buttonStart.isEnabled() ) {
             buttonStart.enable();
             buttonStart.draw();
@@ -377,12 +385,64 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
         return false;
     };
 
+    if ( !isBattleSetupValid() ) {
+        buttonStart.disable();
+    }
+
     buttonStart.draw();
     buttonExit.draw();
     buttonReset.draw();
 
     const fheroes2::Rect terrainArea{ windowOffset.x + 306, windowOffset.y + 272, terrainIconSize.width, terrainIconSize.height };
     renderTerrain( terrainArea.getPosition(), _terrainType, display );
+
+    const auto getTerrainName
+        = [this]() { return _terrainType == Maps::Ground::UNKNOWN ? std::string( "RANDOM" ) : StringUpper( Maps::Ground::String( _terrainType ) ); };
+
+    const auto getThorActions = [&isBattleSetupValid, this]() {
+        fheroes2::thor::ActionMask actions = fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_SELECT_ATTACKER )
+                                                   | fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_SELECT_DEFENDER )
+                                                   | fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_PREVIOUS_TERRAIN )
+                                                   | fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_NEXT_TERRAIN )
+                                                   | fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_RESET )
+                                                   | fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_EXIT );
+        if ( armyInfo[1].hero != nullptr ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL );
+        }
+        if ( isBattleSetupValid() ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::BATTLE_ONLY_START );
+        }
+
+        return actions;
+    };
+
+    const auto publishThorInformation = [&getActiveArmy, &getTerrainName, &isBattleSetupValid, this]() {
+        const auto getOpponentName
+            = []( const ArmyInfo & info ) { return info.hero != nullptr ? StringUpper( info.hero->GetName() ) : std::string( "MONSTERS" ); };
+
+        const Army & attackerArmy = getActiveArmy( armyInfo[0] );
+        const Army & defenderArmy = getActiveArmy( armyInfo[1] );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::BATTLE_ONLY_SETUP;
+        snapshot.category = "BATTLE ONLY";
+        snapshot.title = getOpponentName( armyInfo[0] ) + " VS " + getOpponentName( armyInfo[1] );
+        snapshot.detail = "TERRAIN " + getTerrainName() + "     DEFENDER "
+                          + ( armyInfo[1].hero != nullptr && !armyInfo[1].player.isControlAI() ? "HUMAN" : "AI" );
+        snapshot.date = isBattleSetupValid() ? "ARMIES READY" : "ARMY INVALID";
+        snapshot.resources = "ATTACKER " + std::to_string( attackerArmy.GetOccupiedSlotCount() ) + "/" + std::to_string( attackerArmy.Size() )
+                             + " STACKS     DEFENDER " + std::to_string( defenderArmy.GetOccupiedSlotCount() ) + "/"
+                             + std::to_string( defenderArmy.Size() ) + " STACKS";
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    };
+
+    const auto restoreThorSetup = [&getThorActions, &publishThorInformation]() {
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::BATTLE_ONLY_SETUP );
+        fheroes2::thor::setEnabledActions( getThorActions() );
+        publishThorInformation();
+    };
+
+    restoreThorSetup();
 
     display.render();
 
@@ -392,6 +452,7 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
 
     LocalEvent & le = LocalEvent::Get();
     while ( le.HandleEvents() ) {
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
         bool updateSpellPoints = false;
         bool needRender = false;
         bool needRedrawOpponentsStats = false;
@@ -407,19 +468,22 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
             buttonReset.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonReset.area() ) );
         }
 
-        if ( buttonStart.isEnabled() && ( le.MouseClickLeft( buttonStart.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) ) ) {
+        if ( buttonStart.isEnabled()
+             && ( requestedThorAction == ThorAction::BATTLE_ONLY_START || le.MouseClickLeft( buttonStart.area() )
+                  || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) ) ) {
             result = true;
 
             break;
         }
-        if ( le.MouseClickLeft( buttonReset.area() ) ) {
+        if ( requestedThorAction == ThorAction::BATTLE_ONLY_RESET || le.MouseClickLeft( buttonReset.area() ) ) {
             resetBattleSetup = true;
             result = true;
 
             break;
         }
 
-        if ( le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+        if ( requestedThorAction == ThorAction::BATTLE_ONLY_EXIT || le.MouseClickLeft( buttonExit.area() )
+             || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
             break;
         }
 
@@ -444,12 +508,13 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
             }
         }
 
-        if ( le.MouseClickLeft( terrainArea ) || le.isMouseWheelDownInArea( terrainArea ) ) {
+        if ( requestedThorAction == ThorAction::BATTLE_ONLY_NEXT_TERRAIN || le.MouseClickLeft( terrainArea )
+             || le.isMouseWheelDownInArea( terrainArea ) ) {
             _terrainType = getNextTerrain( _terrainType );
             renderTerrain( terrainArea.getPosition(), _terrainType, display );
             needRender = true;
         }
-        else if ( le.isMouseWheelUpInArea( terrainArea ) ) {
+        else if ( requestedThorAction == ThorAction::BATTLE_ONLY_PREVIOUS_TERRAIN || le.isMouseWheelUpInArea( terrainArea ) ) {
             _terrainType = getPrevTerrain( _terrainType );
             renderTerrain( terrainArea.getPosition(), _terrainType, display );
             needRender = true;
@@ -459,8 +524,14 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
             ArmyInfo & first = armyInfo[firstId];
             const ArmyInfo & second = armyInfo[secondId];
 
-            if ( le.MouseClickLeft( first.portraitRoi ) ) {
-                const int hid = Dialog::selectHeroes( first.hero ? first.hero->GetID() : Heroes::UNKNOWN );
+            const bool isThorHeroSelection = ( firstId == 0 && requestedThorAction == ThorAction::BATTLE_ONLY_SELECT_ATTACKER )
+                                             || ( firstId == 1 && requestedThorAction == ThorAction::BATTLE_ONLY_SELECT_DEFENDER );
+            if ( isThorHeroSelection || le.MouseClickLeft( first.portraitRoi ) ) {
+                int hid = Heroes::UNKNOWN;
+                {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+                    hid = Dialog::selectHeroes( first.hero ? first.hero->GetID() : Heroes::UNKNOWN );
+                }
                 if ( second.hero && hid == second.hero->GetID() ) {
                     fheroes2::showStandardTextMessage( _( "Error" ), _( "Please select another hero." ), Dialog::OK );
                 }
@@ -473,7 +544,7 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
 
                     updateHero( first, windowOffset );
 
-                    needRender = needRender || updateStartButton( first.monster, second.monster );
+                    needRender = needRender || updateStartButton();
                 }
 
                 titleRoiRestorer.restore();
@@ -518,7 +589,7 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
 
                 armyInfo[firstId].needRedraw = true;
 
-                needRender = needRender || updateStartButton( armyInfo[firstId].monster, armyInfo[secondId].monster );
+                needRender = needRender || updateStartButton();
             }
             else if ( firstUI.artifact != nullptr && le.isMouseCursorPosInArea( firstUI.artifact->GetArea() ) && firstUI.artifact->QueueEventProcessing() ) {
                 if ( firstUI.army != nullptr && firstUI.army->isSelected() ) {
@@ -556,7 +627,7 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
         }
 
         if ( armyInfo[1].hero != nullptr ) {
-            if ( le.MouseClickLeft( defendingHeroTypeRoi ) ) {
+            if ( requestedThorAction == ThorAction::BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL || le.MouseClickLeft( defendingHeroTypeRoi ) ) {
                 if ( armyInfo[1].player.isControlAI() ) {
                     armyInfo[1].player.SetControl( CONTROL_HUMAN );
                 }
@@ -607,6 +678,9 @@ bool Battle::Only::setup( const bool allowBackup, bool & resetBattleSetup )
         if ( needRender ) {
             display.render();
         }
+
+        fheroes2::thor::setEnabledActions( getThorActions() );
+        publishThorInformation();
     }
 
     armyInfo[0].ui = {};

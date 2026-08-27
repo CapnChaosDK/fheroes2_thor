@@ -44,6 +44,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_HOT_SEAT_MENU = 10;
     private static final int CONTEXT_LOAD_GAME_MENU = 11;
     private static final int CONTEXT_SCENARIO_SETUP = 12;
+    private static final int CONTEXT_BATTLE_ONLY_SETUP = 13;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -118,6 +119,14 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_SCENARIO_PREVIOUS_FACTION = 70;
     private static final int ACTION_SCENARIO_NEXT_FACTION = 71;
     private static final int ACTION_SCENARIO_HANDICAP = 72;
+    private static final int ACTION_BATTLE_ONLY_SELECT_ATTACKER = 73;
+    private static final int ACTION_BATTLE_ONLY_SELECT_DEFENDER = 74;
+    private static final int ACTION_BATTLE_ONLY_PREVIOUS_TERRAIN = 75;
+    private static final int ACTION_BATTLE_ONLY_NEXT_TERRAIN = 76;
+    private static final int ACTION_BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL = 77;
+    private static final int ACTION_BATTLE_ONLY_RESET = 78;
+    private static final int ACTION_BATTLE_ONLY_START = 79;
+    private static final int ACTION_BATTLE_ONLY_EXIT = 80;
 
     interface KeySender
     {
@@ -218,7 +227,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SCENARIO_SETUP ? requestedContext : CONTEXT_FALLBACK;
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_BATTLE_ONLY_SETUP ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -228,7 +237,7 @@ final class ThorSecondScreenPresentation extends Presentation
             final boolean contextChanged = gameContext != context;
             gameContext = context;
             enabledActions = requestedEnabledActions;
-            if ( contextChanged || ( informationChanged && gameContext == CONTEXT_SCENARIO_SETUP ) ) {
+            if ( contextChanged || ( informationChanged && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP ) ) ) {
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
             }
@@ -322,7 +331,7 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
-                   || gameContext == CONTEXT_SCENARIO_SETUP )
+                   || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
                     drawBattleInformationCard( canvas, innerPanel );
@@ -617,6 +626,17 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "IMPOSSIBLE", ACTION_SCENARIO_DIFFICULTY_IMPOSSIBLE, KeyEvent.KEYCODE_5 );
                 addAction( "START", ACTION_SCENARIO_START, KeyEvent.KEYCODE_ENTER );
                 addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_BATTLE_ONLY_SETUP:
+                contextTitle = "BATTLE ONLY";
+                addAction( "SELECT ATTACKER", ACTION_BATTLE_ONLY_SELECT_ATTACKER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SELECT DEFENDER", ACTION_BATTLE_ONLY_SELECT_DEFENDER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PREV TERRAIN", ACTION_BATTLE_ONLY_PREVIOUS_TERRAIN, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT TERRAIN", ACTION_BATTLE_ONLY_NEXT_TERRAIN, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DEFENDER CONTROL", ACTION_BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "RESET", ACTION_BATTLE_ONLY_RESET, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "START", ACTION_BATTLE_ONLY_START, KeyEvent.KEYCODE_ENTER );
+                addAction( "EXIT", ACTION_BATTLE_ONLY_EXIT, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";

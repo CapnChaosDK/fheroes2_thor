@@ -198,13 +198,33 @@ namespace
         }
     }
 
+    bool isBattleOnlySetupAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::BATTLE_ONLY_SELECT_ATTACKER:
+        case Action::BATTLE_ONLY_SELECT_DEFENDER:
+        case Action::BATTLE_ONLY_PREVIOUS_TERRAIN:
+        case Action::BATTLE_ONLY_NEXT_TERRAIN:
+        case Action::BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL:
+        case Action::BATTLE_ONLY_RESET:
+        case Action::BATTLE_ONLY_START:
+        case Action::BATTLE_ONLY_EXIT:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
 
         return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
-               || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP;
+               || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
+               || context == UiContext::BATTLE_ONLY_SETUP;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -230,6 +250,8 @@ namespace
             return isLoadGameMenuAction( action );
         case fheroes2::thor::UiContext::SCENARIO_SETUP:
             return isScenarioSetupAction( action );
+        case fheroes2::thor::UiContext::BATTLE_ONLY_SETUP:
+            return isBattleOnlySetupAction( action );
         default:
             return false;
         }

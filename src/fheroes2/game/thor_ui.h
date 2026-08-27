@@ -29,7 +29,8 @@ namespace fheroes2::thor
         MULTIPLAYER_MENU,
         HOT_SEAT_MENU,
         LOAD_GAME_MENU,
-        SCENARIO_SETUP
+        SCENARIO_SETUP,
+        BATTLE_ONLY_SETUP
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -108,7 +109,15 @@ namespace fheroes2::thor
         SCENARIO_PLAYER_CONTROL,
         SCENARIO_PREVIOUS_FACTION,
         SCENARIO_NEXT_FACTION,
-        SCENARIO_HANDICAP
+        SCENARIO_HANDICAP,
+        BATTLE_ONLY_SELECT_ATTACKER,
+        BATTLE_ONLY_SELECT_DEFENDER,
+        BATTLE_ONLY_PREVIOUS_TERRAIN,
+        BATTLE_ONLY_NEXT_TERRAIN,
+        BATTLE_ONLY_TOGGLE_DEFENDER_CONTROL,
+        BATTLE_ONLY_RESET,
+        BATTLE_ONLY_START,
+        BATTLE_ONLY_EXIT
     };
 
     using ActionMask = uint64_t;

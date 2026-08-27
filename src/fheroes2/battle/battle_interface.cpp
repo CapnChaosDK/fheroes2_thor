@@ -3342,6 +3342,11 @@ void Battle::Interface::HumanBattleTurn( const Unit & unit, Actions & actions, s
         break;
     }
 
+    if ( requestedAction != fheroes2::thor::Action::NONE && !humanturn_exit
+         && fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::BATTLE ) {
+        publishThorBattleInformation( unit );
+    }
+
     // Add offsets to inner objects
     fheroes2::Rect battleFieldRect{ _interfacePosition.x, _interfacePosition.y, _interfacePosition.width, _interfacePosition.height - status.height };
 
@@ -3698,17 +3703,23 @@ void Battle::Interface::FadeArena( const bool clearMessageLog )
 
 void Battle::Interface::_openBattleSettingsDialog()
 {
-    const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
+    {
+        const fheroes2::thor::UiContextGuard thorDialogContextGuard( fheroes2::thor::UiContext::DIALOG );
 
-    const Settings & conf = Settings::Get();
-    const bool showGrid = conf.BattleShowGrid();
-    const bool isTurnOrderInsideWindow{ TurnOrder::isRenderingInsideBattlefieldWindow( border.GetRect() ) };
+        const Settings & conf = Settings::Get();
+        const bool showGrid = conf.BattleShowGrid();
+        const bool isTurnOrderInsideWindow{ TurnOrder::isRenderingInsideBattlefieldWindow( border.GetRect() ) };
 
-    DialogBattleSettings( isTurnOrderInsideWindow );
+        DialogBattleSettings( isTurnOrderInsideWindow );
 
-    if ( showGrid != conf.BattleShowGrid() ) {
-        // The grid setting has changed. Update for the Battlefield ground.
-        _redrawBattleGround();
+        if ( showGrid != conf.BattleShowGrid() ) {
+            // The grid setting has changed. Update for the Battlefield ground.
+            _redrawBattleGround();
+        }
+    }
+
+    if ( _currentUnit != nullptr ) {
+        publishThorBattleInformation( *_currentUnit );
     }
 }
 

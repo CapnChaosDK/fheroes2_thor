@@ -342,9 +342,39 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Cycle both directions through factions on a changeable position and verify fixed-faction controls are muted. Cycle all three handicap states and verify AI positions cannot receive a handicap.
 5. Exercise Select Map, all difficulties, Start, Back, rapid taps, physical controls, upper touchscreen, and mouse to confirm the previously validated Scenario Setup behavior remains intact.
 
+### Battle Only setup
+
+Status: `passed`; behavior and focused acceptance tests approved and hardware-validated on 2026-08-27.
+
+- Add a dedicated Battle Only Setup context instead of showing the generic fallback deck.
+- Show attacker, defender, defender control, terrain, occupied army slots, and army readiness in the lower information card.
+- Expose Select Attacker, Select Defender, Previous Terrain, Next Terrain, Defender Control, Reset, Start, and Exit as stable semantic actions processed on the game thread.
+- Hero selection temporarily uses the modal Dialog deck and restores Battle Only Setup exactly once. Defender Control is available only for a defending hero, and Start mirrors the validity of the active hero or monster armies.
+- Reset restores the existing defaults, Start transitions to the validated Battle deck, and Exit returns to Main Menu. Existing upper-screen army/loadout editing, mouse, touchscreen, physical-controller, and hotkey paths remain available.
+- Automated device testing exposed that Battle Options and a Battle confirmation could restore the Battle deck while leaving its information card empty. The settings-dialog restoration point and completed semantic actions that remain in the current turn now republish the active unit snapshot after returning from Dialog. Focused Options and confirmation restoration retests passed on the final rebuilt candidate.
+- A fully native lower-screen loadout editor for army slots, primary and secondary skills, artifacts, spellbook, morale, and luck is deferred as a separate later slice; this first slice does not discard or duplicate those engine-owned editors.
+
+#### Automated Battle Only device validation
+
+- The final candidate installed and launched successfully on the connected AYN Thor as `org.fheroes2.thor/org.fheroes2.GameActivity`; the command deck opened on display 4.
+- Live two-display captures verified the initial Lord Kilburn versus Monsters setup, Random terrain, AI defender, occupied-stack counts, ready state, readable eight-button layout, and muted Defender Control for a monster defender.
+- Lower-screen semantic actions changed terrain in both directions, opened the attacker selector, cancelled it through Dialog, restored Battle Only Setup exactly once, selected Sir Gallant as defender through the existing physical navigation path, toggled the defender to Human, and refreshed both screens immediately.
+- Reset restored Lord Kilburn versus Monsters, Random terrain, the muted defender-control action, and ready state. Start launched exactly one match and transitioned to the existing Battle deck and information card. Exit returned directly from a checkpointed Battle Only Setup state to Main Menu.
+- Battle Options testing exposed an empty information card after Dialog restoration. The corrected candidate republishes the current unit after the settings context guard closes. A cancelled Auto confirmation exposed the same general pattern; completed semantic Battle actions that remain in the current turn now republish the active-unit snapshot. Options cancellation and confirmation cancellation both passed focused retests with the full Battle card restored.
+- Android build and lint pass through the required short `R:` mapping. Final candidate SHA-256: `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`.
+- The user completed the remaining manual checks successfully: duplicate-hero rejection restored Battle Only Setup correctly; invalid and restored active armies muted and re-enabled Start; and rapid selector taps, physical controls, upper touchscreen, and mouse all passed without regression.
+
+#### Focused Battle Only setup validation
+
+1. Open Battle Only and verify attacker, defender, control type, terrain, occupied army slots, and readiness agree on both screens. Cycle terrain in both directions, including Random.
+2. Open both hero selectors, cancel and confirm selections, and verify each modal restores Battle Only Setup once. Attempt to select the same hero for both sides and verify the existing error handling restores correctly.
+3. Select a defending hero and toggle Human/AI. Reset to the default monster defender and verify Defender Control becomes muted.
+4. Make either active army invalid with the upper editor and verify Start mutes; restore a valid army and verify Start enables. Confirm upper army and loadout editing leaves the information card synchronized.
+5. Test Reset, Exit, rapid taps, and Start. Verify Start launches exactly one battle and switches to the validated Battle deck; confirm physical controls, mouse, and upper touchscreen remain intact.
+
 ### Later menu slices
 
-- Battle Only setup is the next recommended planning slice because it is locally available for full Thor validation.
+- Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
 - Campaign selection remains deferred until compatible campaign assets are available for full device validation.
 - Later slices include High Scores variants, Settings, and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
