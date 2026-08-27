@@ -23,6 +23,7 @@
 #include <cassert>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "dialog.h"
@@ -39,6 +40,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -75,10 +77,58 @@ namespace
     const fheroes2::Rect interfaceTypeRoi{ fheroes2::twoOptionsOffsetX, fheroes2::optionsOffsetY + fheroes2::optionsStepY * 2, fheroes2::optionIconSize,
                                            fheroes2::optionIconSize };
     const fheroes2::Rect textSupportModeRoi{ fheroes2::twoOptionsOffsetX + fheroes2::twoOptionsStepX, fheroes2::optionsOffsetY + fheroes2::optionsStepY * 2,
-                                             fheroes2::optionIconSize, fheroes2::optionIconSize };
+                                              fheroes2::optionIconSize, fheroes2::optionIconSize };
 
-    SelectedWindow showConfigurationWindow()
+    std::string getInterfaceTypeName( const InterfaceType interfaceType )
     {
+        switch ( interfaceType ) {
+        case InterfaceType::GOOD:
+            return "Good";
+        case InterfaceType::EVIL:
+            return "Evil";
+        case InterfaceType::DYNAMIC:
+            return "Dynamic";
+        default:
+            assert( 0 );
+            return "Unknown";
+        }
+    }
+
+    void publishThorGameSettings( const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        const fheroes2::SupportedLanguage currentLanguage = fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() );
+        const fheroes2::LanguageSwitcher languageSwitcher( currentLanguage );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::GAME_SETTINGS;
+        snapshot.title = "Language: " + std::string( fheroes2::getLanguageName( currentLanguage ) );
+        snapshot.category = "CURRENT SETTINGS";
+        snapshot.detail = std::string( "Cursor: " ) + ( conf.isMonochromeCursorEnabled() ? "Monochrome" : "Color" )
+                          + " | Interface: " + getInterfaceTypeName( conf.getInterfaceType() );
+        snapshot.date = std::to_string( supportedLanguages.size() ) + ( supportedLanguages.size() == 1 ? " LANGUAGE" : " LANGUAGES" );
+        snapshot.resources = std::string( "Text Support: " ) + ( conf.isTextSupportModeEnabled() ? "On" : "Off" );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_GRAPHICS )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_AUDIO )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_HOT_KEYS )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_CURSOR_TYPE )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_INTERFACE_TYPE )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_TEXT_SUPPORT )
+                                                    | fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_CLOSE );
+        if ( supportedLanguages.size() > 1 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::GAME_SETTINGS_LANGUAGE );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
+    SelectedWindow showConfigurationWindow( const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
         fheroes2::Display & display = fheroes2::Display::instance();
 
         fheroes2::StandardWindow background( 289, fheroes2::optionsStepY * 3 + 52, true, display );
@@ -116,6 +166,7 @@ namespace
         drawOptions();
 
         display.render( background.totalArea() );
+        publishThorGameSettings( supportedLanguages );
 
         bool isTextSupportModeEnabled = conf.isTextSupportModeEnabled();
 
@@ -123,28 +174,34 @@ namespace
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != ThorAction::NONE ) {
+                // Consume one lower-screen request and reject queued duplicates until this panel is rebuilt.
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
-            if ( le.MouseClickLeft( windowLanguageRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_LANGUAGE || le.MouseClickLeft( windowLanguageRoi ) ) {
                 return SelectedWindow::Language;
             }
-            if ( le.MouseClickLeft( windowGraphicsRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_GRAPHICS || le.MouseClickLeft( windowGraphicsRoi ) ) {
                 return SelectedWindow::Graphics;
             }
-            if ( le.MouseClickLeft( windowAudioRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_AUDIO || le.MouseClickLeft( windowAudioRoi ) ) {
                 return SelectedWindow::AudioSettings;
             }
-            if ( le.MouseClickLeft( windowHotKeyRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_HOT_KEYS || le.MouseClickLeft( windowHotKeyRoi ) ) {
                 return SelectedWindow::HotKeys;
             }
-            if ( le.MouseClickLeft( windowCursorTypeRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_CURSOR_TYPE || le.MouseClickLeft( windowCursorTypeRoi ) ) {
                 return SelectedWindow::CursorType;
             }
-            if ( le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_INTERFACE_TYPE || le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
                 return SelectedWindow::InterfaceType;
             }
-            if ( le.MouseClickLeft( windowTextSupportModeRoi ) ) {
+            if ( requestedThorAction == ThorAction::GAME_SETTINGS_TEXT_SUPPORT || le.MouseClickLeft( windowTextSupportModeRoi ) ) {
                 return SelectedWindow::TextSupportMode;
             }
 
@@ -183,6 +240,10 @@ namespace
 
                 display.render( emptyDialogRestorer.rect() );
             }
+
+            // Help dialogs temporarily clear the semantic action mask while using Dialog context.
+            // Republish the current panel after any such nested dialog closes.
+            publishThorGameSettings( supportedLanguages );
         }
 
         return SelectedWindow::Exit;
@@ -193,6 +254,8 @@ namespace fheroes2
 {
     void openGameSettings()
     {
+        const thor::UiContextGuard thorContextGuard( thor::UiContext::GAME_SETTINGS );
+
         drawMainMenuScreen();
 
         Display & display = Display::instance();
@@ -201,6 +264,7 @@ namespace fheroes2
         display.updateNextRenderRoi( { 0, 0, display.width(), display.height() } );
 
         Settings & conf = Settings::Get();
+        const std::vector<SupportedLanguage> supportedLanguages = getSupportedLanguages();
 
         bool saveConfiguration = false;
 
@@ -208,10 +272,10 @@ namespace fheroes2
         while ( windowType != SelectedWindow::Exit ) {
             switch ( windowType ) {
             case SelectedWindow::Configuration:
-                windowType = showConfigurationWindow();
+                windowType = showConfigurationWindow( supportedLanguages );
                 break;
             case SelectedWindow::Language: {
-                const std::vector<SupportedLanguage> supportedLanguages = getSupportedLanguages();
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
 
                 if ( supportedLanguages.size() > 1 ) {
                     selectLanguage( supportedLanguages, getLanguageFromAbbreviation( conf.getGameLanguage() ), true );
@@ -227,18 +291,24 @@ namespace fheroes2
                 windowType = SelectedWindow::UpdateSettings;
                 break;
             }
-            case SelectedWindow::Graphics:
+            case SelectedWindow::Graphics: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 saveConfiguration |= openGraphicsSettingsDialog( drawMainMenuScreen );
                 windowType = SelectedWindow::Configuration;
                 break;
-            case SelectedWindow::AudioSettings:
+            }
+            case SelectedWindow::AudioSettings: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 saveConfiguration |= Dialog::openAudioSettingsDialog( false );
                 windowType = SelectedWindow::Configuration;
                 break;
-            case SelectedWindow::HotKeys:
+            }
+            case SelectedWindow::HotKeys: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 openHotkeysDialog();
                 windowType = SelectedWindow::Configuration;
                 break;
+            }
             case SelectedWindow::CursorType:
                 conf.setMonochromeCursor( !conf.isMonochromeCursorEnabled() );
                 windowType = SelectedWindow::UpdateSettings;

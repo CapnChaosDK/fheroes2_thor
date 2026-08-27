@@ -35,7 +35,8 @@ namespace fheroes2::thor
         HIGH_SCORES_CAMPAIGN,
         CAMPAIGN_INTRO,
         SUCCESSION_WARS_CAMPAIGN,
-        PRICE_OF_LOYALTY_CAMPAIGN
+        PRICE_OF_LOYALTY_CAMPAIGN,
+        GAME_SETTINGS
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -131,7 +132,15 @@ namespace fheroes2::thor
         CAMPAIGN_SELECT_PRICE_OF_LOYALTY,
         CAMPAIGN_SELECT_VOYAGE_HOME,
         CAMPAIGN_SELECT_WIZARDS_ISLE,
-        CAMPAIGN_SELECT_DESCENDANTS
+        CAMPAIGN_SELECT_DESCENDANTS,
+        GAME_SETTINGS_LANGUAGE,
+        GAME_SETTINGS_GRAPHICS,
+        GAME_SETTINGS_AUDIO,
+        GAME_SETTINGS_HOT_KEYS,
+        GAME_SETTINGS_CURSOR_TYPE,
+        GAME_SETTINGS_INTERFACE_TYPE,
+        GAME_SETTINGS_TEXT_SUPPORT,
+        GAME_SETTINGS_CLOSE
     };
 
     using ActionMask = uint64_t;

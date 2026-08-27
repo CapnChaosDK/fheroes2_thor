@@ -50,6 +50,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_CAMPAIGN_INTRO = 16;
     private static final int CONTEXT_SUCCESSION_WARS_CAMPAIGN = 17;
     private static final int CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN = 18;
+    private static final int CONTEXT_GAME_SETTINGS = 19;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -141,6 +142,14 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_CAMPAIGN_SELECT_VOYAGE_HOME = 87;
     private static final int ACTION_CAMPAIGN_SELECT_WIZARDS_ISLE = 88;
     private static final int ACTION_CAMPAIGN_SELECT_DESCENDANTS = 89;
+    private static final int ACTION_GAME_SETTINGS_LANGUAGE = 90;
+    private static final int ACTION_GAME_SETTINGS_GRAPHICS = 91;
+    private static final int ACTION_GAME_SETTINGS_AUDIO = 92;
+    private static final int ACTION_GAME_SETTINGS_HOT_KEYS = 93;
+    private static final int ACTION_GAME_SETTINGS_CURSOR_TYPE = 94;
+    private static final int ACTION_GAME_SETTINGS_INTERFACE_TYPE = 95;
+    private static final int ACTION_GAME_SETTINGS_TEXT_SUPPORT = 96;
+    private static final int ACTION_GAME_SETTINGS_CLOSE = 97;
 
     interface KeySender
     {
@@ -242,7 +251,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_GAME_SETTINGS ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -346,7 +355,7 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
-                   || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP )
+                   || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
                     drawBattleInformationCard( canvas, innerPanel );
@@ -679,6 +688,17 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "WIZARD'S ISLE", ACTION_CAMPAIGN_SELECT_WIZARDS_ISLE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "DESCENDANTS", ACTION_CAMPAIGN_SELECT_DESCENDANTS, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_GAME_SETTINGS:
+                contextTitle = "GAME SETTINGS";
+                addAction( "LANGUAGE", ACTION_GAME_SETTINGS_LANGUAGE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "GRAPHICS", ACTION_GAME_SETTINGS_GRAPHICS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "AUDIO", ACTION_GAME_SETTINGS_AUDIO, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "HOT KEYS", ACTION_GAME_SETTINGS_HOT_KEYS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CURSOR TYPE", ACTION_GAME_SETTINGS_CURSOR_TYPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "INTERFACE TYPE", ACTION_GAME_SETTINGS_INTERFACE_TYPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TEXT SUPPORT", ACTION_GAME_SETTINGS_TEXT_SUPPORT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_GAME_SETTINGS_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";

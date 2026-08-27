@@ -438,12 +438,33 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Re-enter and use Back through the lower display and the existing physical or keyboard Cancel paths. Verify New Game returns once with no residual audio, palette corruption, or delayed selection.
 5. Rapidly tap different campaign choices and Back. Verify only one transition occurs, then check upper touchscreen, mouse, physical controls, configurable hotkeys, and the validated Original selector for regressions.
 
+### Game Settings workflow
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- The top-level Game Settings panel uses a dedicated lower-screen context with Language, Graphics, Audio, Hot Keys, Cursor Type, Interface Type, Text Support, and Okay / Back.
+- Language follows the engine's supported-language list and is visible but muted when English is the only available choice. The lower information card shows the current language, cursor, interface, and text-support values.
+- Cursor Type, Interface Type, and Text Support use the existing settings paths and refresh both displays immediately. Lower-screen duplicate taps are discarded while the panel rebuilds.
+- Language, Graphics, Audio, and Hot Keys remain engine-owned child dialogs. They temporarily use Dialog context and restore Game Settings exactly once when closed.
+- Configuration saving, Main Menu and New Game routing, right-click help, upper touchscreen, mouse, physical controls, configurable hotkeys, and text-support behavior remain unchanged.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
+- Brief post-launch checks found the game process and presentation window without fatal runtime errors. Display 4 remained registered with physical ID `4630946482288158084`; the user then completed the visual and interaction validation manually.
+- All five focused checks passed on the Thor: both entry paths and closing behavior; immediate cursor, interface, and text-support synchronization; child-dialog restoration; persisted settings and language availability; and rapid-tap, help, input-path, menu, and campaign-selector regression coverage.
+
+#### Focused Game Settings validation
+
+1. Open Settings from Main Menu and from New Game. Verify both displays agree, all eight lower controls are readable, and closing follows the existing destination behavior.
+2. Toggle Cursor Type, cycle every Interface Type value, and toggle Text Support twice. Verify both displays refresh immediately and rapid taps do not queue duplicate changes.
+3. Open and close Language, Graphics, Audio, and Hot Keys. Verify each child uses Dialog controls and restores Game Settings exactly once after confirmation or cancellation.
+4. Change representative settings, close with Okay / Back, reopen, explicitly relaunch the app, and verify the saved values. Confirm Language is enabled or muted according to the installed assets.
+5. Exercise lower touch, upper touchscreen, mouse, physical controls, configurable hotkeys, right-click help, and rapid mixed taps. Verify Main Menu, New Game, and both validated campaign selectors retain their behavior.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
-- Next recommended slice: plan the top-level Game Settings dialog in `fheroes2::openGameSettings()` in `src/fheroes2/dialog/dialog_game_settings.cpp`. Cover Language, Graphics, Audio, Hot Keys, cursor type, interface type, text support, and Okay/Back; account for nested-dialog restoration, in-place redraws, persisted configuration, and availability rules. Present behavior and focused manual acceptance tests for approval before implementation.
+- Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
 - Editor menus follow the Settings slice.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
