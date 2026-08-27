@@ -6,9 +6,9 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.4.0` at `503ef2318ca254329748ce443ee69271bcc2bf41`
-- Latest hardware-validated development commit: `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34`
-- Development APK SHA-256: `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`
-- Battle Only setup, High Scores, and the Succession Wars Roland/Archibald selector are hardware-validated. The Price of Loyalty four-campaign selector is the next recommended navigable-menu planning point; all required expansion maps and selector videos are installed, while the engine image-resource gate still needs explicit confirmation during planning.
+- Latest hardware-validated development commit: `db739b8c6`
+- Development APK SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`
+- Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next recommended navigable-menu planning point is the top-level Game Settings dialog; Editor menus follow later.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

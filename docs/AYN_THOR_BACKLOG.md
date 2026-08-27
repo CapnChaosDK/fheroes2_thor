@@ -15,7 +15,7 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- This hardware-validated development checkpoint adds the Price of Loyalty selector on top of the Succession Wars selector, validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
+- Commit `db739b8c6` is the latest hardware-validated development checkpoint. It adds the Price of Loyalty selector on top of the Succession Wars selector, validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
 - It exposes Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, and Back while preserving the upper hover animations and existing missing-video behavior.
 - Debug APK SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
 - Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused campaign selection, animation, cleanup, rapid-tap, and input-regression checks.

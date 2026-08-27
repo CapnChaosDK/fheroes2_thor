@@ -17,24 +17,23 @@
 - Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
 - Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
-- Latest hardware-validated development commit: `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34`.
-- The development checkpoint adds the Succession Wars Roland/Archibald campaign selector on top of the validated Battle Only setup and High Scores workflow. Its final debug APK SHA-256 is `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`.
+- Latest hardware-validated development commit: `db739b8c6`.
+- This checkpoint adds the Price of Loyalty selector with all four expansion campaigns and Back while preserving hover animations, missing-video behavior, audio/palette cleanup, and existing input paths. Its final debug APK SHA-256 is `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- The working tree is clean at this handoff. There are no known uncommitted source changes to preserve.
-- Scenario Setup player editing, Battle Only setup, High Scores, and the Succession Wars selector are complete and hardware-validated. The selector covers non-interactive intro synchronization, Roland/Archibald selection, Back without residual audio, intro skipping, rapid taps, and physical, touchscreen, mouse, and keyboard regressions.
-- Validated implementation commit: `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34`.
-- The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned.
+- The hardware-validated Price of Loyalty selector is preserved in commit `db739b8c6`.
+- Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated. Price of Loyalty validation covers all four matching first scenarios, hover animation switching/looping/static restoration, Back and Cancel cleanup, rapid taps, and physical, touchscreen, mouse, hotkey, and Original-selector regressions.
+- The latest committed validated implementation is `db739b8c6`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
 
 ## Next recommended planning point
 
-- Plan the Price of Loyalty four-campaign selector in `Game::NewPriceOfLoyaltyCampaign()` in `src/fheroes2/game/game_newgame.cpp`.
-- The Thor contains all 24 required `CAMP1_01.HXC` through `CAMP4_04.HXC` maps and all four `IVYPOL.SMK`, `IVYVOY.SMK`, `IVYWIZ.SMK`, and `IVYDES.SMK` selector videos. Still verify the engine's `X_LOADCM` and `X_IVY` resource gate and the enabled Expansion entry before implementation.
-- Account for its four hover-triggered animations, per-video missing behavior, static background restoration, audio/palette cleanup, and the current `NEW_GAME` fallback/exit behavior.
-- Propose lower-screen behavior, modal/animation handling, Back or exit semantics, enabled-state rules, and focused manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, Succession Wars selector, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- The next feature planning point from the backlog is the top-level Game Settings dialog in `fheroes2::openGameSettings()` in `src/fheroes2/dialog/dialog_game_settings.cpp`; Editor menus follow later.
+- Plan lower-screen access to Language, Graphics, Audio, Hot Keys, cursor type, interface type, text support, and Okay/Back. Account for nested-dialog context restoration, settings that update the current dialog in place, persisted configuration, language availability, and safe enabled states.
+- Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
+- Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 
