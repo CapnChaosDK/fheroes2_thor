@@ -17,23 +17,23 @@
 - Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
 - Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
-- Latest hardware-validated development commit: `db739b8c6`.
-- This checkpoint adds the Price of Loyalty selector with all four expansion campaigns and Back while preserving hover animations, missing-video behavior, audio/palette cleanup, and existing input paths. Its final debug APK SHA-256 is `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
+- Latest hardware-validated development commit: `f395e0a8d`.
+- This checkpoint adds the navigable Game Settings workflow on top of both campaign selectors. Its final debug APK SHA-256 is `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- The hardware-validated Price of Loyalty selector is preserved in commit `db739b8c6`.
-- Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated. Price of Loyalty validation covers all four matching first scenarios, hover animation switching/looping/static restoration, Back and Cancel cleanup, rapid taps, and physical, touchscreen, mouse, hotkey, and Original-selector regressions.
-- The latest committed validated implementation is `db739b8c6`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
+- Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Game Settings validation covers both entry paths, live cursor/interface/text-support synchronization, all four child dialogs, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, menu, and campaign-selector regressions.
+- The latest committed validated implementation is `f395e0a8d`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
 
 ## Next recommended planning point
 
-- The next feature planning point from the backlog is the top-level Game Settings dialog in `fheroes2::openGameSettings()` in `src/fheroes2/dialog/dialog_game_settings.cpp`; Editor menus follow later.
-- Plan lower-screen access to Language, Graphics, Audio, Hot Keys, cursor type, interface type, text support, and Okay/Back. Account for nested-dialog context restoration, settings that update the current dialog in place, persisted configuration, language availability, and safe enabled states.
+- The next feature planning point from the backlog is the Editor menu hierarchy, beginning with its top-level menu and existing editor options.
+- Plan stable lower-screen actions, availability, nested-dialog restoration, and Back/exit semantics without duplicating editor-owned logic.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Retain the validated Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 

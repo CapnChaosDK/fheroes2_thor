@@ -26,6 +26,7 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | High Scores | Campaign and Exit from Standard; Standard and Exit from Campaign; Campaign follows installed-asset availability |
 | Succession Wars campaign | Non-interactive intro state, then Roland, Archibald, Back |
 | Price of Loyalty campaigns | Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, Back |
+| Game Settings | Language, Graphics, Audio, Hot Keys, Cursor Type, Interface Type, Text Support, Okay / Back |
 | Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
@@ -43,6 +44,8 @@ High Scores opens the Standard table first. The lower deck switches both display
 Selecting the original Succession Wars campaign shows a non-interactive lower-screen state while the intro runs, then exposes Roland, Archibald, and Back beside the animated upper selector. Back returns to New Game without residual selector audio, and stale intro or selector taps are cleared during context changes.
 
 Selecting the Price of Loyalty expansion exposes all four campaigns and Back on the lower display while preserving the upper selector's hover animations. Missing-video behavior remains compatible with the engine, and selection or cancellation clears queued actions, audio, and palette state before the next screen.
+
+Game Settings shows the current language, cursor, interface, and text-support states. Direct toggles refresh both displays immediately, unavailable language selection is muted, and the existing Language, Graphics, Audio, and Hot Keys dialogs restore the Settings deck when they close.
 
 If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
 
@@ -112,8 +115,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest committed validated development checkpoint is `db739b8c6`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, and both campaign-selection workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
+The latest committed validated development checkpoint is `f395e0a8d`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, Game Settings, and both campaign-selection workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
 
-The next feature planning point is the top-level Game Settings dialog: Language, Graphics, Audio, Hot Keys, cursor type, interface type, text support, and Okay/Back, including restoration across nested dialogs and settings that redraw in place. Editor menus follow later. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
+The next feature planning point is the Editor menu hierarchy. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).
