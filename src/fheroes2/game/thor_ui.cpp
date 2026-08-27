@@ -294,7 +294,28 @@ namespace
 
     bool isEditorInterfaceAction( const fheroes2::thor::Action action )
     {
-        return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS;
+        return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS || action == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS;
+    }
+
+    bool isEditorSystemOptionsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::EDITOR_SYSTEM_LANGUAGE:
+        case Action::EDITOR_SYSTEM_GRAPHICS:
+        case Action::EDITOR_SYSTEM_AUDIO:
+        case Action::EDITOR_SYSTEM_HOT_KEYS:
+        case Action::EDITOR_SYSTEM_ANIMATION:
+        case Action::EDITOR_SYSTEM_PASSABILITY:
+        case Action::EDITOR_SYSTEM_INTERFACE_TYPE:
+        case Action::EDITOR_SYSTEM_CURSOR_TYPE:
+        case Action::EDITOR_SYSTEM_SCROLL_SPEED:
+        case Action::EDITOR_SYSTEM_CLOSE:
+            return true;
+        default:
+            return false;
+        }
     }
 
     bool isEditorFileOptionsAction( const fheroes2::thor::Action action )
@@ -329,7 +350,7 @@ namespace
                || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN || context == UiContext::GAME_SETTINGS || context == UiContext::EDITOR_MAIN_MENU
                || context == UiContext::EDITOR_NEW_MAP_MENU || context == UiContext::EDITOR_MAP_SIZE_SCRATCH
                || context == UiContext::EDITOR_MAP_SIZE_RANDOM || context == UiContext::EDITOR_INTERFACE
-               || context == UiContext::EDITOR_FILE_OPTIONS;
+               || context == UiContext::EDITOR_FILE_OPTIONS || context == UiContext::EDITOR_SYSTEM_OPTIONS;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -380,6 +401,8 @@ namespace
             return isEditorInterfaceAction( action );
         case fheroes2::thor::UiContext::EDITOR_FILE_OPTIONS:
             return isEditorFileOptionsAction( action );
+        case fheroes2::thor::UiContext::EDITOR_SYSTEM_OPTIONS:
+            return isEditorSystemOptionsAction( action );
         default:
             return false;
         }

@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "cursor.h"
@@ -43,6 +44,7 @@
 #include "render_processor.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -110,7 +112,75 @@ namespace
         }
     }
 
-    DialogAction openEditorOptionsDialog()
+    std::string getInterfaceTypeName( const InterfaceType interfaceType )
+    {
+        switch ( interfaceType ) {
+        case InterfaceType::GOOD:
+            return "Good";
+        case InterfaceType::EVIL:
+            return "Evil";
+        case InterfaceType::DYNAMIC:
+            return "Dynamic";
+        default:
+            assert( 0 );
+            return "Unknown";
+        }
+    }
+
+    std::string getScrollSpeedName( const int speed )
+    {
+        switch ( speed ) {
+        case SCROLL_SPEED_NONE:
+            return "Off";
+        case SCROLL_SPEED_SLOW:
+            return "Slow";
+        case SCROLL_SPEED_NORMAL:
+            return "Normal";
+        case SCROLL_SPEED_FAST:
+            return "Fast";
+        case SCROLL_SPEED_VERY_FAST:
+            return "Very Fast";
+        default:
+            assert( 0 );
+            return "Unknown";
+        }
+    }
+
+    void publishThorEditorSettings( const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        const fheroes2::SupportedLanguage currentLanguage = fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() );
+        const fheroes2::LanguageSwitcher languageSwitcher( currentLanguage );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::EDITOR_SYSTEM_OPTIONS;
+        snapshot.title = std::string( "Animation: " ) + ( conf.isEditorAnimationEnabled() ? "On" : "Off" )
+                         + " | Passability: " + ( conf.isEditorPassabilityEnabled() ? "Show" : "Hide" );
+        snapshot.category = "EDITOR SETTINGS";
+        snapshot.detail = std::string( "Cursor: " ) + ( conf.isMonochromeCursorEnabled() ? "Monochrome" : "Color" )
+                          + " | Interface: " + getInterfaceTypeName( conf.getInterfaceType() );
+        snapshot.date = "Scroll: " + getScrollSpeedName( conf.ScrollSpeed() );
+        snapshot.resources = "Language: " + std::string( fheroes2::getLanguageName( currentLanguage ) );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_GRAPHICS )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_AUDIO )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_HOT_KEYS )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_ANIMATION )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_PASSABILITY )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_INTERFACE_TYPE )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_CURSOR_TYPE )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_SCROLL_SPEED )
+                                                    | fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_CLOSE );
+        if ( supportedLanguages.size() > 1 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::EDITOR_SYSTEM_LANGUAGE );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
+    DialogAction openEditorOptionsDialog( const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
     {
         fheroes2::Display & display = fheroes2::Display::instance();
 
@@ -152,39 +222,46 @@ namespace
 
         // Render the whole screen as interface type or resolution could have been changed.
         display.render();
+        publishThorEditorSettings( supportedLanguages );
 
         LocalEvent & le = LocalEvent::Get();
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                // Consume one lower-screen request and reject queued duplicates until the panel is rebuilt.
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
-            if ( le.MouseClickLeft( windowLanguageRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_LANGUAGE || le.MouseClickLeft( windowLanguageRoi ) ) {
                 return DialogAction::Language;
             }
-            if ( le.MouseClickLeft( windowGraphicsRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_GRAPHICS || le.MouseClickLeft( windowGraphicsRoi ) ) {
                 return DialogAction::Graphics;
             }
-            if ( le.MouseClickLeft( windowAudioRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_AUDIO || le.MouseClickLeft( windowAudioRoi ) ) {
                 return DialogAction::AudioSettings;
             }
-            if ( le.MouseClickLeft( windowHotKeyRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_HOT_KEYS || le.MouseClickLeft( windowHotKeyRoi ) ) {
                 return DialogAction::HotKeys;
             }
-            if ( le.MouseClickLeft( windowAnimationRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_ANIMATION || le.MouseClickLeft( windowAnimationRoi ) ) {
                 return DialogAction::Animation;
             }
-            if ( le.MouseClickLeft( windowPassabilityRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_PASSABILITY || le.MouseClickLeft( windowPassabilityRoi ) ) {
                 return DialogAction::Passabiility;
             }
-            if ( le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_INTERFACE_TYPE || le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
                 return DialogAction::InterfaceType;
             }
-            if ( le.MouseClickLeft( windowCursorTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_CURSOR_TYPE || le.MouseClickLeft( windowCursorTypeRoi ) ) {
                 return DialogAction::CursorType;
             }
-            if ( le.MouseClickLeft( windowScrollSpeedRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_SYSTEM_SCROLL_SPEED || le.MouseClickLeft( windowScrollSpeedRoi ) ) {
                 return DialogAction::UpdateScrollSpeed;
             }
             if ( le.isMouseWheelUpInArea( windowScrollSpeedRoi ) ) {
@@ -224,6 +301,9 @@ namespace
             else if ( le.isMouseRightButtonPressedInArea( buttonOk.area() ) ) {
                 fheroes2::showStandardTextMessage( _( "Okay" ), _( "Exit this menu." ), 0 );
             }
+
+            // Right-click help temporarily uses Dialog context. Restore the current values and actions afterwards.
+            publishThorEditorSettings( supportedLanguages );
         }
 
         return DialogAction::Close;
@@ -234,11 +314,13 @@ namespace Editor
 {
     void openEditorSettings()
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::EDITOR_SYSTEM_OPTIONS );
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
         // We should write to the configuration file only once to avoid extra I/O operations.
         bool saveConfiguration = false;
         Settings & conf = Settings::Get();
+        const std::vector<fheroes2::SupportedLanguage> supportedLanguages = fheroes2::getSupportedLanguages();
 
         auto redrawEditor = [&conf]() {
             Interface::EditorInterface & editorInterface = Interface::EditorInterface::Get();
@@ -265,10 +347,10 @@ namespace Editor
         while ( action != DialogAction::Close ) {
             switch ( action ) {
             case DialogAction::Configuration:
-                action = openEditorOptionsDialog();
+                action = openEditorOptionsDialog( supportedLanguages );
                 break;
             case DialogAction::Language: {
-                const std::vector<fheroes2::SupportedLanguage> supportedLanguages = fheroes2::getSupportedLanguages();
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
 
                 if ( supportedLanguages.size() > 1 ) {
                     selectLanguage( supportedLanguages, fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() ), true );
@@ -287,21 +369,27 @@ namespace Editor
                 action = DialogAction::Configuration;
                 break;
             }
-            case DialogAction::Graphics:
+            case DialogAction::Graphics: {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 saveConfiguration |= fheroes2::openGraphicsSettingsDialog( rebuildEditor );
 
                 action = DialogAction::Configuration;
                 break;
-            case DialogAction::AudioSettings:
+            }
+            case DialogAction::AudioSettings: {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 saveConfiguration |= Dialog::openAudioSettingsDialog( false );
 
                 action = DialogAction::Configuration;
                 break;
-            case DialogAction::HotKeys:
+            }
+            case DialogAction::HotKeys: {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::openHotkeysDialog();
 
                 action = DialogAction::Configuration;
                 break;
+            }
             case DialogAction::Animation:
                 conf.setEditorAnimation( !conf.isEditorAnimationEnabled() );
                 saveConfiguration = true;

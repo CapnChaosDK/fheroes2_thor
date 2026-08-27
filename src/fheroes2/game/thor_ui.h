@@ -42,7 +42,8 @@ namespace fheroes2::thor
         EDITOR_MAP_SIZE_SCRATCH,
         EDITOR_MAP_SIZE_RANDOM,
         EDITOR_INTERFACE,
-        EDITOR_FILE_OPTIONS
+        EDITOR_FILE_OPTIONS,
+        EDITOR_SYSTEM_OPTIONS
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -165,7 +166,18 @@ namespace fheroes2::thor
         EDITOR_FILE_MAIN_MENU,
         EDITOR_FILE_QUIT,
         EDITOR_FILE_AUTO_PLAYTEST,
-        EDITOR_FILE_CANCEL
+        EDITOR_FILE_CANCEL,
+        EDITOR_OPEN_SYSTEM_OPTIONS,
+        EDITOR_SYSTEM_LANGUAGE,
+        EDITOR_SYSTEM_GRAPHICS,
+        EDITOR_SYSTEM_AUDIO,
+        EDITOR_SYSTEM_HOT_KEYS,
+        EDITOR_SYSTEM_ANIMATION,
+        EDITOR_SYSTEM_PASSABILITY,
+        EDITOR_SYSTEM_INTERFACE_TYPE,
+        EDITOR_SYSTEM_CURSOR_TYPE,
+        EDITOR_SYSTEM_SCROLL_SPEED,
+        EDITOR_SYSTEM_CLOSE
     };
 
     using ActionMask = uint64_t;

@@ -44,6 +44,7 @@
 #include "editor_event_details_window.h"
 #include "editor_map_specs_window.h"
 #include "editor_object_popup_window.h"
+#include "editor_options.h"
 #include "editor_save_map_window.h"
 #include "editor_secondary_skill_selection.h"
 #include "editor_spell_selection.h"
@@ -124,7 +125,8 @@ namespace
     void setThorEditorInterfaceState()
     {
         fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_INTERFACE );
-        fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS ) );
+        fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS )
+                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS ) );
     }
 
     void setThorEditorFileOptionsState()
@@ -1614,6 +1616,12 @@ namespace Interface
                 }
 
                 break;
+            }
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS ) {
+                fheroes2::thor::setEnabledActions( 0 );
+                Editor::openEditorSettings();
+                setThorEditorInterfaceState();
+                continue;
             }
 
             bool isCursorOverGameArea = false;

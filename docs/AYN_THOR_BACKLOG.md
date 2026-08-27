@@ -500,13 +500,33 @@ Status: `passed`; behavior and focused acceptance tests approved and hardware-va
 4. Test Start Map with invalid and valid maps, Auto Playtest, Main Menu, and Quit. Verify failed or cancelled operations restore File Options, while confirmed transitions occur exactly once.
 5. Test Cancel/Back, help, rapid mixed taps, physical controls, upper touchscreen, mouse, and hotkeys. Recheck Editor pre-entry and established Main Menu workflows for regressions.
 
+### In-map Editor System Options
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- The Map Editor lower-screen context now exposes System Options beside File Options. The System Options panel mirrors the existing engine-owned Language, Graphics, Audio, Hot Keys, Animation, Passability, Interface Type, Cursor Type, Scroll Speed, and Okay / Back actions.
+- The lower information card shows the current language, animation, passability, interface, cursor, and scroll-speed values. Language follows the installed-language availability and is visible but muted when English is the only supported choice.
+- Direct settings reuse the existing editor redraw, rebuild, runtime-update, and configuration-save paths. Graphics, Audio, Hot Keys, Language, and right-click help use Dialog context and restore System Options exactly once.
+- Semantic operations reject queued rapid taps while the panel changes or a nested dialog is active. Closing System Options restores the in-map Map Editor deck without affecting File Options.
+- Editor tools, map specifications, and richer map information remain deferred as separate later slices.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `51664E906A2EBE207CBB888CAD49E16CAA2BCFA14734C390DD852938994157FA`.
+- All five focused checks passed on the Thor: both displays and the information card synchronized; direct settings updated immediately; child dialogs and language availability restored correctly; settings persisted across relaunch and interface rebuilds; and rapid taps, help, physical controls, upper touch, mouse, hotkeys, File Options, Editor entry, and established Main Menu workflows retained their behavior.
+
+#### Focused in-map Editor System Options validation
+
+1. Open System Options and verify both screens and the information card show matching current values.
+2. Exercise Animation, Passability, Interface Type, Cursor Type, and every Scroll Speed value; verify immediate upper- and lower-screen synchronization.
+3. Open and close Language, Graphics, Audio, and Hot Keys. Verify Dialog appears for each child, restores System Options once, and Language is enabled or muted according to the installed assets.
+4. Close and reopen System Options, then explicitly relaunch the app and return to the Editor. Verify changed settings persist and the Editor remains usable after interface rebuilds.
+5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, and hotkeys. Recheck File Options, Editor pre-entry, and established Main Menu workflows for regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
-- In-map Editor File Options, System Options, tools, and information follow the pre-entry hierarchy as separate focused slices.
+- In-map Editor File Options and System Options are hardware-validated; tools, map specifications, and richer information remain separate later slices.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria
