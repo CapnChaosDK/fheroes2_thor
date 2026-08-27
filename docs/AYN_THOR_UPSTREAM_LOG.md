@@ -6,9 +6,9 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.4.0` at `503ef2318ca254329748ce443ee69271bcc2bf41`
-- Latest hardware-validated development commit: `db4297d4b2024247639c21e4407f2d3ed5e1b30a`
-- Development APK SHA-256: `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`
-- Battle Only setup is validated; High Scores is the next recommended navigable-menu planning point.
+- Latest hardware-validated development commit: `188f36fc3ff1fa086b68e9b311245ab667b0c910`
+- Development APK SHA-256: `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`
+- Battle Only setup and High Scores are validated. Compatible Succession Wars campaign assets are installed; Campaign selection is the next recommended navigable-menu planning point, with expansion assets to be checked separately.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

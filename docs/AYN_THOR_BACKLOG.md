@@ -402,7 +402,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
-- Compatible Succession Wars campaign assets are now installed on the Thor. Campaign selection is the next recommended planning point as a separate slice with its own behavior and focused tests.
+- Compatible Succession Wars campaign assets are now installed on the Thor. Campaign selection is the next recommended planning point as a separate slice with its own behavior and focused tests. Inspect the video-backed Roland/Archibald selector and the separate four-campaign expansion selector in `game_newgame.cpp`, including missing-video fallbacks, animation behavior, and exit semantics. Check expansion assets independently before including that path in the first proposal.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Later slices include Settings and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.

@@ -17,23 +17,24 @@
 - Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
 - Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
-- Latest hardware-validated development commit: `db4297d4b2024247639c21e4407f2d3ed5e1b30a`.
-- The development checkpoint adds the Battle Only setup command deck and information card. Its final debug APK SHA-256 is `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`.
+- Latest hardware-validated development commit: `188f36fc3ff1fa086b68e9b311245ab667b0c910`.
+- The development checkpoint adds the High Scores Standard/Campaign workflow on top of the validated Battle Only setup. Its final debug APK SHA-256 is `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
 - The working tree is clean at this handoff. There are no known uncommitted source changes to preserve.
-- Scenario Setup player editing and Battle Only setup are complete and hardware-validated. Battle Only covers attacker and defender selection, terrain, defender control, readiness-aware Start, Reset, Exit, modal restoration, and transition to the existing Battle deck.
-- Validated implementation commit: `db4297d4b2024247639c21e4407f2d3ed5e1b30a`.
+- Scenario Setup player editing, Battle Only setup, and High Scores are complete and hardware-validated. High Scores covers synchronized Standard/Campaign switching, installed-asset availability, direct Exit, help-dialog restoration, rapid taps, and physical, touchscreen, mouse, and keyboard regressions.
+- Validated implementation commit: `188f36fc3ff1fa086b68e9b311245ab667b0c910`.
 - The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned.
 
 ## Next recommended planning point
 
-- Plan the High Scores workflow, the next small, asset-independent navigable-menu slice.
-- Inspect the existing upper-screen High Scores variants, navigation, exit behavior, and availability rules before proposing lower-screen behavior and focused manual acceptance tests.
-- Obtain user approval before implementation. Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
-- Campaign selection remains deferred until compatible campaign assets are available for full device validation.
+- Plan the Campaign selection workflow. Compatible Succession Wars campaign assets are now installed and the High Scores test confirmed that the engine detects them.
+- Inspect `Game::NewSuccessionWarsCampaign()` and `Game::NewPriceOfLoyaltyCampaign()` in `src/fheroes2/game/game_newgame.cpp`: the upper screen uses animated/video-backed Roland/Archibald and four-campaign expansion selectors, with missing-video fallbacks and distinct asset requirements.
+- Determine which expansion assets are installed before including the expansion selector in the first slice. Prefer the smallest fully hardware-testable slice; do not assume Price of Loyalty assets from the confirmed Succession Wars assets.
+- Propose lower-screen behavior, modal/animation handling, Back or exit semantics, enabled-state rules, and focused manual acceptance tests, then wait for user approval before implementation.
+- Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 
