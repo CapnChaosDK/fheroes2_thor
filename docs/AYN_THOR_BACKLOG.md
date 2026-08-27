@@ -13,6 +13,13 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 - APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - The release adds the hardware-validated Scenario Setup player-editing workflow: player navigation, Standard human-position transfer, fixed-count Hot Seat seat swapping, faction selection, handicap selection, synchronized upper highlighting, and lower information refresh.
 
+## Latest validated development checkpoint
+
+- Commit `db4297d4b2024247639c21e4407f2d3ed5e1b30a` was pushed to `origin/ayn-thor-dual-screen` on 2026-08-27.
+- It adds the hardware-validated Battle Only setup command deck and information card on top of `thor-v0.4.0`.
+- Final debug APK SHA-256: `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`.
+- Android build and lint passed. The user passed the focused hardware checklist, including selector restoration, duplicate-hero rejection, army readiness, defender control, terrain, Reset, Exit, Start, rapid taps, and physical, touchscreen, and mouse regressions.
+
 ## Agreed product decisions
 
 - The lower display will become context-sensitive.
@@ -354,7 +361,7 @@ Status: `passed`; behavior and focused acceptance tests approved and hardware-va
 - Automated device testing exposed that Battle Options and a Battle confirmation could restore the Battle deck while leaving its information card empty. The settings-dialog restoration point and completed semantic actions that remain in the current turn now republish the active unit snapshot after returning from Dialog. Focused Options and confirmation restoration retests passed on the final rebuilt candidate.
 - A fully native lower-screen loadout editor for army slots, primary and secondary skills, artifacts, spellbook, morale, and luck is deferred as a separate later slice; this first slice does not discard or duplicate those engine-owned editors.
 
-#### Automated Battle Only device validation
+#### Battle Only device validation
 
 - The final candidate installed and launched successfully on the connected AYN Thor as `org.fheroes2.thor/org.fheroes2.GameActivity`; the command deck opened on display 4.
 - Live two-display captures verified the initial Lord Kilburn versus Monsters setup, Random terrain, AI defender, occupied-stack counts, ready state, readable eight-button layout, and muted Defender Control for a monster defender.
@@ -376,7 +383,8 @@ Status: `passed`; behavior and focused acceptance tests approved and hardware-va
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
 - Campaign selection remains deferred until compatible campaign assets are available for full device validation.
-- Later slices include High Scores variants, Settings, and Editor menus.
+- High Scores is the next recommended small, asset-independent navigable-menu slice. Inspect its upper-screen variants and exit behavior, then propose lower-screen behavior and focused manual acceptance tests for approval.
+- Later slices include Settings and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria
@@ -385,7 +393,14 @@ Status: `passed`; behavior and focused acceptance tests approved and hardware-va
 - Nested choices and Back restore the correct parent without stacked menus or duplicate actions.
 - Missing campaign assets and unavailable load categories are reflected in native enabled-action masks.
 - Dialog remains reserved for modal Confirm and Cancel. Menu choices use dedicated menu states.
-- Build/lint pass through the short `R:` path, followed by a full New Game hierarchy test on the Thor.
+- Build/lint pass through the short `R:` path, followed by focused manual testing on the Thor.
+
+## Validation workflow
+
+- Automate compile, Android build, lint, identifier parity, static checks, APK hashing, installation, explicit launch, and concise diagnostic queries where useful.
+- Give the user a short, focused hardware checklist and wait for their manual results before recording validation or publishing a checkpoint.
+- Avoid extended ADB-driven UI navigation, repeated screenshots, and exhaustive automated device interaction unless the user explicitly asks for it or a reported failure needs targeted diagnosis. This keeps validation efficient and avoids excessive token use.
+- Preserve previously validated behavior through focused regression items rather than replaying every earlier workflow automatically.
 
 ## Milestone 4: interactive second-screen tools
 

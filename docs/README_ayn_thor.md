@@ -14,7 +14,7 @@ The implementation uses Android's public multi-display APIs. It does not hardcod
 
 ## Lower-screen controls
 
-The Heroes II-styled command deck follows the active game context. Its upper information panel shows game-visible summaries for the Adventure Map, Hero, Castle/Town, Battle, and Scenario Setup contexts.
+The Heroes II-styled command deck follows the active game context. Its upper information panel shows game-visible summaries for the Adventure Map, Hero, Castle/Town, Battle, Scenario Setup, and Battle Only Setup contexts.
 
 | Context | Available actions |
 | --- | --- |
@@ -22,6 +22,7 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | New Game menus | Standard, Campaign, Multiplayer, Battle Only, Settings, campaign type, Hot Seat player count, Back |
 | Load Game | Standard, Campaign, Hot Seat, Back; unavailable categories are muted |
 | Scenario setup | Select Map, player navigation and assignment, faction, handicap, five difficulty levels, Start, Back |
+| Battle Only setup | Select Attacker, Select Defender, previous/next terrain, Defender Control, Reset, Start, Exit |
 | Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
@@ -31,6 +32,8 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 Context is published by the native game engine and polled by the Android Presentation. Temporary message dialogs override the current layout and restore the underlying context when they close.
 
 Scenario Setup player editing follows the native game rules. Standard games retain exactly one human position. Hot Seat uses a two-step Select/Swap flow so the chosen number of human players cannot change. Faction and handicap actions are muted when the selected map or player does not allow them.
+
+Battle Only Setup shows both sides, defender control, terrain, occupied army slots, and readiness. Hero selection uses the existing upper-screen selector, Start is muted when either active army is invalid, and Start transitions directly to the Battle deck.
 
 If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
 
@@ -94,8 +97,12 @@ adb shell dumpsys display
 
 The lower display should be active and should appear either in the presentation display category or in the active display list. The controller also responds to displays being enabled, disabled, or re-created while the game is running.
 
+## Development validation workflow
+
+Build and lint checks are automated. After installing and explicitly launching a candidate, hardware behavior is normally validated manually by the user from a short focused checklist. Extended ADB-driven navigation and repeated screenshot capture are reserved for requested automation or diagnosis of a specific failure.
+
 ## Current scope
 
-The current version provides semantic controls and read-only information cards while leaving upstream rendering unchanged. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
+The current validated development checkpoint is commit `db4297d4b2024247639c21e4407f2d3ed5e1b30a`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, and Battle Only setup workflows while leaving upstream rendering unchanged. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

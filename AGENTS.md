@@ -5,7 +5,9 @@
 - This workspace is the AYN Thor dual-screen fork of fheroes2.
 - Before implementing any new code slice, present the proposed behavior and focused acceptance tests, then wait for the user's approval.
 - Keep deferred ideas and later slices in `docs/AYN_THOR_BACKLOG.md`; do not discard them when implementing an earlier slice.
-- Build and install an approved candidate, give the user focused hardware tests, and wait for their results. Record passed validation before committing and pushing unless the user explicitly requests a different workflow.
+- Build and lint an approved candidate, install and explicitly launch it on the Thor, then give the user a short set of focused hardware tests and wait for their results. The user prefers to perform device interaction manually.
+- Keep automatic device testing to brief connection, installation, launch, log, and state checks. Do not run extended ADB-driven navigation, repeated screenshots, or exhaustive automated hardware interaction unless the user explicitly requests it or it is needed to diagnose a reported failure; these runs consume too many tokens.
+- Record the user's passed validation before committing and pushing unless the user explicitly requests a different workflow.
 - Preserve unrelated or pre-existing working-tree changes. Never reset or overwrite them.
 
 ## Current validated checkpoint
@@ -15,20 +17,22 @@
 - Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
 - Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
+- Latest hardware-validated development commit: `db4297d4b2024247639c21e4407f2d3ed5e1b30a`.
+- The development checkpoint adds the Battle Only setup command deck and information card. Its final debug APK SHA-256 is `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
 - The working tree is clean at this handoff. There are no known uncommitted source changes to preserve.
-- Scenario Setup player editing is complete and hardware-validated: player navigation, Standard human-position transfer, fixed-count Hot Seat seat swapping, faction changes, handicap changes, upper-screen highlighting, lower information refresh, and regression coverage all passed.
-- Validated implementation commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
+- Scenario Setup player editing and Battle Only setup are complete and hardware-validated. Battle Only covers attacker and defender selection, terrain, defender control, readiness-aware Start, Reset, Exit, modal restoration, and transition to the existing Battle deck.
+- Validated implementation commit: `db4297d4b2024247639c21e4407f2d3ed5e1b30a`.
 - The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned.
 
 ## Next recommended planning point
 
-- Plan the Battle Only setup workflow, the next locally testable navigable-menu slice.
-- Inspect the existing upper-screen Battle Only setup controls and availability rules before proposing the lower-screen behavior and focused acceptance tests.
-- Obtain user approval before implementation. Retain the validated New Game, Load Game, Scenario Setup, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Plan the High Scores workflow, the next small, asset-independent navigable-menu slice.
+- Inspect the existing upper-screen High Scores variants, navigation, exit behavior, and availability rules before proposing lower-screen behavior and focused manual acceptance tests.
+- Obtain user approval before implementation. Retain the validated New Game, Load Game, Scenario Setup, Battle Only setup, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 - Campaign selection remains deferred until compatible campaign assets are available for full device validation.
 
 ## Android build and device workflow
@@ -57,7 +61,7 @@
 
 - APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Package/activity: `org.fheroes2.thor/org.fheroes2.GameActivity`.
-- The last device endpoint was `192.168.68.84:40669`, but wireless ADB ports can change. Run `adb devices` before install or launch.
+- The last device endpoint was `192.168.68.81:39585`, but wireless ADB ports can change. Run `adb devices` before install or launch.
 - Launch the explicit game activity after installation; do not use `monkey`, which can open the asset Toolset instead.
 - The lower Android display was display ID 4. Its last SurfaceFlinger physical ID was `4630946482288158084`; re-check after panel toggles or reboot.
 
