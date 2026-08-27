@@ -542,9 +542,29 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Add, edit, and cancel rumors, daily events, and creator notes. Verify child Cancel is local and main Back still rolls back accepted tentative child edits.
 5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, and the existing specifications hotkey. Recheck File Options, System Options, Editor entry, and established menu workflows.
 
+### In-map Editor Tools
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- The Map Editor lower-screen context exposes Editor Tools beside File Options, System Options, and Map Specifications. Its main panel provides Terrain, Landscape Objects, Detail, Adventure Objects, Kingdom Objects, Monsters, Streams, Roads, Erase, Magnify, Undo, Redo, and Back.
+- Tool subpanels mirror the existing engine-owned terrain types, brush sizes, object categories and selectors, Detail Edit/Move/Copy modes, monster selection, and erase filters. Android only changes the native `EditorPanel` selection; placement, dragging, area selection, editing, moving, copying, validation, and erasure remain owned by the upper editor map.
+- The information card follows the selected tool, terrain, brush, object category and selection, detail mode, erase filters, and live Undo/Redo availability. Undo and Redo are enabled only when the existing history manager permits them.
+- Native object selectors and help use Dialog context and restore the exact tool parent. Context changes clear queued actions, and semantic controls are disabled while a selector or Magnify view is active.
+- Existing upper touchscreen, mouse, physical controls, hotkeys, File Options, System Options, Map Specifications, and established menu workflows remain available. Richer map information remains deferred as a separate later slice.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- All five focused checks passed on the Thor: both new and loaded maps stayed synchronized across every tool; terrain, brush, placement, Detail, Erase, Magnify, and Undo/Redo behavior worked through the native editor paths; selectors restored their exact parents; and rapid taps, help, upper touch, mouse, physical controls, hotkeys, File Options, System Options, Map Specifications, Editor entry, and established menu workflows retained their behavior.
+
+#### Focused in-map Editor Tools validation
+
+1. Open Editor Tools from newly created and loaded maps. Select all nine tools and verify the upper toolbar, lower subpanel, and information card agree.
+2. Select terrain types and all four brush sizes, then draw single-tile, sized, and dragged-area terrain on the upper screen. Verify Undo/Redo availability and results.
+3. Exercise every landscape, adventure, kingdom, monster, stream, and road category. Verify native selectors restore their exact parent and placement remains controlled by the upper map.
+4. Exercise Detail Edit/Move/Copy and every Erase filter and brush size. Verify edits use the established history behavior and the lower information card remains synchronized.
+5. Exercise rapid mixed taps, selector cancellation, right-click help, upper touchscreen, mouse, physical controls, hotkeys, Magnify, Undo/Redo, File Options, System Options, Map Specifications, Editor entry, and established menu regressions.
+
 ### Next recommended planning point
 
-- Plan Editor tools as the next focused slice. Keep richer map information separate, and preserve the specifications dialog's transactional and nested-parent behavior.
+- Plan richer map information as the next separate slice while preserving every validated Editor workflow.
 
 ### Later menu slices
 
@@ -552,7 +572,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
-- In-map Editor File Options, System Options, and Map Specifications are hardware-validated; tools and richer information remain separate later slices.
+- In-map Editor File Options, System Options, Map Specifications, and Editor Tools are hardware-validated; richer map information remains a separate later slice.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria

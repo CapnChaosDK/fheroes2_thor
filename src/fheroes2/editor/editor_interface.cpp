@@ -127,7 +127,8 @@ namespace
         fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_INTERFACE );
         fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS )
-                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS ) );
+                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS )
+                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_TOOLS ) );
     }
 
     void setThorEditorFileOptionsState()
@@ -1630,6 +1631,17 @@ namespace Interface
                 setThorEditorInterfaceState();
                 continue;
             }
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_TOOLS ) {
+                fheroes2::thor::setEnabledActions( 0 );
+                _editorPanel.openThorTools();
+                continue;
+            }
+            const fheroes2::thor::UiContext thorContext = fheroes2::thor::getUiContext();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE && thorContext >= fheroes2::thor::UiContext::EDITOR_TOOLS
+                 && thorContext <= fheroes2::thor::UiContext::EDITOR_TOOL_ERASE ) {
+                _editorPanel.queueEventProcessing( requestedThorAction );
+                continue;
+            }
 
             bool isCursorOverGameArea = false;
 
@@ -1814,7 +1826,7 @@ namespace Interface
                         cursor.SetThemes( Cursor::POINTER );
                     }
 
-                    res = _editorPanel.queueEventProcessing();
+                    res = _editorPanel.queueEventProcessing( requestedThorAction );
                 }
                 else if ( !_gameArea.NeedScroll() ) {
                     // Cursor is over the game area

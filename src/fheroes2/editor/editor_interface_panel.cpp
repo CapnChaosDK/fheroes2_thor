@@ -219,6 +219,390 @@ namespace Interface
         updateUndoRedoButtonsStates( false, false );
     }
 
+    void EditorPanel::openThorTools()
+    {
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_TOOLS );
+        _publishThorToolState();
+    }
+
+    void EditorPanel::_setThorToolContext()
+    {
+        using UiContext = fheroes2::thor::UiContext;
+
+        UiContext context = UiContext::EDITOR_TOOLS;
+        switch ( _selectedInstrument ) {
+        case Instrument::TERRAIN:
+            context = UiContext::EDITOR_TOOL_TERRAIN;
+            break;
+        case Instrument::LANDSCAPE_OBJECTS:
+            context = UiContext::EDITOR_TOOL_LANDSCAPE;
+            break;
+        case Instrument::DETAIL:
+            context = UiContext::EDITOR_TOOL_DETAIL;
+            break;
+        case Instrument::ADVENTURE_OBJECTS:
+            context = UiContext::EDITOR_TOOL_ADVENTURE;
+            break;
+        case Instrument::KINGDOM_OBJECTS:
+            context = UiContext::EDITOR_TOOL_KINGDOM;
+            break;
+        case Instrument::MONSTERS:
+            context = UiContext::EDITOR_TOOL_MONSTERS;
+            break;
+        case Instrument::STREAM:
+            context = UiContext::EDITOR_TOOL_STREAMS;
+            break;
+        case Instrument::ROAD:
+            context = UiContext::EDITOR_TOOL_ROADS;
+            break;
+        case Instrument::ERASE:
+            context = UiContext::EDITOR_TOOL_ERASE;
+            break;
+        default:
+            assert( 0 );
+            break;
+        }
+
+        fheroes2::thor::setUiContext( context );
+        _publishThorToolState();
+    }
+
+    void EditorPanel::_publishThorToolState() const
+    {
+        using Action = fheroes2::thor::Action;
+        using UiContext = fheroes2::thor::UiContext;
+
+        const UiContext context = fheroes2::thor::getUiContext();
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( Action::EDITOR_TOOL_BACK );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = context;
+        snapshot.title = _( "Editor Tools" );
+        snapshot.category = _( "Selected Tool" );
+        snapshot.resources = std::string( _( "Undo" ) ) + ": " + ( _isUndoAvailable ? _( "Available" ) : _( "Unavailable" ) ) + "   " + _( "Redo" ) + ": "
+                             + ( _isRedoAvailable ? _( "Available" ) : _( "Unavailable" ) );
+
+        const auto addAction = [&enabledActions]( const Action action ) { enabledActions |= fheroes2::thor::actionMask( action ); };
+        const auto brushName = [this]() -> const char * {
+            switch ( _selectedBrushSize ) {
+            case BrushSize::SMALL:
+                return _( "Small Brush" );
+            case BrushSize::MEDIUM:
+                return _( "Medium Brush" );
+            case BrushSize::LARGE:
+                return _( "Large Brush" );
+            case BrushSize::AREA:
+                return _selectedInstrument == Instrument::TERRAIN ? _( "Area Fill" ) : _( "Clear Area" );
+            default:
+                return "";
+            }
+        };
+        const auto toolName = [this]() -> const char * {
+            switch ( _selectedInstrument ) {
+            case Instrument::TERRAIN:
+                return _( "Terrain" );
+            case Instrument::LANDSCAPE_OBJECTS:
+                return _( "Landscape Objects" );
+            case Instrument::DETAIL:
+                return _( "Detail" );
+            case Instrument::ADVENTURE_OBJECTS:
+                return _( "Adventure Objects" );
+            case Instrument::KINGDOM_OBJECTS:
+                return _( "Kingdom Objects" );
+            case Instrument::MONSTERS:
+                return _( "Monsters" );
+            case Instrument::STREAM:
+                return _( "Streams" );
+            case Instrument::ROAD:
+                return _( "Roads" );
+            case Instrument::ERASE:
+                return _( "Erase" );
+            default:
+                return "";
+            }
+        };
+        const auto objectSelection = []( const int32_t objectType, const char * emptyText ) {
+            return objectType < 0 ? std::string( emptyText ) : std::string( _( "Object" ) ) + " #" + std::to_string( objectType + 1 );
+        };
+
+        if ( context == UiContext::EDITOR_TOOLS ) {
+            for ( Action action = Action::EDITOR_TOOL_TERRAIN; action <= Action::EDITOR_TOOL_ERASE;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            addAction( Action::EDITOR_TOOL_MAGNIFY );
+            if ( _isUndoAvailable ) {
+                addAction( Action::EDITOR_TOOL_UNDO );
+            }
+            if ( _isRedoAvailable ) {
+                addAction( Action::EDITOR_TOOL_REDO );
+            }
+            snapshot.detail = toolName();
+            snapshot.date = _( "Upper map remains interactive" );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_TERRAIN ) {
+            for ( Action action = Action::EDITOR_BRUSH_SMALL; action <= Action::EDITOR_BRUSH_AREA;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            for ( Action action = Action::EDITOR_TERRAIN_WATER; action <= Action::EDITOR_TERRAIN_BEACH;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            snapshot.detail = _getTerrainTypeName( _selectedTerrain );
+            snapshot.date = brushName();
+        }
+        else if ( context == UiContext::EDITOR_TOOL_LANDSCAPE ) {
+            for ( Action action = Action::EDITOR_LANDSCAPE_MOUNTAINS; action <= Action::EDITOR_LANDSCAPE_MISC;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            snapshot.detail = _selectedLandscapeObject < 0 ? _( "Select object type" ) : _getLandscapeObjectTypeName( _selectedLandscapeObject );
+            snapshot.date = objectSelection( getSelectedObjectType(), _( "No object selected" ) );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_DETAIL ) {
+            for ( Action action = Action::EDITOR_DETAIL_EDIT; action <= Action::EDITOR_DETAIL_COPY;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            snapshot.detail = _getDetailModeTypeName( _selectedDetailBrushType );
+            snapshot.date = _( "Use on upper map" );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_ADVENTURE ) {
+            for ( Action action = Action::EDITOR_ADVENTURE_ARTIFACTS; action <= Action::EDITOR_ADVENTURE_MISC;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            snapshot.detail = _selectedAdventureObject < 0 ? _( "Select object type" ) : _getAdventureObjectTypeName( _selectedAdventureObject );
+            snapshot.date = objectSelection( getSelectedObjectType(), _( "No object selected" ) );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_KINGDOM ) {
+            addAction( Action::EDITOR_KINGDOM_HEROES );
+            addAction( Action::EDITOR_KINGDOM_TOWNS );
+            snapshot.detail = _selectedKingdomObject < 0 ? _( "Select object type" ) : _getKingdomObjectTypeName( _selectedKingdomObject );
+            snapshot.date = objectSelection( getSelectedObjectType(), _( "No object selected" ) );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_MONSTERS ) {
+            addAction( Action::EDITOR_MONSTER_SELECT );
+            snapshot.detail = _( "Monsters" );
+            snapshot.date = objectSelection( _selectedMonsterType, _( "No monster selected" ) );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_STREAMS ) {
+            snapshot.detail = _( "Streams" );
+            snapshot.date = _( "Draw on upper map" );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_ROADS ) {
+            snapshot.detail = _( "Roads" );
+            snapshot.date = _( "Draw on upper map" );
+        }
+        else if ( context == UiContext::EDITOR_TOOL_ERASE ) {
+            for ( Action action = Action::EDITOR_BRUSH_SMALL; action <= Action::EDITOR_BRUSH_AREA;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            for ( Action action = Action::EDITOR_ERASE_MOUNTAINS; action <= Action::EDITOR_ERASE_STREAMS;
+                  action = static_cast<Action>( static_cast<int32_t>( action ) + 1 ) ) {
+                addAction( action );
+            }
+            const std::array<const char *, 11> eraseTypeNames{ _( "Mountains" ),  _( "Rocks" ),     _( "Trees" ),  _( "Landscape" ), _( "Non-pickable" ),
+                                                                _( "Towns" ),      _( "Pickable" ),  _( "Monsters" ), _( "Heroes" ),    _( "Roads" ),
+                                                                _( "Streams" ) };
+            snapshot.detail.clear();
+            for ( size_t index = 0; index < _eraseButtonObjectTypes.size(); ++index ) {
+                if ( ( _eraseTypes & _eraseButtonObjectTypes[index] ) == 0 ) {
+                    continue;
+                }
+                if ( !snapshot.detail.empty() ) {
+                    snapshot.detail += ", ";
+                }
+                snapshot.detail += eraseTypeNames[index];
+            }
+            if ( snapshot.detail.empty() ) {
+                snapshot.detail = _( "No object types selected" );
+            }
+            else if ( _eraseTypes == ObjectErasureType::ERASE_ALL_OBJECTS ) {
+                snapshot.detail = _( "All object types" );
+            }
+            snapshot.date = brushName();
+        }
+        else {
+            return;
+        }
+
+        fheroes2::thor::setEnabledActions( enabledActions );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    }
+
+    bool EditorPanel::_processThorAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+        using UiContext = fheroes2::thor::UiContext;
+
+        if ( action == Action::NONE ) {
+            return false;
+        }
+
+        const UiContext context = fheroes2::thor::getUiContext();
+        if ( action == Action::EDITOR_TOOL_BACK ) {
+            if ( context == UiContext::EDITOR_TOOLS ) {
+                fheroes2::thor::setUiContext( UiContext::EDITOR_INTERFACE );
+                fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( Action::EDITOR_OPEN_FILE_OPTIONS )
+                                                   | fheroes2::thor::actionMask( Action::EDITOR_OPEN_SYSTEM_OPTIONS )
+                                                   | fheroes2::thor::actionMask( Action::EDITOR_OPEN_MAP_SPECIFICATIONS )
+                                                   | fheroes2::thor::actionMask( Action::EDITOR_OPEN_TOOLS ) );
+            }
+            else {
+                openThorTools();
+            }
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOLS ) {
+            if ( action >= Action::EDITOR_TOOL_TERRAIN && action <= Action::EDITOR_TOOL_ERASE ) {
+                _selectedInstrument = static_cast<uint8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_TOOL_TERRAIN ) );
+                if ( _selectedInstrument == Instrument::DETAIL ) {
+                    _selectedDetailBrushType = DetailBrushType::EDITING;
+                }
+                _setCursor();
+                setRedraw();
+                _setThorToolContext();
+
+                if ( _selectedInstrument == Instrument::MONSTERS && _selectedMonsterType < 0 ) {
+                    fheroes2::thor::setEnabledActions( 0 );
+                    _redraw();
+                    handleObjectMouseClick( Dialog::selectMonsterType );
+                    _publishThorToolState();
+                }
+                return true;
+            }
+            if ( action == Action::EDITOR_TOOL_MAGNIFY ) {
+                fheroes2::thor::setEnabledActions( 0 );
+                _interface.eventViewWorld();
+                openThorTools();
+                return true;
+            }
+            if ( action == Action::EDITOR_TOOL_UNDO ) {
+                _interface.undoAction();
+                _publishThorToolState();
+                return true;
+            }
+            if ( action == Action::EDITOR_TOOL_REDO ) {
+                _interface.redoAction();
+                _publishThorToolState();
+                return true;
+            }
+        }
+
+        if ( action >= Action::EDITOR_BRUSH_SMALL && action <= Action::EDITOR_BRUSH_AREA ) {
+            _selectedBrushSize = static_cast<uint8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_BRUSH_SMALL ) );
+            setRedraw();
+            _publishThorToolState();
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_TERRAIN && action >= Action::EDITOR_TERRAIN_WATER && action <= Action::EDITOR_TERRAIN_BEACH ) {
+            _selectedTerrain = static_cast<uint8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_TERRAIN_WATER ) );
+            setRedraw();
+            _publishThorToolState();
+            return true;
+        }
+
+        const auto selectObject = [this]( const int8_t category, const std::function<int( int )> & selector ) {
+            fheroes2::thor::setEnabledActions( 0 );
+            if ( _selectedInstrument == Instrument::LANDSCAPE_OBJECTS ) {
+                _selectedLandscapeObject = category;
+            }
+            else if ( _selectedInstrument == Instrument::ADVENTURE_OBJECTS ) {
+                _selectedAdventureObject = category;
+            }
+            else if ( _selectedInstrument == Instrument::KINGDOM_OBJECTS ) {
+                _selectedKingdomObject = category;
+            }
+            _setCursor();
+            setRedraw();
+            _redraw();
+            handleObjectMouseClick( selector );
+            _publishThorToolState();
+        };
+
+        if ( context == UiContext::EDITOR_TOOL_LANDSCAPE && action >= Action::EDITOR_LANDSCAPE_MOUNTAINS && action <= Action::EDITOR_LANDSCAPE_MISC ) {
+            const int8_t category = static_cast<int8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_LANDSCAPE_MOUNTAINS ) );
+            switch ( category ) {
+            case LandscapeObjectBrush::MOUNTAINS:
+                selectObject( category, Dialog::selectMountainType );
+                break;
+            case LandscapeObjectBrush::ROCKS:
+                selectObject( category, Dialog::selectRockType );
+                break;
+            case LandscapeObjectBrush::TREES:
+                selectObject( category, Dialog::selectTreeType );
+                break;
+            case LandscapeObjectBrush::WATER_OBJECTS:
+                selectObject( category, Dialog::selectLandscapeOceanObjectType );
+                break;
+            case LandscapeObjectBrush::LANDSCAPE_MISC:
+                selectObject( category, Dialog::selectLandscapeMiscellaneousObjectType );
+                break;
+            default:
+                assert( 0 );
+            }
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_DETAIL && action >= Action::EDITOR_DETAIL_EDIT && action <= Action::EDITOR_DETAIL_COPY ) {
+            _selectedDetailBrushType = static_cast<uint8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_DETAIL_EDIT ) );
+            _setCursor();
+            setRedraw();
+            _publishThorToolState();
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_ADVENTURE && action >= Action::EDITOR_ADVENTURE_ARTIFACTS && action <= Action::EDITOR_ADVENTURE_MISC ) {
+            const int8_t category = static_cast<int8_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_ADVENTURE_ARTIFACTS ) );
+            const std::array<std::function<int( int )>, AdventureObjectBrush::ADVENTURE_COUNT> selectors{ Dialog::selectArtifactType, Dialog::selectDwellingType,
+                                                                                                         Dialog::selectMineType, Dialog::selectPowerUpObjectType,
+                                                                                                         Dialog::selectTreasureType, Dialog::selectOceanObjectType,
+                                                                                                         Dialog::selectAdventureMiscellaneousObjectType };
+            selectObject( category, selectors[category] );
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_KINGDOM && ( action == Action::EDITOR_KINGDOM_HEROES || action == Action::EDITOR_KINGDOM_TOWNS ) ) {
+            const int8_t category = action == Action::EDITOR_KINGDOM_HEROES ? KingdomObjectBrush::HEROES : KingdomObjectBrush::TOWNS;
+            if ( category == KingdomObjectBrush::HEROES ) {
+                selectObject( category, Dialog::selectHeroType );
+            }
+            else {
+                selectObject( category, [this]( const int32_t /* type */ ) {
+                    int32_t type = -1;
+                    int32_t color = -1;
+                    getTownObjectProperties( getSelectedObjectType(), type, color );
+                    Dialog::selectTownType( type, color );
+                    return generateTownObjectProperties( type, color );
+                } );
+            }
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_MONSTERS && action == Action::EDITOR_MONSTER_SELECT ) {
+            fheroes2::thor::setEnabledActions( 0 );
+            handleObjectMouseClick( Dialog::selectMonsterType );
+            setRedraw();
+            _publishThorToolState();
+            return true;
+        }
+
+        if ( context == UiContext::EDITOR_TOOL_ERASE && action >= Action::EDITOR_ERASE_MOUNTAINS && action <= Action::EDITOR_ERASE_STREAMS ) {
+            const size_t index = static_cast<size_t>( static_cast<int32_t>( action ) - static_cast<int32_t>( Action::EDITOR_ERASE_MOUNTAINS ) );
+            _eraseTypes ^= _eraseButtonObjectTypes[index];
+            setRedraw();
+            _publishThorToolState();
+            return true;
+        }
+
+        return false;
+    }
+
     fheroes2::Rect EditorPanel::getBrushArea() const
     {
         // Roads and streams are placed using only 1x1 brush.
@@ -1028,6 +1412,9 @@ namespace Interface
 
     void EditorPanel::updateUndoRedoButtonsStates( const bool isUndoAvailable, const bool isRedoAvailable )
     {
+        _isUndoAvailable = isUndoAvailable;
+        _isRedoAvailable = isRedoAvailable;
+
         auto updateButtonState = []( fheroes2::ButtonBase & button, const bool isAvailable ) {
             if ( isAvailable ) {
                 if ( button.isDisabled() ) {
@@ -1043,12 +1430,25 @@ namespace Interface
 
         updateButtonState( _buttonUndo, isUndoAvailable );
         updateButtonState( _buttonRedo, isRedoAvailable );
+
+        const fheroes2::thor::UiContext context = fheroes2::thor::getUiContext();
+        if ( context >= fheroes2::thor::UiContext::EDITOR_TOOLS && context <= fheroes2::thor::UiContext::EDITOR_TOOL_ERASE ) {
+            _publishThorToolState();
+        }
     }
 
-    fheroes2::GameMode EditorPanel::queueEventProcessing()
+    fheroes2::GameMode EditorPanel::queueEventProcessing( const fheroes2::thor::Action thorAction )
     {
         LocalEvent & le = LocalEvent::Get();
         fheroes2::GameMode res = fheroes2::GameMode::CANCEL;
+
+        if ( _processThorAction( thorAction ) ) {
+            return res;
+        }
+
+        const fheroes2::thor::UiContext thorContext = fheroes2::thor::getUiContext();
+        const bool isThorToolsActive
+            = thorContext >= fheroes2::thor::UiContext::EDITOR_TOOLS && thorContext <= fheroes2::thor::UiContext::EDITOR_TOOL_ERASE;
 
         if ( le.isMouseLeftButtonPressedInArea( _rectInstruments ) ) {
             for ( size_t i = 0; i < _instrumentButtonsRect.size(); ++i ) {
@@ -1075,6 +1475,10 @@ namespace Interface
                     }
 
                     setRedraw();
+
+                    if ( isThorToolsActive ) {
+                        _setThorToolContext();
+                    }
 
                     break;
                 }
@@ -1439,12 +1843,20 @@ namespace Interface
             fheroes2::showStandardTextMessage( _( "System Options" ), _( "View the editor system options, which let you customize the editor." ), Dialog::ZERO );
         }
 
+        if ( isThorToolsActive ) {
+            _publishThorToolState();
+        }
+
         return res;
     }
 
     void EditorPanel::handleObjectMouseClick( const std::function<int( int )> & typeSelection )
     {
-        const int type = typeSelection( getSelectedObjectType() );
+        int type = -1;
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            type = typeSelection( getSelectedObjectType() );
+        }
         if ( type >= 0 ) {
             switch ( _selectedInstrument ) {
             case Instrument::MONSTERS:
@@ -1468,6 +1880,11 @@ namespace Interface
 
         // The cursor must be set according to the position of mouse cursor.
         _interface.updateCursor( _interface.getGameArea().GetValidTileIdFromPoint( LocalEvent::Get().getMouseCursorPos() ) );
+
+        const fheroes2::thor::UiContext context = fheroes2::thor::getUiContext();
+        if ( context >= fheroes2::thor::UiContext::EDITOR_TOOLS && context <= fheroes2::thor::UiContext::EDITOR_TOOL_ERASE ) {
+            _publishThorToolState();
+        }
     }
 
     void EditorPanel::getTownObjectProperties( const int32_t packedType, int32_t & type, int32_t & color )

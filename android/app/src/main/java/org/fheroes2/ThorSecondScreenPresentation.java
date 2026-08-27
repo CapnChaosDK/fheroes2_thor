@@ -62,6 +62,16 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_EDITOR_MAP_SPEC_PLAYERS = 28;
     private static final int CONTEXT_EDITOR_MAP_SPEC_VICTORY = 29;
     private static final int CONTEXT_EDITOR_MAP_SPEC_LOSS = 30;
+    private static final int CONTEXT_EDITOR_TOOLS = 31;
+    private static final int CONTEXT_EDITOR_TOOL_TERRAIN = 32;
+    private static final int CONTEXT_EDITOR_TOOL_LANDSCAPE = 33;
+    private static final int CONTEXT_EDITOR_TOOL_DETAIL = 34;
+    private static final int CONTEXT_EDITOR_TOOL_ADVENTURE = 35;
+    private static final int CONTEXT_EDITOR_TOOL_KINGDOM = 36;
+    private static final int CONTEXT_EDITOR_TOOL_MONSTERS = 37;
+    private static final int CONTEXT_EDITOR_TOOL_STREAMS = 38;
+    private static final int CONTEXT_EDITOR_TOOL_ROADS = 39;
+    private static final int CONTEXT_EDITOR_TOOL_ERASE = 40;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -218,6 +228,62 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_EDITOR_MAP_SPEC_DECREASE_VALUE = 152;
     private static final int ACTION_EDITOR_MAP_SPEC_INCREASE_VALUE = 153;
     private static final int ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK = 154;
+    private static final int ACTION_EDITOR_OPEN_TOOLS = 155;
+    private static final int ACTION_EDITOR_TOOL_TERRAIN = 156;
+    private static final int ACTION_EDITOR_TOOL_LANDSCAPE = 157;
+    private static final int ACTION_EDITOR_TOOL_DETAIL = 158;
+    private static final int ACTION_EDITOR_TOOL_ADVENTURE = 159;
+    private static final int ACTION_EDITOR_TOOL_KINGDOM = 160;
+    private static final int ACTION_EDITOR_TOOL_MONSTERS = 161;
+    private static final int ACTION_EDITOR_TOOL_STREAMS = 162;
+    private static final int ACTION_EDITOR_TOOL_ROADS = 163;
+    private static final int ACTION_EDITOR_TOOL_ERASE = 164;
+    private static final int ACTION_EDITOR_TOOL_MAGNIFY = 165;
+    private static final int ACTION_EDITOR_TOOL_UNDO = 166;
+    private static final int ACTION_EDITOR_TOOL_REDO = 167;
+    private static final int ACTION_EDITOR_TOOL_BACK = 168;
+    private static final int ACTION_EDITOR_BRUSH_SMALL = 169;
+    private static final int ACTION_EDITOR_BRUSH_MEDIUM = 170;
+    private static final int ACTION_EDITOR_BRUSH_LARGE = 171;
+    private static final int ACTION_EDITOR_BRUSH_AREA = 172;
+    private static final int ACTION_EDITOR_TERRAIN_WATER = 173;
+    private static final int ACTION_EDITOR_TERRAIN_GRASS = 174;
+    private static final int ACTION_EDITOR_TERRAIN_SNOW = 175;
+    private static final int ACTION_EDITOR_TERRAIN_SWAMP = 176;
+    private static final int ACTION_EDITOR_TERRAIN_LAVA = 177;
+    private static final int ACTION_EDITOR_TERRAIN_DESERT = 178;
+    private static final int ACTION_EDITOR_TERRAIN_DIRT = 179;
+    private static final int ACTION_EDITOR_TERRAIN_WASTELAND = 180;
+    private static final int ACTION_EDITOR_TERRAIN_BEACH = 181;
+    private static final int ACTION_EDITOR_LANDSCAPE_MOUNTAINS = 182;
+    private static final int ACTION_EDITOR_LANDSCAPE_ROCKS = 183;
+    private static final int ACTION_EDITOR_LANDSCAPE_TREES = 184;
+    private static final int ACTION_EDITOR_LANDSCAPE_WATER = 185;
+    private static final int ACTION_EDITOR_LANDSCAPE_MISC = 186;
+    private static final int ACTION_EDITOR_DETAIL_EDIT = 187;
+    private static final int ACTION_EDITOR_DETAIL_MOVE = 188;
+    private static final int ACTION_EDITOR_DETAIL_COPY = 189;
+    private static final int ACTION_EDITOR_ADVENTURE_ARTIFACTS = 190;
+    private static final int ACTION_EDITOR_ADVENTURE_DWELLINGS = 191;
+    private static final int ACTION_EDITOR_ADVENTURE_MINES = 192;
+    private static final int ACTION_EDITOR_ADVENTURE_POWER_UPS = 193;
+    private static final int ACTION_EDITOR_ADVENTURE_TREASURES = 194;
+    private static final int ACTION_EDITOR_ADVENTURE_WATER = 195;
+    private static final int ACTION_EDITOR_ADVENTURE_MISC = 196;
+    private static final int ACTION_EDITOR_KINGDOM_HEROES = 197;
+    private static final int ACTION_EDITOR_KINGDOM_TOWNS = 198;
+    private static final int ACTION_EDITOR_MONSTER_SELECT = 199;
+    private static final int ACTION_EDITOR_ERASE_MOUNTAINS = 200;
+    private static final int ACTION_EDITOR_ERASE_ROCKS = 201;
+    private static final int ACTION_EDITOR_ERASE_TREES = 202;
+    private static final int ACTION_EDITOR_ERASE_LANDSCAPE = 203;
+    private static final int ACTION_EDITOR_ERASE_ADVENTURE_NON_PICKABLE = 204;
+    private static final int ACTION_EDITOR_ERASE_TOWNS = 205;
+    private static final int ACTION_EDITOR_ERASE_ADVENTURE_PICKABLE = 206;
+    private static final int ACTION_EDITOR_ERASE_MONSTERS = 207;
+    private static final int ACTION_EDITOR_ERASE_HEROES = 208;
+    private static final int ACTION_EDITOR_ERASE_ROADS = 209;
+    private static final int ACTION_EDITOR_ERASE_STREAMS = 210;
 
     interface KeySender
     {
@@ -319,7 +385,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_MAP_SPEC_LOSS ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_TOOL_ERASE ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -426,7 +492,7 @@ final class ThorSecondScreenPresentation extends Presentation
                    || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS
                    || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
                    || gameContext == CONTEXT_EDITOR_MAP_SPEC_PLAYERS || gameContext == CONTEXT_EDITOR_MAP_SPEC_VICTORY
-                   || gameContext == CONTEXT_EDITOR_MAP_SPEC_LOSS )
+                   || gameContext == CONTEXT_EDITOR_MAP_SPEC_LOSS || ( gameContext >= CONTEXT_EDITOR_TOOLS && gameContext <= CONTEXT_EDITOR_TOOL_ERASE ) )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
                     drawBattleInformationCard( canvas, innerPanel );
@@ -794,6 +860,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_EDITOR_INTERFACE:
                 contextTitle = "MAP EDITOR";
+                addAction( "EDITOR TOOLS", ACTION_EDITOR_OPEN_TOOLS, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "FILE OPTIONS", ACTION_EDITOR_OPEN_FILE_OPTIONS, KeyEvent.KEYCODE_F );
                 addAction( "SYSTEM OPTIONS", ACTION_EDITOR_OPEN_SYSTEM_OPTIONS, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "MAP SPECIFICATIONS", ACTION_EDITOR_OPEN_MAP_SPECIFICATIONS, KeyEvent.KEYCODE_UNKNOWN );
@@ -867,6 +934,98 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "MORE TIME", ACTION_EDITOR_MAP_SPEC_INCREASE_VALUE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "BACK", ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
+            case CONTEXT_EDITOR_TOOLS:
+                contextTitle = "EDITOR TOOLS";
+                addAction( "TERRAIN", ACTION_EDITOR_TOOL_TERRAIN, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LANDSCAPE", ACTION_EDITOR_TOOL_LANDSCAPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DETAIL", ACTION_EDITOR_TOOL_DETAIL, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ADVENTURE", ACTION_EDITOR_TOOL_ADVENTURE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "KINGDOM", ACTION_EDITOR_TOOL_KINGDOM, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MONSTERS", ACTION_EDITOR_TOOL_MONSTERS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "STREAMS", ACTION_EDITOR_TOOL_STREAMS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ROADS", ACTION_EDITOR_TOOL_ROADS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ERASE", ACTION_EDITOR_TOOL_ERASE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MAGNIFY", ACTION_EDITOR_TOOL_MAGNIFY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "UNDO", ACTION_EDITOR_TOOL_UNDO, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "REDO", ACTION_EDITOR_TOOL_REDO, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_TERRAIN:
+                contextTitle = "TOOLS — TERRAIN";
+                addAction( "WATER", ACTION_EDITOR_TERRAIN_WATER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "GRASS", ACTION_EDITOR_TERRAIN_GRASS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SNOW", ACTION_EDITOR_TERRAIN_SNOW, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SWAMP", ACTION_EDITOR_TERRAIN_SWAMP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LAVA", ACTION_EDITOR_TERRAIN_LAVA, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DESERT", ACTION_EDITOR_TERRAIN_DESERT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DIRT", ACTION_EDITOR_TERRAIN_DIRT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "WASTELAND", ACTION_EDITOR_TERRAIN_WASTELAND, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BEACH", ACTION_EDITOR_TERRAIN_BEACH, KeyEvent.KEYCODE_UNKNOWN );
+                addBrushActions();
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_LANDSCAPE:
+                contextTitle = "TOOLS — LANDSCAPE";
+                addAction( "MOUNTAINS", ACTION_EDITOR_LANDSCAPE_MOUNTAINS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ROCKS", ACTION_EDITOR_LANDSCAPE_ROCKS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TREES", ACTION_EDITOR_LANDSCAPE_TREES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "WATER OBJECTS", ACTION_EDITOR_LANDSCAPE_WATER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MISCELLANEOUS", ACTION_EDITOR_LANDSCAPE_MISC, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_DETAIL:
+                contextTitle = "TOOLS — DETAIL";
+                addAction( "EDIT", ACTION_EDITOR_DETAIL_EDIT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MOVE", ACTION_EDITOR_DETAIL_MOVE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "COPY", ACTION_EDITOR_DETAIL_COPY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_ADVENTURE:
+                contextTitle = "TOOLS — ADVENTURE";
+                addAction( "ARTIFACTS", ACTION_EDITOR_ADVENTURE_ARTIFACTS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DWELLINGS", ACTION_EDITOR_ADVENTURE_DWELLINGS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MINES", ACTION_EDITOR_ADVENTURE_MINES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "POWER-UPS", ACTION_EDITOR_ADVENTURE_POWER_UPS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TREASURES", ACTION_EDITOR_ADVENTURE_TREASURES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "WATER OBJECTS", ACTION_EDITOR_ADVENTURE_WATER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MISCELLANEOUS", ACTION_EDITOR_ADVENTURE_MISC, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_KINGDOM:
+                contextTitle = "TOOLS — KINGDOM";
+                addAction( "HEROES", ACTION_EDITOR_KINGDOM_HEROES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TOWNS", ACTION_EDITOR_KINGDOM_TOWNS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_MONSTERS:
+                contextTitle = "TOOLS — MONSTERS";
+                addAction( "SELECT MONSTER", ACTION_EDITOR_MONSTER_SELECT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_STREAMS:
+                contextTitle = "TOOLS — STREAMS";
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_ROADS:
+                contextTitle = "TOOLS — ROADS";
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_TOOL_ERASE:
+                contextTitle = "TOOLS — ERASE";
+                addAction( "MOUNTAINS", ACTION_EDITOR_ERASE_MOUNTAINS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ROCKS", ACTION_EDITOR_ERASE_ROCKS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TREES", ACTION_EDITOR_ERASE_TREES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LANDSCAPE", ACTION_EDITOR_ERASE_LANDSCAPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NON-PICKABLE", ACTION_EDITOR_ERASE_ADVENTURE_NON_PICKABLE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TOWNS", ACTION_EDITOR_ERASE_TOWNS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PICKABLE", ACTION_EDITOR_ERASE_ADVENTURE_PICKABLE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MONSTERS", ACTION_EDITOR_ERASE_MONSTERS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "HEROES", ACTION_EDITOR_ERASE_HEROES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ROADS", ACTION_EDITOR_ERASE_ROADS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "STREAMS", ACTION_EDITOR_ERASE_STREAMS, KeyEvent.KEYCODE_UNKNOWN );
+                addBrushActions();
+                addAction( "BACK", ACTION_EDITOR_TOOL_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
                 addDialogActions();
@@ -883,6 +1042,14 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
             addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+        }
+
+        private void addBrushActions()
+        {
+            addAction( "1 × 1", ACTION_EDITOR_BRUSH_SMALL, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "2 × 2", ACTION_EDITOR_BRUSH_MEDIUM, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "4 × 4", ACTION_EDITOR_BRUSH_LARGE, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "AREA", ACTION_EDITOR_BRUSH_AREA, KeyEvent.KEYCODE_UNKNOWN );
         }
 
         private void addEditorMapSizeActions()

@@ -295,7 +295,72 @@ namespace
     bool isEditorInterfaceAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS || action == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS
-               || action == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS;
+               || action == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS || action == fheroes2::thor::Action::EDITOR_OPEN_TOOLS;
+    }
+
+    bool isEditorToolsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::EDITOR_TOOL_TERRAIN:
+        case Action::EDITOR_TOOL_LANDSCAPE:
+        case Action::EDITOR_TOOL_DETAIL:
+        case Action::EDITOR_TOOL_ADVENTURE:
+        case Action::EDITOR_TOOL_KINGDOM:
+        case Action::EDITOR_TOOL_MONSTERS:
+        case Action::EDITOR_TOOL_STREAMS:
+        case Action::EDITOR_TOOL_ROADS:
+        case Action::EDITOR_TOOL_ERASE:
+        case Action::EDITOR_TOOL_MAGNIFY:
+        case Action::EDITOR_TOOL_UNDO:
+        case Action::EDITOR_TOOL_REDO:
+        case Action::EDITOR_TOOL_BACK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isEditorBrushAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::EDITOR_BRUSH_SMALL || action == Action::EDITOR_BRUSH_MEDIUM || action == Action::EDITOR_BRUSH_LARGE
+               || action == Action::EDITOR_BRUSH_AREA;
+    }
+
+    bool isEditorToolSubpanelAction( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
+    {
+        using Action = fheroes2::thor::Action;
+        using UiContext = fheroes2::thor::UiContext;
+
+        if ( action == Action::EDITOR_TOOL_BACK ) {
+            return true;
+        }
+
+        switch ( context ) {
+        case UiContext::EDITOR_TOOL_TERRAIN:
+            return isEditorBrushAction( action )
+                   || ( action >= Action::EDITOR_TERRAIN_WATER && action <= Action::EDITOR_TERRAIN_BEACH );
+        case UiContext::EDITOR_TOOL_LANDSCAPE:
+            return action >= Action::EDITOR_LANDSCAPE_MOUNTAINS && action <= Action::EDITOR_LANDSCAPE_MISC;
+        case UiContext::EDITOR_TOOL_DETAIL:
+            return action >= Action::EDITOR_DETAIL_EDIT && action <= Action::EDITOR_DETAIL_COPY;
+        case UiContext::EDITOR_TOOL_ADVENTURE:
+            return action >= Action::EDITOR_ADVENTURE_ARTIFACTS && action <= Action::EDITOR_ADVENTURE_MISC;
+        case UiContext::EDITOR_TOOL_KINGDOM:
+            return action == Action::EDITOR_KINGDOM_HEROES || action == Action::EDITOR_KINGDOM_TOWNS;
+        case UiContext::EDITOR_TOOL_MONSTERS:
+            return action == Action::EDITOR_MONSTER_SELECT;
+        case UiContext::EDITOR_TOOL_STREAMS:
+        case UiContext::EDITOR_TOOL_ROADS:
+            return false;
+        case UiContext::EDITOR_TOOL_ERASE:
+            return isEditorBrushAction( action ) || ( action >= Action::EDITOR_ERASE_MOUNTAINS && action <= Action::EDITOR_ERASE_STREAMS );
+        default:
+            return false;
+        }
     }
 
     bool isEditorSystemOptionsAction( const fheroes2::thor::Action action )
@@ -406,7 +471,8 @@ namespace
                || context == UiContext::EDITOR_MAP_SIZE_RANDOM || context == UiContext::EDITOR_INTERFACE
                || context == UiContext::EDITOR_FILE_OPTIONS || context == UiContext::EDITOR_SYSTEM_OPTIONS
                || context == UiContext::EDITOR_MAP_SPECIFICATIONS || context == UiContext::EDITOR_MAP_SPEC_PLAYERS
-               || context == UiContext::EDITOR_MAP_SPEC_VICTORY || context == UiContext::EDITOR_MAP_SPEC_LOSS;
+               || context == UiContext::EDITOR_MAP_SPEC_VICTORY || context == UiContext::EDITOR_MAP_SPEC_LOSS || context == UiContext::EDITOR_TOOLS
+               || ( context >= UiContext::EDITOR_TOOL_TERRAIN && context <= UiContext::EDITOR_TOOL_ERASE );
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -466,6 +532,18 @@ namespace
         case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_VICTORY:
         case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS:
             return isEditorMapSpecConditionAction( action );
+        case fheroes2::thor::UiContext::EDITOR_TOOLS:
+            return isEditorToolsAction( action );
+        case fheroes2::thor::UiContext::EDITOR_TOOL_TERRAIN:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_LANDSCAPE:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_DETAIL:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_ADVENTURE:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_KINGDOM:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_MONSTERS:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_STREAMS:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_ROADS:
+        case fheroes2::thor::UiContext::EDITOR_TOOL_ERASE:
+            return isEditorToolSubpanelAction( action, context );
         default:
             return false;
         }

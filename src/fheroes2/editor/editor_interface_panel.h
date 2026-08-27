@@ -30,6 +30,7 @@
 #include "image.h"
 #include "map_object_info.h"
 #include "math_base.h"
+#include "thor_ui.h"
 #include "ui_button.h"
 
 namespace Interface
@@ -127,7 +128,9 @@ namespace Interface
         // Set flag to redraw Editor buttons panel on the next interface render.
         void setRedraw() const;
 
-        fheroes2::GameMode queueEventProcessing();
+        fheroes2::GameMode queueEventProcessing( fheroes2::thor::Action thorAction = fheroes2::thor::Action::NONE );
+
+        void openThorTools();
 
         // Do not call this method directly, use Interface::Editor::redraw() instead.
         // The name of this method starts from _ on purpose to do not mix with other public methods.
@@ -165,6 +168,10 @@ namespace Interface
         static const char * _getEraseObjectTypeName( const uint32_t eraseObjectType );
 
         void _setCursor();
+
+        void _setThorToolContext();
+        void _publishThorToolState() const;
+        bool _processThorAction( fheroes2::thor::Action action );
 
         void handleObjectMouseClick( const std::function<int( int )> & typeSelection );
 
@@ -335,6 +342,8 @@ namespace Interface
         uint8_t _selectedBrushSize{ BrushSize::MEDIUM };
         uint8_t _selectedDetailBrushType{ DetailBrushType::EDITING };
         uint32_t _eraseTypes{ ObjectErasureType::ERASE_ALL_OBJECTS };
+        bool _isUndoAvailable{ false };
+        bool _isRedoAvailable{ false };
 
         std::array<int32_t, LandscapeObjectBrush::LANDSCAPE_COUNT> _selectedLandscapeObjectType;
         std::array<int32_t, AdventureObjectBrush::ADVENTURE_COUNT> _selectedAdventureObjectType;
