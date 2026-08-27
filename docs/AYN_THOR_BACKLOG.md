@@ -520,12 +520,31 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Close and reopen System Options, then explicitly relaunch the app and return to the Editor. Verify changed settings persist and the Editor remains usable after interface rebuilds.
 5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, and hotkeys. Recheck File Options, Editor pre-entry, and established Main Menu workflows for regressions.
 
+### In-map Editor Map Specifications
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- The Map Editor lower-screen context exposes Map Specifications beside File Options and System Options. Its main panel provides Map Name, Description, Player Setup, Difficulty, Victory, Loss, Rumors, Events, Map Language, Creator Notes, Okay, and Back / Cancel.
+- Player Setup provides previous/next available-player navigation and cycles the existing Human, Computer, and Human-or-Computer states while preserving the Editor's requirement that at least one player remains human-capable.
+- Victory and Loss use focused subpanels. Condition navigation filters through the same map-owned availability rules as the upper dropdowns, while condition-specific target, alliance, standard-victory, AI-eligibility, gold, and time controls reuse the existing condition UI state and validation.
+- The lower information card follows tentative map, player, difficulty, language, victory, loss, alliance, gold, and time values. Nested text, rumor, event, language, town, hero, artifact, and help windows use Dialog context and restore their exact specifications parent.
+- Subpanel Back returns to the main specifications panel while retaining tentative edits. Main Back / Cancel restores the complete map backup; Okay commits through the existing single Editor history action.
+- Semantic operations reject queued rapid taps while contexts or child windows change. Existing upper touchscreen, mouse, physical controls, hotkeys, and right-click help remain available.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
+- All five focused checks passed on the Thor: newly created and loaded maps entered synchronized specifications panels; transactional text, metadata, player, difficulty, and language edits restored or committed correctly; all available victory/loss controls including three-player alliances worked with their map prerequisites; rumors, events, creator notes, and nested dialogs restored their exact parents; and rapid taps, help, upper touch, mouse, physical controls, hotkeys, File Options, System Options, Editor entry, and established menu workflows retained their behavior.
+- Editor tools and richer map information remain deferred as separate later slices.
+
+#### Focused in-map Editor Map Specifications validation
+
+1. Open Map Specifications from newly created and loaded maps. Verify the upper window, lower main panel, and information card agree.
+2. Change map text, player type, difficulty, and language. Verify main Back restores every value, while Okay preserves all changes after reopening and as one Undo/Redo history action.
+3. Exercise every victory and loss condition available on the test map, including target selectors, alliances, gold, time, standard-victory, and AI controls. Verify unavailable conditions cannot be selected and each child restores its exact parent.
+4. Add, edit, and cancel rumors, daily events, and creator notes. Verify child Cancel is local and main Back still rolls back accepted tentative child edits.
+5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, and the existing specifications hotkey. Recheck File Options, System Options, Editor entry, and established menu workflows.
+
 ### Next recommended planning point
 
-- Plan the in-map Editor Map Specifications workflow as the next focused slice.
-- Inspect the existing specifications window before proposing which stable lower-screen actions and summaries belong in the first slice. Preserve its engine-owned map validation, nested detail windows, and mutation logic.
-- Define exact Dialog restoration and Okay/Back behavior, plus a short manual regression checklist covering the validated Editor pre-entry, File Options, and System Options workflows.
-- Keep Editor tools and richer map information as separate later slices; do not discard or silently fold them into Map Specifications.
+- Plan Editor tools as the next focused slice. Keep richer map information separate, and preserve the specifications dialog's transactional and nested-parent behavior.
 
 ### Later menu slices
 
@@ -533,7 +552,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
-- In-map Editor File Options and System Options are hardware-validated; tools, map specifications, and richer information remain separate later slices.
+- In-map Editor File Options, System Options, and Map Specifications are hardware-validated; tools and richer information remain separate later slices.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria

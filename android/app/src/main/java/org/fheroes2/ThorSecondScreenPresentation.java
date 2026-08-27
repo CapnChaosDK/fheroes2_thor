@@ -58,6 +58,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_EDITOR_INTERFACE = 24;
     private static final int CONTEXT_EDITOR_FILE_OPTIONS = 25;
     private static final int CONTEXT_EDITOR_SYSTEM_OPTIONS = 26;
+    private static final int CONTEXT_EDITOR_MAP_SPECIFICATIONS = 27;
+    private static final int CONTEXT_EDITOR_MAP_SPEC_PLAYERS = 28;
+    private static final int CONTEXT_EDITOR_MAP_SPEC_VICTORY = 29;
+    private static final int CONTEXT_EDITOR_MAP_SPEC_LOSS = 30;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -187,6 +191,33 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_EDITOR_SYSTEM_CURSOR_TYPE = 125;
     private static final int ACTION_EDITOR_SYSTEM_SCROLL_SPEED = 126;
     private static final int ACTION_EDITOR_SYSTEM_CLOSE = 127;
+    private static final int ACTION_EDITOR_OPEN_MAP_SPECIFICATIONS = 128;
+    private static final int ACTION_EDITOR_MAP_SPEC_NAME = 129;
+    private static final int ACTION_EDITOR_MAP_SPEC_DESCRIPTION = 130;
+    private static final int ACTION_EDITOR_MAP_SPEC_PLAYERS = 131;
+    private static final int ACTION_EDITOR_MAP_SPEC_DIFFICULTY = 132;
+    private static final int ACTION_EDITOR_MAP_SPEC_VICTORY = 133;
+    private static final int ACTION_EDITOR_MAP_SPEC_LOSS = 134;
+    private static final int ACTION_EDITOR_MAP_SPEC_RUMORS = 135;
+    private static final int ACTION_EDITOR_MAP_SPEC_EVENTS = 136;
+    private static final int ACTION_EDITOR_MAP_SPEC_LANGUAGE = 137;
+    private static final int ACTION_EDITOR_MAP_SPEC_ABOUT = 138;
+    private static final int ACTION_EDITOR_MAP_SPEC_OKAY = 139;
+    private static final int ACTION_EDITOR_MAP_SPEC_CANCEL = 140;
+    private static final int ACTION_EDITOR_MAP_SPEC_PREVIOUS_PLAYER = 141;
+    private static final int ACTION_EDITOR_MAP_SPEC_NEXT_PLAYER = 142;
+    private static final int ACTION_EDITOR_MAP_SPEC_PLAYER_TYPE = 143;
+    private static final int ACTION_EDITOR_MAP_SPEC_PREVIOUS_CONDITION = 144;
+    private static final int ACTION_EDITOR_MAP_SPEC_NEXT_CONDITION = 145;
+    private static final int ACTION_EDITOR_MAP_SPEC_SELECT_TARGET = 146;
+    private static final int ACTION_EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY = 147;
+    private static final int ACTION_EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY = 148;
+    private static final int ACTION_EDITOR_MAP_SPEC_PREVIOUS_ALLIANCE_PLAYER = 149;
+    private static final int ACTION_EDITOR_MAP_SPEC_NEXT_ALLIANCE_PLAYER = 150;
+    private static final int ACTION_EDITOR_MAP_SPEC_SWITCH_ALLIANCE = 151;
+    private static final int ACTION_EDITOR_MAP_SPEC_DECREASE_VALUE = 152;
+    private static final int ACTION_EDITOR_MAP_SPEC_INCREASE_VALUE = 153;
+    private static final int ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK = 154;
 
     interface KeySender
     {
@@ -288,7 +319,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_SYSTEM_OPTIONS ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_MAP_SPEC_LOSS ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -392,7 +423,10 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
-                   || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS )
+                   || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS
+                   || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
+                   || gameContext == CONTEXT_EDITOR_MAP_SPEC_PLAYERS || gameContext == CONTEXT_EDITOR_MAP_SPEC_VICTORY
+                   || gameContext == CONTEXT_EDITOR_MAP_SPEC_LOSS )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
                     drawBattleInformationCard( canvas, innerPanel );
@@ -762,6 +796,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "MAP EDITOR";
                 addAction( "FILE OPTIONS", ACTION_EDITOR_OPEN_FILE_OPTIONS, KeyEvent.KEYCODE_F );
                 addAction( "SYSTEM OPTIONS", ACTION_EDITOR_OPEN_SYSTEM_OPTIONS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MAP SPECIFICATIONS", ACTION_EDITOR_OPEN_MAP_SPECIFICATIONS, KeyEvent.KEYCODE_UNKNOWN );
                 break;
             case CONTEXT_EDITOR_FILE_OPTIONS:
                 contextTitle = "EDITOR — FILE OPTIONS";
@@ -786,6 +821,51 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "CURSOR TYPE", ACTION_EDITOR_SYSTEM_CURSOR_TYPE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "SCROLL SPEED", ACTION_EDITOR_SYSTEM_SCROLL_SPEED, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "OKAY / BACK", ACTION_EDITOR_SYSTEM_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_MAP_SPECIFICATIONS:
+                contextTitle = "EDITOR — MAP SPECIFICATIONS";
+                addAction( "MAP NAME", ACTION_EDITOR_MAP_SPEC_NAME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DESCRIPTION", ACTION_EDITOR_MAP_SPEC_DESCRIPTION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PLAYER SETUP", ACTION_EDITOR_MAP_SPEC_PLAYERS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DIFFICULTY", ACTION_EDITOR_MAP_SPEC_DIFFICULTY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "VICTORY", ACTION_EDITOR_MAP_SPEC_VICTORY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LOSS", ACTION_EDITOR_MAP_SPEC_LOSS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "RUMORS", ACTION_EDITOR_MAP_SPEC_RUMORS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "EVENTS", ACTION_EDITOR_MAP_SPEC_EVENTS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MAP LANGUAGE", ACTION_EDITOR_MAP_SPEC_LANGUAGE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CREATOR NOTES", ACTION_EDITOR_MAP_SPEC_ABOUT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY", ACTION_EDITOR_MAP_SPEC_OKAY, KeyEvent.KEYCODE_ENTER );
+                addAction( "BACK / CANCEL", ACTION_EDITOR_MAP_SPEC_CANCEL, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_MAP_SPEC_PLAYERS:
+                contextTitle = "MAP SPECIFICATIONS — PLAYERS";
+                addAction( "PREV PLAYER", ACTION_EDITOR_MAP_SPEC_PREVIOUS_PLAYER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT PLAYER", ACTION_EDITOR_MAP_SPEC_NEXT_PLAYER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PLAYER TYPE", ACTION_EDITOR_MAP_SPEC_PLAYER_TYPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_MAP_SPEC_VICTORY:
+                contextTitle = "MAP SPECIFICATIONS — VICTORY";
+                addAction( "PREV CONDITION", ACTION_EDITOR_MAP_SPEC_PREVIOUS_CONDITION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT CONDITION", ACTION_EDITOR_MAP_SPEC_NEXT_CONDITION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SELECT TARGET", ACTION_EDITOR_MAP_SPEC_SELECT_TARGET, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "STANDARD VICTORY", ACTION_EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ALLOW AI", ACTION_EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PREV ALLIANCE PLAYER", ACTION_EDITOR_MAP_SPEC_PREVIOUS_ALLIANCE_PLAYER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT ALLIANCE PLAYER", ACTION_EDITOR_MAP_SPEC_NEXT_ALLIANCE_PLAYER, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SWITCH ALLIANCE", ACTION_EDITOR_MAP_SPEC_SWITCH_ALLIANCE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LESS GOLD", ACTION_EDITOR_MAP_SPEC_DECREASE_VALUE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MORE GOLD", ACTION_EDITOR_MAP_SPEC_INCREASE_VALUE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_MAP_SPEC_LOSS:
+                contextTitle = "MAP SPECIFICATIONS — LOSS";
+                addAction( "PREV CONDITION", ACTION_EDITOR_MAP_SPEC_PREVIOUS_CONDITION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT CONDITION", ACTION_EDITOR_MAP_SPEC_NEXT_CONDITION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SELECT TARGET", ACTION_EDITOR_MAP_SPEC_SELECT_TARGET, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LESS TIME", ACTION_EDITOR_MAP_SPEC_DECREASE_VALUE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MORE TIME", ACTION_EDITOR_MAP_SPEC_INCREASE_VALUE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";

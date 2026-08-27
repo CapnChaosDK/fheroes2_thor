@@ -126,7 +126,8 @@ namespace
     {
         fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_INTERFACE );
         fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS )
-                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS ) );
+                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS )
+                                           | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS ) );
     }
 
     void setThorEditorFileOptionsState()
@@ -1620,6 +1621,12 @@ namespace Interface
             if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS ) {
                 fheroes2::thor::setEnabledActions( 0 );
                 Editor::openEditorSettings();
+                setThorEditorInterfaceState();
+                continue;
+            }
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS ) {
+                fheroes2::thor::setEnabledActions( 0 );
+                openMapSpecificationsDialog();
                 setThorEditorInterfaceState();
                 continue;
             }

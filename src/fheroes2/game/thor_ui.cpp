@@ -294,7 +294,8 @@ namespace
 
     bool isEditorInterfaceAction( const fheroes2::thor::Action action )
     {
-        return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS || action == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS;
+        return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS || action == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS
+               || action == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS;
     }
 
     bool isEditorSystemOptionsAction( const fheroes2::thor::Action action )
@@ -337,6 +338,59 @@ namespace
         }
     }
 
+    bool isEditorMapSpecificationsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::EDITOR_MAP_SPEC_NAME:
+        case Action::EDITOR_MAP_SPEC_DESCRIPTION:
+        case Action::EDITOR_MAP_SPEC_PLAYERS:
+        case Action::EDITOR_MAP_SPEC_DIFFICULTY:
+        case Action::EDITOR_MAP_SPEC_VICTORY:
+        case Action::EDITOR_MAP_SPEC_LOSS:
+        case Action::EDITOR_MAP_SPEC_RUMORS:
+        case Action::EDITOR_MAP_SPEC_EVENTS:
+        case Action::EDITOR_MAP_SPEC_LANGUAGE:
+        case Action::EDITOR_MAP_SPEC_ABOUT:
+        case Action::EDITOR_MAP_SPEC_OKAY:
+        case Action::EDITOR_MAP_SPEC_CANCEL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isEditorMapSpecPlayersAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::EDITOR_MAP_SPEC_PREVIOUS_PLAYER || action == Action::EDITOR_MAP_SPEC_NEXT_PLAYER
+               || action == Action::EDITOR_MAP_SPEC_PLAYER_TYPE || action == Action::EDITOR_MAP_SPEC_SUBMENU_BACK;
+    }
+
+    bool isEditorMapSpecConditionAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::EDITOR_MAP_SPEC_PREVIOUS_CONDITION:
+        case Action::EDITOR_MAP_SPEC_NEXT_CONDITION:
+        case Action::EDITOR_MAP_SPEC_SELECT_TARGET:
+        case Action::EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY:
+        case Action::EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY:
+        case Action::EDITOR_MAP_SPEC_PREVIOUS_ALLIANCE_PLAYER:
+        case Action::EDITOR_MAP_SPEC_NEXT_ALLIANCE_PLAYER:
+        case Action::EDITOR_MAP_SPEC_SWITCH_ALLIANCE:
+        case Action::EDITOR_MAP_SPEC_DECREASE_VALUE:
+        case Action::EDITOR_MAP_SPEC_INCREASE_VALUE:
+        case Action::EDITOR_MAP_SPEC_SUBMENU_BACK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
@@ -350,7 +404,9 @@ namespace
                || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN || context == UiContext::GAME_SETTINGS || context == UiContext::EDITOR_MAIN_MENU
                || context == UiContext::EDITOR_NEW_MAP_MENU || context == UiContext::EDITOR_MAP_SIZE_SCRATCH
                || context == UiContext::EDITOR_MAP_SIZE_RANDOM || context == UiContext::EDITOR_INTERFACE
-               || context == UiContext::EDITOR_FILE_OPTIONS || context == UiContext::EDITOR_SYSTEM_OPTIONS;
+               || context == UiContext::EDITOR_FILE_OPTIONS || context == UiContext::EDITOR_SYSTEM_OPTIONS
+               || context == UiContext::EDITOR_MAP_SPECIFICATIONS || context == UiContext::EDITOR_MAP_SPEC_PLAYERS
+               || context == UiContext::EDITOR_MAP_SPEC_VICTORY || context == UiContext::EDITOR_MAP_SPEC_LOSS;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -403,6 +459,13 @@ namespace
             return isEditorFileOptionsAction( action );
         case fheroes2::thor::UiContext::EDITOR_SYSTEM_OPTIONS:
             return isEditorSystemOptionsAction( action );
+        case fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS:
+            return isEditorMapSpecificationsAction( action );
+        case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_PLAYERS:
+            return isEditorMapSpecPlayersAction( action );
+        case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_VICTORY:
+        case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS:
+            return isEditorMapSpecConditionAction( action );
         default:
             return false;
         }

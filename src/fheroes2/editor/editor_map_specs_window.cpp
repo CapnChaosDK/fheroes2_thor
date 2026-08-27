@@ -63,6 +63,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_castle.h"
@@ -1215,8 +1216,83 @@ namespace
             }
         }
 
+        uint8_t conditionType() const
+        {
+            return _conditionType;
+        }
+
+        bool isNormalVictoryAllowed() const
+        {
+            return _isNormalVictoryAllowed;
+        }
+
+        bool isVictoryConditionApplicableForAI() const
+        {
+            return _isVictoryConditionApplicableForAI;
+        }
+
+        int32_t goldValue() const
+        {
+            return _goldAccumulationValue.getValue();
+        }
+
+        bool hasSelectableTarget() const
+        {
+            return _conditionType == Maps::FileInfo::VICTORY_CAPTURE_TOWN || _conditionType == Maps::FileInfo::VICTORY_KILL_HERO
+                   || _conditionType == Maps::FileInfo::VICTORY_OBTAIN_ARTIFACT;
+        }
+
+        bool canToggleNormalVictory() const
+        {
+            return _conditionType == Maps::FileInfo::VICTORY_CAPTURE_TOWN || _conditionType == Maps::FileInfo::VICTORY_OBTAIN_ARTIFACT
+                   || _conditionType == Maps::FileInfo::VICTORY_COLLECT_ENOUGH_GOLD;
+        }
+
+        bool canToggleAiVictory() const
+        {
+            return _conditionType == Maps::FileInfo::VICTORY_COLLECT_ENOUGH_GOLD
+                   || ( _conditionType == Maps::FileInfo::VICTORY_CAPTURE_TOWN && _townToCapture.second == PlayerColor::NONE );
+        }
+
+        bool hasAllianceControls() const
+        {
+            return _conditionType == Maps::FileInfo::VICTORY_DEFEAT_OTHER_SIDE;
+        }
+
+        bool hasGoldControls() const
+        {
+            return _conditionType == Maps::FileInfo::VICTORY_COLLECT_ENOUGH_GOLD;
+        }
+
+        void selectPreviousAlliancePlayer()
+        {
+            const size_t playerCount = static_cast<size_t>( Color::Count( _availableColors ) );
+            if ( playerCount > 0 ) {
+                _selectedAlliancePlayerIndex = ( _selectedAlliancePlayerIndex + playerCount - 1 ) % playerCount;
+            }
+        }
+
+        void selectNextAlliancePlayer()
+        {
+            const size_t playerCount = static_cast<size_t>( Color::Count( _availableColors ) );
+            if ( playerCount > 0 ) {
+                _selectedAlliancePlayerIndex = ( _selectedAlliancePlayerIndex + 1 ) % playerCount;
+            }
+        }
+
+        std::string selectedAlliancePlayer() const
+        {
+            const PlayerColorsVector colors( _availableColors );
+            return colors.empty() ? std::string{} : Color::String( colors[_selectedAlliancePlayerIndex % colors.size()] );
+        }
+
+        void adjustGold( const bool increase )
+        {
+            _goldAccumulationValue.setValue( _goldAccumulationValue.getValue() + ( increase ? 10000 : -10000 ) );
+        }
+
         // Returns true if rendering is required.
-        bool processEvents()
+        bool processEvents( const fheroes2::thor::Action requestedThorAction = fheroes2::thor::Action::NONE )
         {
             switch ( _conditionType ) {
             case Maps::FileInfo::VICTORY_DEFEAT_EVERYONE:
@@ -1226,7 +1302,7 @@ namespace
             case Maps::FileInfo::VICTORY_CAPTURE_TOWN: {
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _selectConditionRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SELECT_TARGET || le.MouseClickLeft( _selectConditionRoi ) ) {
                     assert( !_mapTownInfos.empty() );
 
                     const int32_t maxHeight = std::min( 100 + SelectMapCastle::itemsOffsetY * 12, fheroes2::Display::instance().height() - 100 );
@@ -1251,6 +1327,7 @@ namespace
                         }
                     }
 
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     if ( listbox.selectItemsEventProcessing() == Dialog::OK ) {
                         const int townIndex = listbox.GetCurrent();
 
@@ -1263,18 +1340,19 @@ namespace
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage( _( "Special Victory Condition" ), _( "Click here to change the town needed to capture to achieve victory." ),
                                                        Dialog::ZERO );
                     return false;
                 }
 
-                if ( le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY || le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
                     _isNormalVictoryAllowed = !_isNormalVictoryAllowed;
 
                     return true;
                 }
 
-                if ( le.MouseClickLeft( _allowVictoryConditionForAIRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY || le.MouseClickLeft( _allowVictoryConditionForAIRoi ) ) {
                     _isVictoryConditionApplicableForAI = !_isVictoryConditionApplicableForAI;
 
                     return true;
@@ -1285,7 +1363,7 @@ namespace
             case Maps::FileInfo::VICTORY_KILL_HERO: {
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _selectConditionRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SELECT_TARGET || le.MouseClickLeft( _selectConditionRoi ) ) {
                     assert( !_mapHeroInfos.empty() );
 
                     const int32_t maxHeight = std::min( 100 + SelectMapCastle::itemsOffsetY * 12, fheroes2::Display::instance().height() - 100 );
@@ -1310,6 +1388,7 @@ namespace
                         }
                     }
 
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     if ( listbox.selectItemsEventProcessing() == Dialog::OK ) {
                         const int heroIndex = listbox.GetCurrent();
 
@@ -1322,6 +1401,7 @@ namespace
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage( _( "Special Victory Condition" ), _( "Click here to change the hero needed to defeat to achieve victory." ),
                                                        Dialog::ZERO );
                     return false;
@@ -1332,7 +1412,8 @@ namespace
             case Maps::FileInfo::VICTORY_OBTAIN_ARTIFACT: {
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _selectConditionRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SELECT_TARGET || le.MouseClickLeft( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     const Artifact artifact = Dialog::selectArtifact( static_cast<int>( _victoryArtifactId ), true );
 
                     if ( artifact.isValid() || artifact.GetID() == Artifact::EDITOR_ANY_ULTIMATE_ARTIFACT ) {
@@ -1343,12 +1424,13 @@ namespace
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::ArtifactDialogElement( Artifact( static_cast<int>( _victoryArtifactId ) ) ).showPopup( Dialog::ZERO );
 
                     return false;
                 }
 
-                if ( le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY || le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
                     _isNormalVictoryAllowed = !_isNormalVictoryAllowed;
 
                     return true;
@@ -1358,13 +1440,16 @@ namespace
             }
             case Maps::FileInfo::VICTORY_DEFEAT_OTHER_SIDE: {
                 LocalEvent & le = LocalEvent::Get();
+                const bool switchSelectedAlliance = requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SWITCH_ALLIANCE;
 
                 for ( size_t allianceNumber = 0; allianceNumber < _alliancesCheckboxes.size(); ++allianceNumber ) {
                     for ( size_t playerNumber = 0; playerNumber < _alliancesCheckboxes[allianceNumber].size(); ++playerNumber ) {
                         const fheroes2::Rect & checkboxRect = _alliancesCheckboxes[allianceNumber][playerNumber]->getRect();
+                        const bool isSemanticSwitchTarget = switchSelectedAlliance && playerNumber == _selectedAlliancePlayerIndex
+                                                            && ( _alliances[allianceNumber] & _alliancesCheckboxes[allianceNumber][playerNumber]->getColor() ) == 0;
 
                         // Allow to select player only if it is not already selected.
-                        if ( le.MouseClickLeft( checkboxRect ) ) {
+                        if ( isSemanticSwitchTarget || le.MouseClickLeft( checkboxRect ) ) {
                             const PlayerColor color = _alliancesCheckboxes[allianceNumber][playerNumber]->getColor();
 
                             // There can be a maximum of (active_players - 1) in one alliance to have at least one player in the other alliance.
@@ -1386,6 +1471,7 @@ namespace
                         }
 
                         if ( le.isMouseRightButtonPressedInArea( checkboxRect ) ) {
+                            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                             std::string header = _( "Put %{color} player in the %{alliance} alliance" );
                             std::string messageText = _( "If this checkbox is checked, the %{color} player will be in the %{alliance} alliance." );
 
@@ -1405,19 +1491,25 @@ namespace
                 break;
             }
             case Maps::FileInfo::VICTORY_COLLECT_ENOUGH_GOLD: {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_DECREASE_VALUE
+                     || requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_INCREASE_VALUE ) {
+                    adjustGold( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_INCREASE_VALUE );
+                    return true;
+                }
+
                 if ( _goldAccumulationValue.processEvents() ) {
                     return true;
                 }
 
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY || le.MouseClickLeft( _allowNormalVictoryRoi ) ) {
                     _isNormalVictoryAllowed = !_isNormalVictoryAllowed;
 
                     return true;
                 }
 
-                if ( le.MouseClickLeft( _allowVictoryConditionForAIRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY || le.MouseClickLeft( _allowVictoryConditionForAIRoi ) ) {
                     _isVictoryConditionApplicableForAI = !_isVictoryConditionApplicableForAI;
 
                     return true;
@@ -1448,6 +1540,7 @@ namespace
         std::pair<int32_t, PlayerColor> _townToCapture{ 0, PlayerColor::NONE };
         std::vector<PlayerColorsSet> _alliances;
         std::vector<std::vector<std::unique_ptr<Editor::Checkbox>>> _alliancesCheckboxes;
+        size_t _selectedAlliancePlayerIndex{ 0 };
         std::vector<TownInfo> _mapTownInfos;
         std::vector<HeroInfo> _mapHeroInfos;
 
@@ -1741,8 +1834,33 @@ namespace
             }
         }
 
+        uint8_t conditionType() const
+        {
+            return _conditionType;
+        }
+
+        int32_t outOfTimeValue() const
+        {
+            return _outOfTimeValue.getValue();
+        }
+
+        bool hasSelectableTarget() const
+        {
+            return _conditionType == Maps::FileInfo::LOSS_TOWN || _conditionType == Maps::FileInfo::LOSS_HERO;
+        }
+
+        bool hasTimeControls() const
+        {
+            return _conditionType == Maps::FileInfo::LOSS_OUT_OF_TIME;
+        }
+
+        void adjustOutOfTime( const bool increase )
+        {
+            _outOfTimeValue.setValue( _outOfTimeValue.getValue() + ( increase ? 1 : -1 ) );
+        }
+
         // Returns true if rendering is required.
-        bool processEvents()
+        bool processEvents( const fheroes2::thor::Action requestedThorAction = fheroes2::thor::Action::NONE )
         {
             switch ( _conditionType ) {
             case Maps::FileInfo::LOSS_EVERYTHING:
@@ -1752,7 +1870,7 @@ namespace
             case Maps::FileInfo::LOSS_TOWN: {
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _selectConditionRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SELECT_TARGET || le.MouseClickLeft( _selectConditionRoi ) ) {
                     assert( !_mapTownInfos.empty() );
 
                     const int32_t maxHeight = std::min( 100 + SelectMapCastle::itemsOffsetY * 12, fheroes2::Display::instance().height() - 100 );
@@ -1778,6 +1896,7 @@ namespace
                         }
                     }
 
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     const int32_t result = listbox.selectItemsEventProcessing();
 
                     if ( result == Dialog::OK ) {
@@ -1793,6 +1912,7 @@ namespace
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage( _( "Special Loss Condition" ), _( "Click here to change the town whose loss would mean defeat." ), Dialog::ZERO );
                     return false;
                 }
@@ -1802,7 +1922,7 @@ namespace
             case Maps::FileInfo::LOSS_HERO: {
                 LocalEvent & le = LocalEvent::Get();
 
-                if ( le.MouseClickLeft( _selectConditionRoi ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_SELECT_TARGET || le.MouseClickLeft( _selectConditionRoi ) ) {
                     assert( !_mapHeroInfos.empty() );
 
                     const int32_t maxHeight = std::min( 100 + SelectMapCastle::itemsOffsetY * 12, fheroes2::Display::instance().height() - 100 );
@@ -1828,6 +1948,7 @@ namespace
                         }
                     }
 
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     const int32_t result = listbox.selectItemsEventProcessing();
 
                     if ( result == Dialog::OK ) {
@@ -1843,6 +1964,7 @@ namespace
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( _selectConditionRoi ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage( _( "Special Loss Condition" ), _( "Click here to change the hero whose loss would mean defeat." ), Dialog::ZERO );
                     return false;
                 }
@@ -1850,6 +1972,11 @@ namespace
                 break;
             }
             case Maps::FileInfo::LOSS_OUT_OF_TIME:
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_DECREASE_VALUE
+                     || requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_INCREASE_VALUE ) {
+                    adjustOutOfTime( requestedThorAction == fheroes2::thor::Action::EDITOR_MAP_SPEC_INCREASE_VALUE );
+                    return true;
+                }
                 return _outOfTimeValue.processEvents();
             default:
                 // Did you add more conditions? Add the logic for them!
@@ -1877,11 +2004,9 @@ namespace
         fheroes2::Rect _selectConditionRoi;
     };
 
-    uint8_t showWinLoseList( const Maps::Map_Format::MapFormat & mapFormat, const fheroes2::Point & offset, const uint8_t selectedCondition, const bool isLossList,
-                             const int dropBoxIcn )
+    std::vector<uint8_t> getAvailableWinLoseConditions( const Maps::Map_Format::MapFormat & mapFormat, const bool isLossList )
     {
         std::vector<uint8_t> conditions = isLossList ? supportedLossConditions : supportedVictoryConditions;
-        assert( std::find( conditions.begin(), conditions.end(), selectedCondition ) != conditions.end() );
 
         if ( isLossList ) {
             // Remove the conditions that have no selection among objects.
@@ -1918,6 +2043,15 @@ namespace
                                   conditions.end() );
             }
         }
+
+        return conditions;
+    }
+
+    uint8_t showWinLoseList( const Maps::Map_Format::MapFormat & mapFormat, const fheroes2::Point & offset, const uint8_t selectedCondition, const bool isLossList,
+                             const int dropBoxIcn )
+    {
+        std::vector<uint8_t> conditions = getAvailableWinLoseConditions( mapFormat, isLossList );
+        assert( std::find( conditions.begin(), conditions.end(), selectedCondition ) != conditions.end() );
 
         DropBoxList conditionList( offset, static_cast<int32_t>( conditions.size() ), isLossList, dropBoxIcn );
         conditionList.SetListContent( conditions );
@@ -2028,6 +2162,8 @@ namespace Editor
 {
     bool mapSpecificationsDialog( Maps::Map_Format::MapFormat & mapFormat, const int32_t maxMapNameLength )
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS );
+
         // Verify victory and loss condition types.
         if ( std::find( supportedVictoryConditions.begin(), supportedVictoryConditions.end(), mapFormat.victoryConditionType ) == supportedVictoryConditions.end() ) {
             assert( 0 );
@@ -2248,11 +2384,191 @@ namespace Editor
             text.drawInRoi( descriptionTextRoi.x, descriptionTextRoi.y, descriptionTextRoi.width, display, descriptionTextRoi );
         };
 
+        using ThorAction = fheroes2::thor::Action;
+        fheroes2::thor::UiContext thorContext = fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS;
+        size_t selectedPlayerIndex = 0;
+
+        const auto playerTypeText = [&mapFormat]( const PlayerColor color ) {
+            const bool human = ( mapFormat.humanPlayerColors & color ) != 0;
+            const bool computer = ( mapFormat.computerPlayerColors & color ) != 0;
+            if ( human && computer ) {
+                return std::string( "HUMAN OR COMPUTER" );
+            }
+            return human ? std::string( "HUMAN" ) : std::string( "COMPUTER" );
+        };
+
+        const auto publishThorState = [&]() {
+            fheroes2::thor::setUiContext( thorContext );
+
+            fheroes2::thor::ActionMask actions = 0;
+            fheroes2::thor::InformationSnapshot snapshot;
+            snapshot.context = thorContext;
+            snapshot.title = mapFormat.name;
+            snapshot.category = "MAP SPECIFICATIONS";
+            snapshot.detail = std::string( "Difficulty: " ) + Difficulty::String( mapFormat.difficulty );
+            snapshot.date = std::string( "Language: " ) + fheroes2::getLanguageName( mapFormat.mainLanguage );
+            snapshot.resources = std::string( "Victory: " ) + getVictoryConditionText( victoryConditionUI.conditionType() ) + " | Loss: "
+                                 + getLossConditionText( lossConditionUI.conditionType() );
+
+            switch ( thorContext ) {
+            case fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS:
+                actions = fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_NAME )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_DESCRIPTION )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PLAYERS )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_DIFFICULTY )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_VICTORY )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_LOSS )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_RUMORS )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_EVENTS )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_LANGUAGE )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_ABOUT )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_OKAY )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_CANCEL );
+                break;
+            case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_PLAYERS: {
+                const PlayerColor color = availableColors[selectedPlayerIndex % availableColors.size()];
+                snapshot.category = "PLAYER SETUP";
+                snapshot.title = Color::String( color );
+                snapshot.detail = playerTypeText( color );
+                snapshot.resources = "Choose who may control this player";
+                actions = fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PREVIOUS_PLAYER )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_NEXT_PLAYER )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PLAYER_TYPE )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SUBMENU_BACK );
+                break;
+            }
+            case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_VICTORY:
+                snapshot.category = "VICTORY CONDITION";
+                snapshot.title = getVictoryConditionText( victoryConditionUI.conditionType() );
+                snapshot.detail = std::string( "Standard victory: " ) + ( victoryConditionUI.isNormalVictoryAllowed() ? "On" : "Off" )
+                                  + " | AI: " + ( victoryConditionUI.isVictoryConditionApplicableForAI() ? "Allowed" : "Human only" );
+                snapshot.resources = victoryConditionUI.hasAllianceControls()
+                                         ? "Alliance player: " + victoryConditionUI.selectedAlliancePlayer()
+                                         : ( victoryConditionUI.hasGoldControls() ? "Gold: " + std::to_string( victoryConditionUI.goldValue() ) : "" );
+                actions = fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PREVIOUS_CONDITION )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_NEXT_CONDITION )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SUBMENU_BACK );
+                if ( victoryConditionUI.hasSelectableTarget() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SELECT_TARGET );
+                }
+                if ( victoryConditionUI.canToggleNormalVictory() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_TOGGLE_STANDARD_VICTORY );
+                }
+                if ( victoryConditionUI.canToggleAiVictory() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_TOGGLE_AI_VICTORY );
+                }
+                if ( victoryConditionUI.hasAllianceControls() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PREVIOUS_ALLIANCE_PLAYER )
+                               | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_NEXT_ALLIANCE_PLAYER )
+                               | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SWITCH_ALLIANCE );
+                }
+                if ( victoryConditionUI.hasGoldControls() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_DECREASE_VALUE )
+                               | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_INCREASE_VALUE );
+                }
+                break;
+            case fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS:
+                snapshot.category = "LOSS CONDITION";
+                snapshot.title = getLossConditionText( lossConditionUI.conditionType() );
+                snapshot.detail = lossConditionUI.hasTimeControls() ? Editor::getDateDescription( lossConditionUI.outOfTimeValue() ) : "";
+                snapshot.resources.clear();
+                actions = fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_PREVIOUS_CONDITION )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_NEXT_CONDITION )
+                          | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SUBMENU_BACK );
+                if ( lossConditionUI.hasSelectableTarget() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_SELECT_TARGET );
+                }
+                if ( lossConditionUI.hasTimeControls() ) {
+                    actions |= fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_DECREASE_VALUE )
+                               | fheroes2::thor::actionMask( ThorAction::EDITOR_MAP_SPEC_INCREASE_VALUE );
+                }
+                break;
+            default:
+                break;
+            }
+
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+            fheroes2::thor::setEnabledActions( actions );
+        };
+
+        const auto cycleCondition = [&]( const bool isLoss, const bool next ) {
+            const std::vector<uint8_t> conditions = getAvailableWinLoseConditions( mapFormat, isLoss );
+            uint8_t & condition = isLoss ? mapFormat.lossConditionType : mapFormat.victoryConditionType;
+            const auto conditionIter = std::find( conditions.begin(), conditions.end(), condition );
+            assert( conditionIter != conditions.end() );
+            const size_t currentIndex = static_cast<size_t>( std::distance( conditions.begin(), conditionIter ) );
+            const size_t newIndex = next ? ( currentIndex + 1 ) % conditions.size() : ( currentIndex + conditions.size() - 1 ) % conditions.size();
+            condition = conditions[newIndex];
+
+            if ( isLoss ) {
+                lossConditionUI.setConditionType( condition );
+                lossConditionUI.updateCondition( mapFormat );
+                lossConditionUI.render( display, true );
+                fheroes2::Copy( itemBackground, 2, 3, display, lossTextRoi );
+                redrawLossCondition( mapFormat.lossConditionType, lossTextRoi, false, display );
+                display.render( fheroes2::getBoundaryRect( lossTextRoi, lossConditionUIRoi ) );
+            }
+            else {
+                victoryConditionUI.setConditionType( condition );
+                victoryConditionUI.updateCondition( mapFormat );
+                victoryConditionUI.render( display, true );
+                fheroes2::Copy( itemBackground, 2, 3, display, victoryTextRoi );
+                redrawVictoryCondition( mapFormat.victoryConditionType, victoryTextRoi, false, display );
+                display.render( fheroes2::getBoundaryRect( victoryTextRoi, victoryConditionUIRoi ) );
+            }
+        };
+
+        const auto cyclePlayerType = [&]( const size_t playerIndex ) {
+            const PlayerColor color = availableColors[playerIndex];
+            const bool allowAi = ( mapFormat.computerPlayerColors & color ) != 0;
+            const bool allowHuman = ( mapFormat.humanPlayerColors & color ) != 0;
+
+            if ( allowHuman ) {
+                if ( allowAi ) {
+                    mapFormat.computerPlayerColors ^= color;
+                }
+                else {
+                    mapFormat.computerPlayerColors |= color;
+                    if ( Color::Count( mapFormat.humanPlayerColors ) > 1 ) {
+                        mapFormat.humanPlayerColors ^= color;
+                    }
+                }
+            }
+            else {
+                mapFormat.humanPlayerColors |= color;
+            }
+
+            fheroes2::Rect renderRoi;
+            if ( victoryConditionUI.updateCondition( mapFormat ) ) {
+                victoryConditionUI.render( display, true );
+                fheroes2::Copy( itemBackground, 2, 3, display, victoryTextRoi );
+                redrawVictoryCondition( mapFormat.victoryConditionType, victoryTextRoi, false, display );
+                renderRoi = fheroes2::getBoundaryRect( renderRoi, victoryConditionUIRoi );
+                renderRoi = fheroes2::getBoundaryRect( renderRoi, victoryTextRoi );
+            }
+            if ( lossConditionUI.updateCondition( mapFormat ) ) {
+                lossConditionUI.render( display, true );
+                fheroes2::Copy( itemBackground, 2, 3, display, lossTextRoi );
+                redrawLossCondition( mapFormat.lossConditionType, lossTextRoi, false, display );
+                renderRoi = fheroes2::getBoundaryRect( renderRoi, lossConditionUIRoi );
+                renderRoi = fheroes2::getBoundaryRect( renderRoi, lossTextRoi );
+            }
+
+            const uint32_t icnIndex = Color::GetIndex( color ) + getPlayerIcnIndex( mapFormat, color );
+            const fheroes2::Sprite & playerIcon = Assets::getImage( ICN::NGEXTRA, icnIndex );
+            fheroes2::Copy( playerIcon, 0, 0, display, playerRects[playerIndex].x, playerRects[playerIndex].y, playerRects[playerIndex].width,
+                            playerRects[playerIndex].height );
+            renderRoi = fheroes2::getBoundaryRect( renderRoi, playerRects[playerIndex] );
+            display.render( renderRoi );
+        };
+
         LocalEvent & le = LocalEvent::Get();
 
         display.render( background.totalArea() );
+        publishThorState();
 
         while ( le.HandleEvents() ) {
+            publishThorState();
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
             buttonRumors.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonRumors.area() ) );
@@ -2262,52 +2578,122 @@ namespace Editor
             lossDroplistButton.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( lossDroplistButtonRoi ) );
             buttonAbout.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonAbout.area() ) );
 
-            if ( Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
+            const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != ThorAction::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            const bool closeCurrentPanel = requestedThorAction == ThorAction::EDITOR_MAP_SPEC_SUBMENU_BACK
+                                           || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL );
+            if ( closeCurrentPanel && thorContext != fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS ) {
+                thorContext = fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS;
+                publishThorState();
+                continue;
+            }
+
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_CANCEL || closeCurrentPanel || le.MouseClickLeft( buttonCancel.area() ) ) {
                 return false;
             }
 
-            if ( Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) || le.MouseClickLeft( buttonOk.area() ) ) {
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_OKAY
+                 || ( thorContext == fheroes2::thor::UiContext::EDITOR_MAP_SPECIFICATIONS
+                      && ( Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) || le.MouseClickLeft( buttonOk.area() ) ) ) ) {
                 break;
             }
 
-            if ( victoryConditionUI.processEvents() ) {
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_PLAYERS ) {
+                thorContext = fheroes2::thor::UiContext::EDITOR_MAP_SPEC_PLAYERS;
+                publishThorState();
+                continue;
+            }
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_VICTORY ) {
+                thorContext = fheroes2::thor::UiContext::EDITOR_MAP_SPEC_VICTORY;
+                publishThorState();
+                continue;
+            }
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_LOSS ) {
+                thorContext = fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS;
+                publishThorState();
+                continue;
+            }
+
+            if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_PREVIOUS_PLAYER ) {
+                selectedPlayerIndex = ( selectedPlayerIndex + availableColors.size() - 1 ) % availableColors.size();
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_NEXT_PLAYER ) {
+                selectedPlayerIndex = ( selectedPlayerIndex + 1 ) % availableColors.size();
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_PLAYER_TYPE ) {
+                cyclePlayerType( selectedPlayerIndex );
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_DIFFICULTY ) {
+                const size_t oldDifficultyIndex = difficultyIndex;
+                difficultyIndex = ( difficultyIndex + 1 ) % 4;
+                difficultyCursor.setPosition( difficultyRects[difficultyIndex].x, difficultyRects[difficultyIndex].y );
+                difficultyCursor.redraw();
+                mapFormat.difficulty = setDifficultyByIndex( difficultyIndex );
+                display.updateNextRenderRoi( difficultyRects[oldDifficultyIndex] );
+                display.render( difficultyRects[difficultyIndex] );
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_PREVIOUS_CONDITION ) {
+                cycleCondition( thorContext == fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS, false );
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_NEXT_CONDITION ) {
+                cycleCondition( thorContext == fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS, true );
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_PREVIOUS_ALLIANCE_PLAYER ) {
+                victoryConditionUI.selectPreviousAlliancePlayer();
+            }
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_NEXT_ALLIANCE_PLAYER ) {
+                victoryConditionUI.selectNextAlliancePlayer();
+            }
+
+            const ThorAction victoryAction = thorContext == fheroes2::thor::UiContext::EDITOR_MAP_SPEC_VICTORY ? requestedThorAction : ThorAction::NONE;
+            const ThorAction lossAction = thorContext == fheroes2::thor::UiContext::EDITOR_MAP_SPEC_LOSS ? requestedThorAction : ThorAction::NONE;
+            if ( victoryConditionUI.processEvents( victoryAction ) ) {
                 victoryConditionUI.render( display, false );
                 display.render( victoryConditionUIRoi );
             }
-            else if ( lossConditionUI.processEvents() ) {
+            else if ( lossConditionUI.processEvents( lossAction ) ) {
                 lossConditionUI.render( display, false );
                 display.render( lossConditionUIRoi );
             }
-            else if ( le.MouseClickLeft( buttonRumors.area() ) ) {
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_RUMORS || le.MouseClickLeft( buttonRumors.area() ) ) {
                 auto temp = mapFormat.rumors;
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 if ( openRumorWindow( temp, mapFormat.mainLanguage ) ) {
                     mapFormat.rumors = std::move( temp );
                 }
 
                 display.render( background.totalArea() );
             }
-            else if ( le.MouseClickLeft( buttonEvents.area() ) ) {
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_EVENTS || le.MouseClickLeft( buttonEvents.area() ) ) {
                 auto temp = mapFormat.dailyEvents;
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 if ( openDailyEventsWindow( temp, mapFormat.humanPlayerColors, mapFormat.computerPlayerColors, mapFormat.mainLanguage ) ) {
                     mapFormat.dailyEvents = std::move( temp );
                 }
 
                 display.render( background.totalArea() );
             }
-            else if ( le.MouseClickLeft( buttonLanguage.area() ) ) {
-                openLanguageWindow( mapFormat );
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_LANGUAGE || le.MouseClickLeft( buttonLanguage.area() ) ) {
+                {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+                    openLanguageWindow( mapFormat );
+                }
 
                 renderMapName();
                 renderMapDescription();
 
                 display.render( fheroes2::getBoundaryRect( scenarioBoxRoi, descriptionTextRoi ) );
             }
-            else if ( le.MouseClickLeft( mapNameRoi ) ) {
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_NAME || le.MouseClickLeft( mapNameRoi ) ) {
                 // TODO: Edit texts directly in this dialog.
 
                 std::string editableMapName = mapFormat.name;
 
                 const fheroes2::Text body{ _( "Change Map Name:" ), fheroes2::FontType::normalWhite() };
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 if ( Dialog::inputString( fheroes2::Text{}, body, editableMapName, maxMapNameLength, false, mapFormat.mainLanguage ) ) {
                     mapFormat.name = std::move( editableMapName );
 
@@ -2315,10 +2701,11 @@ namespace Editor
                     display.render( scenarioBoxRoi );
                 }
             }
-            else if ( le.MouseClickLeft( descriptionTextRoi ) ) {
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_DESCRIPTION || le.MouseClickLeft( descriptionTextRoi ) ) {
                 std::string descripton = mapFormat.description;
 
                 const fheroes2::Text body{ _( "Change Map Description:" ), fheroes2::FontType::normalWhite() };
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 if ( Dialog::inputString( fheroes2::Text{}, body, descripton, Maps::Map_Format::messageCharLimit, true, mapFormat.mainLanguage ) ) {
                     mapFormat.description = std::move( descripton );
 
@@ -2327,6 +2714,7 @@ namespace Editor
                 }
             }
             else if ( le.MouseClickLeft( victoryDroplistButtonRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 const uint8_t result = showWinLoseList( mapFormat, { victoryTextRoi.x - 2, victoryTextRoi.y + victoryTextRoi.height }, mapFormat.victoryConditionType,
                                                         false, dropListIcn );
 
@@ -2344,6 +2732,7 @@ namespace Editor
                 display.render( fheroes2::getBoundaryRect( victoryTextRoi, victoryConditionUIRoi ) );
             }
             else if ( le.MouseClickLeft( lossDroplistButtonRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 const uint8_t result
                     = showWinLoseList( mapFormat, { lossTextRoi.x - 2, lossTextRoi.y + lossTextRoi.height }, mapFormat.lossConditionType, true, dropListIcn );
 
@@ -2360,35 +2749,43 @@ namespace Editor
 
                 display.render( fheroes2::getBoundaryRect( lossTextRoi, lossConditionUIRoi ) );
             }
-            else if ( le.MouseClickLeft( buttonAbout.area() ) ) {
+            else if ( requestedThorAction == ThorAction::EDITOR_MAP_SPEC_ABOUT || le.MouseClickLeft( buttonAbout.area() ) ) {
                 std::string notes = mapFormat.creatorNotes;
 
                 const fheroes2::Text body{ std::string( _( "map|About" ) ) + ':', fheroes2::FontType::normalWhite() };
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 if ( Dialog::inputString( fheroes2::Text{}, body, notes, Maps::Map_Format::messageCharLimit, true, mapFormat.mainLanguage ) ) {
                     mapFormat.creatorNotes = std::move( notes );
                 }
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonCancel.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Cancel" ), _( "Exit this menu without doing anything." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonOk.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Okay" ), _( "Click to accept the changes made." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonRumors.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Rumors" ), _( "Click to edit custom rumors." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonEvents.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Events" ), _( "Click to edit daily events." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonLanguage.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Language" ), _( "Click to change the language of the map." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonAbout.area() ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "map|About" ),
                                                    _( "Click to edit notes from the map creator. These notes are optional and do not appear during gameplay." ),
                                                    Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( mapNameRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::MultiFontText message;
                 message.add( fheroes2::Text{ "\"", fheroes2::FontType::normalWhite() } );
                 message.add( fheroes2::Text{ mapFormat.name, fheroes2::FontType::normalWhite(), mapFormat.mainLanguage } );
@@ -2398,12 +2795,15 @@ namespace Editor
                 fheroes2::showMessage( fheroes2::Text{ _( "Map Name" ), fheroes2::FontType::normalYellow() }, message, Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( descriptionTextRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Map Description" ), _( "Click to change the description of the current map." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( victoryDroplistButtonRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Special Victory Condition" ), _( "Click to change the victory condition of the current map." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( lossDroplistButtonRoi ) ) {
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 fheroes2::showStandardTextMessage( _( "Special Loss Condition" ), _( "Click to change the loss condition of the current map." ), Dialog::ZERO );
             }
 
@@ -2413,62 +2813,13 @@ namespace Editor
                         break;
                     }
 
-                    const bool allowAi = mapFormat.computerPlayerColors & availableColors[i];
-                    const bool allowHuman = mapFormat.humanPlayerColors & availableColors[i];
-
-                    if ( allowHuman ) {
-                        if ( allowAi ) {
-                            // Disable AI.
-                            mapFormat.computerPlayerColors ^= availableColors[i];
-                        }
-                        else {
-                            // Enable AI.
-                            mapFormat.computerPlayerColors |= availableColors[i];
-                            if ( Color::Count( mapFormat.humanPlayerColors ) > 1 ) {
-                                // and disable human only if any other player can be controlled by human.
-                                mapFormat.humanPlayerColors ^= availableColors[i];
-                            }
-                        }
-                    }
-                    else {
-                        // Enable human.
-                        mapFormat.humanPlayerColors |= availableColors[i];
-                    }
-
-                    fheroes2::Rect renderRoi;
-                    if ( victoryConditionUI.updateCondition( mapFormat ) ) {
-                        victoryConditionUI.render( display, true );
-
-                        fheroes2::Copy( itemBackground, 2, 3, display, victoryTextRoi );
-                        redrawVictoryCondition( mapFormat.victoryConditionType, victoryTextRoi, false, display );
-
-                        renderRoi = fheroes2::getBoundaryRect( renderRoi, victoryConditionUIRoi );
-                        renderRoi = fheroes2::getBoundaryRect( renderRoi, victoryTextRoi );
-                    }
-
-                    if ( lossConditionUI.updateCondition( mapFormat ) ) {
-                        lossConditionUI.render( display, true );
-
-                        fheroes2::Copy( itemBackground, 2, 3, display, lossTextRoi );
-                        redrawLossCondition( mapFormat.lossConditionType, lossTextRoi, false, display );
-
-                        renderRoi = fheroes2::getBoundaryRect( renderRoi, lossConditionUIRoi );
-                        renderRoi = fheroes2::getBoundaryRect( renderRoi, lossTextRoi );
-                    }
-
-                    // Update player icon.
-                    const uint32_t icnIndex = Color::GetIndex( availableColors[i] ) + getPlayerIcnIndex( mapFormat, availableColors[i] );
-                    const fheroes2::Sprite & playerIcon = Assets::getImage( ICN::NGEXTRA, icnIndex );
-                    fheroes2::Copy( playerIcon, 0, 0, display, playerRects[i].x, playerRects[i].y, playerRects[i].width, playerRects[i].height );
-
-                    renderRoi = fheroes2::getBoundaryRect( renderRoi, playerRects[i] );
-
-                    display.render( renderRoi );
+                    cyclePlayerType( static_cast<size_t>( i ) );
 
                     break;
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( playerRects[i] ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage( _( "Player Type" ), _( "Indicates the player types in the scenario. Click to change." ), Dialog::ZERO );
                 }
             }
@@ -2494,6 +2845,7 @@ namespace Editor
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( difficultyRects[i] ) ) {
+                    const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                     fheroes2::showStandardTextMessage(
                         _( "Map Difficulty" ),
                         _( "Click to set map difficulty. More difficult maps might include more or stronger enemies, fewer resources, or other special conditions making things tougher for the human player." ),
