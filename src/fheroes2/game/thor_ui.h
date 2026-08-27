@@ -34,7 +34,8 @@ namespace fheroes2::thor
         HIGH_SCORES_STANDARD,
         HIGH_SCORES_CAMPAIGN,
         CAMPAIGN_INTRO,
-        SUCCESSION_WARS_CAMPAIGN
+        SUCCESSION_WARS_CAMPAIGN,
+        PRICE_OF_LOYALTY_CAMPAIGN
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -126,7 +127,11 @@ namespace fheroes2::thor
         HIGH_SCORES_VIEW_CAMPAIGN,
         HIGH_SCORES_EXIT,
         CAMPAIGN_SELECT_ROLAND,
-        CAMPAIGN_SELECT_ARCHIBALD
+        CAMPAIGN_SELECT_ARCHIBALD,
+        CAMPAIGN_SELECT_PRICE_OF_LOYALTY,
+        CAMPAIGN_SELECT_VOYAGE_HOME,
+        CAMPAIGN_SELECT_WIZARDS_ISLE,
+        CAMPAIGN_SELECT_DESCENDANTS
     };
 
     using ActionMask = uint64_t;

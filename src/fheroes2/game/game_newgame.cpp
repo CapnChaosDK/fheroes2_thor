@@ -325,6 +325,10 @@ fheroes2::GameMode Game::NewSuccessionWarsCampaign()
 
 fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
 {
+    using ThorAction = fheroes2::thor::Action;
+    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::PRICE_OF_LOYALTY_CAMPAIGN );
+    fheroes2::thor::setEnabledActions( 0 );
+
     // TODO: Properly choose the campaign instead of this hackish way
     Campaign::CampaignSaveData & campaignSaveData = Campaign::CampaignSaveData::Get();
     campaignSaveData.reset();
@@ -334,9 +338,15 @@ fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
 
     if ( !videos[0] ) {
         // File doesn't exist. Fallback to PoL campaign.
-        showMissingVideoFilesWindow();
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            showMissingVideoFilesWindow();
+        }
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
         return fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
     }
+
+    AudioManager::ResetAudio();
 
     // Fade-out display before playing video.
     fheroes2::fadeOutDisplay();
@@ -364,6 +374,12 @@ fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
 
     display.render();
 
+    fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_PRICE_OF_LOYALTY )
+                                       | fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_VOYAGE_HOME )
+                                       | fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_WIZARDS_ISLE )
+                                       | fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_DESCENDANTS )
+                                       | fheroes2::thor::actionMask( ThorAction::MENU_BACK ) );
+
     const std::array<fheroes2::Rect, 4> activeCampaignArea{ fheroes2::Rect( roiOffset.x + 192, roiOffset.y + 23, 248, 163 ),
                                                             fheroes2::Rect( roiOffset.x + 19, roiOffset.y + 120, 166, 193 ),
                                                             fheroes2::Rect( roiOffset.x + 450, roiOffset.y + 120, 166, 193 ),
@@ -386,24 +402,34 @@ fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
 
     LocalEvent & le = LocalEvent::Get();
     while ( le.HandleEvents( highlightCampaignId < videos.size() ? Game::isCustomDelayNeeded( customDelay ) : true ) ) {
-        if ( le.MouseClickLeft( activeCampaignArea[0] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_PRICE_OF_LOYALTY ) ) {
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_PRICE_OF_LOYALTY || le.MouseClickLeft( activeCampaignArea[0] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_PRICE_OF_LOYALTY ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::PRICE_OF_LOYALTY_CAMPAIGN, 0 } );
             gameChoice = fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
             break;
         }
-        if ( le.MouseClickLeft( activeCampaignArea[1] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_VOYAGE_HOME ) ) {
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_VOYAGE_HOME || le.MouseClickLeft( activeCampaignArea[1] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_VOYAGE_HOME ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::VOYAGE_HOME_CAMPAIGN, 0 } );
             gameChoice = fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
             break;
         }
-        if ( le.MouseClickLeft( activeCampaignArea[2] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_WIZARDS_ISLE ) ) {
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_WIZARDS_ISLE || le.MouseClickLeft( activeCampaignArea[2] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_WIZARDS_ISLE ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::WIZARDS_ISLE_CAMPAIGN, 0 } );
             gameChoice = fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
             break;
         }
-        if ( le.MouseClickLeft( activeCampaignArea[3] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_DESCENDANTS ) ) {
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_DESCENDANTS || le.MouseClickLeft( activeCampaignArea[3] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_DESCENDANTS ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::DESCENDANTS_CAMPAIGN, 0 } );
             gameChoice = fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
+            break;
+        }
+        if ( requestedThorAction == ThorAction::MENU_BACK || HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) ) {
+            gameChoice = fheroes2::GameMode::NEW_GAME;
             break;
         }
 
@@ -442,12 +468,16 @@ fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
         }
     }
 
+    Mixer::Stop();
+
     // Update the frame but do not render it.
     display.fill( 0 );
     display.updateNextRenderRoi( { 0, 0, display.width(), display.height() } );
 
     // Set the fade-in for the Campaign scenario info.
     setDisplayFadeIn();
+
+    fheroes2::thor::setUiContext( gameChoice == fheroes2::GameMode::NEW_GAME ? fheroes2::thor::UiContext::NEW_GAME_MENU : fheroes2::thor::UiContext::DIALOG );
 
     return gameChoice;
 }

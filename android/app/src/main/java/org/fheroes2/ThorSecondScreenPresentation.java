@@ -49,6 +49,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_HIGH_SCORES_CAMPAIGN = 15;
     private static final int CONTEXT_CAMPAIGN_INTRO = 16;
     private static final int CONTEXT_SUCCESSION_WARS_CAMPAIGN = 17;
+    private static final int CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN = 18;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -136,6 +137,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_HIGH_SCORES_EXIT = 83;
     private static final int ACTION_CAMPAIGN_SELECT_ROLAND = 84;
     private static final int ACTION_CAMPAIGN_SELECT_ARCHIBALD = 85;
+    private static final int ACTION_CAMPAIGN_SELECT_PRICE_OF_LOYALTY = 86;
+    private static final int ACTION_CAMPAIGN_SELECT_VOYAGE_HOME = 87;
+    private static final int ACTION_CAMPAIGN_SELECT_WIZARDS_ISLE = 88;
+    private static final int ACTION_CAMPAIGN_SELECT_DESCENDANTS = 89;
 
     interface KeySender
     {
@@ -237,7 +242,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SUCCESSION_WARS_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -665,6 +670,14 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "ORIGINAL CAMPAIGN";
                 addAction( "ROLAND", ACTION_CAMPAIGN_SELECT_ROLAND, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "ARCHIBALD", ACTION_CAMPAIGN_SELECT_ARCHIBALD, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN:
+                contextTitle = "EXPANSION CAMPAIGNS";
+                addAction( "PRICE OF LOYALTY", ACTION_CAMPAIGN_SELECT_PRICE_OF_LOYALTY, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "VOYAGE HOME", ACTION_CAMPAIGN_SELECT_VOYAGE_HOME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "WIZARD'S ISLE", ACTION_CAMPAIGN_SELECT_WIZARDS_ISLE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DESCENDANTS", ACTION_CAMPAIGN_SELECT_DESCENDANTS, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:

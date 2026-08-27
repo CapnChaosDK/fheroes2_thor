@@ -238,6 +238,14 @@ namespace
         return action == Action::CAMPAIGN_SELECT_ROLAND || action == Action::CAMPAIGN_SELECT_ARCHIBALD || action == Action::MENU_BACK;
     }
 
+    bool isPriceOfLoyaltyCampaignAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::CAMPAIGN_SELECT_PRICE_OF_LOYALTY || action == Action::CAMPAIGN_SELECT_VOYAGE_HOME
+               || action == Action::CAMPAIGN_SELECT_WIZARDS_ISLE || action == Action::CAMPAIGN_SELECT_DESCENDANTS || action == Action::MENU_BACK;
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
@@ -246,7 +254,8 @@ namespace
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
-               || context == UiContext::HIGH_SCORES_CAMPAIGN || context == UiContext::SUCCESSION_WARS_CAMPAIGN;
+               || context == UiContext::HIGH_SCORES_CAMPAIGN || context == UiContext::SUCCESSION_WARS_CAMPAIGN
+               || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -280,6 +289,8 @@ namespace
             return isHighScoresCampaignAction( action );
         case fheroes2::thor::UiContext::SUCCESSION_WARS_CAMPAIGN:
             return isSuccessionWarsCampaignAction( action );
+        case fheroes2::thor::UiContext::PRICE_OF_LOYALTY_CAMPAIGN:
+            return isPriceOfLoyaltyCampaignAction( action );
         default:
             return false;
         }

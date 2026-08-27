@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34` adds the hardware-validated Succession Wars Roland/Archibald selector on top of the validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
-- The intro uses a non-interactive lower state, the animated selector exposes Roland, Archibald, and Back, campaign selection executes once, and Back returns to New Game without residual selector audio.
-- Final debug APK SHA-256: `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`.
-- Android build and lint passed. The user passed the focused hardware checklist, including both campaigns, Back, intro skipping, rapid taps, and physical, touchscreen, mouse, and keyboard regressions.
+- This hardware-validated development checkpoint adds the Price of Loyalty selector on top of the Succession Wars selector, validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
+- It exposes Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, and Back while preserving the upper hover animations and existing missing-video behavior.
+- Debug APK SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused campaign selection, animation, cleanup, rapid-tap, and input-regression checks.
 
 ## Agreed product decisions
 
@@ -419,12 +419,32 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Skip the intro through the existing physical, upper-touchscreen, mouse, and keyboard paths and verify the lower selector appears correctly afterward.
 5. Rapidly tap Roland, Archibald, and Back. Verify only one transition occurs and the resulting scenario or New Game context is correct.
 
+### Price of Loyalty campaign selector
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- The animated expansion selector exposes Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, and Back as stable semantic lower-screen actions. A campaign selection executes once and hands off to the existing campaign scenario screen.
+- The existing resource gate remains authoritative: the Expansion entry requires `X_LOADCM`, `X_IVY`, and all maps from all four campaigns.
+- The existing per-video behavior is preserved. A missing `IVYPOL.SMK` shows the warning under Dialog context and falls back to Price of Loyalty; any other missing selector video leaves its campaign selectable without that hover animation.
+- Upper-screen hover animations, static-background restoration, mouse, touchscreen, physical-controller, configurable-hotkey, and text-support behavior remain available. Back and Cancel return to New Game after clearing selector audio, palette state, and queued lower-screen actions.
+- Android build and lint pass through the required short `R:` mapping. The candidate APK installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; SHA-256: `6750BD33D7568AE384B6665BF0B553E277675D634176090E9A2BEC2B5D6E1539`.
+- All five focused checks passed on the Thor: all four lower-screen campaign choices opened their matching first scenarios; all hover animations switched, looped, and restored the static background; Back and Cancel returned cleanly without residual audio or palette corruption; rapid taps produced one transition; and upper touchscreen, mouse, physical controls, configurable hotkeys, and the Original selector retained their validated behavior.
+
+#### Focused Price of Loyalty selector validation
+
+1. Open New Game, Campaign, Expansion. Verify the lower display shows Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, and Back.
+2. Select each campaign separately and verify its matching first scenario opens exactly once.
+3. Hover all four upper-screen regions and verify their animations start, switch cleanly, loop correctly, and restore the static background when the pointer leaves.
+4. Re-enter and use Back through the lower display and the existing physical or keyboard Cancel paths. Verify New Game returns once with no residual audio, palette corruption, or delayed selection.
+5. Rapidly tap different campaign choices and Back. Verify only one transition occurs, then check upper touchscreen, mouse, physical controls, configurable hotkeys, and the validated Original selector for regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
-- The Succession Wars selector is hardware-validated. Plan the four-campaign Price of Loyalty selector independently next, including its per-choice missing-video behavior, hover-driven animations, and Back semantics.
+- The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
-- Later slices include Settings and Editor menus.
+- Next recommended slice: plan the top-level Game Settings dialog in `fheroes2::openGameSettings()` in `src/fheroes2/dialog/dialog_game_settings.cpp`. Cover Language, Graphics, Audio, Hot Keys, cursor type, interface type, text support, and Okay/Back; account for nested-dialog restoration, in-place redraws, persisted configuration, and availability rules. Present behavior and focused manual acceptance tests for approval before implementation.
+- Editor menus follow the Settings slice.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria
