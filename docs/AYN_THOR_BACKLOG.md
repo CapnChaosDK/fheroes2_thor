@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `188f36fc3ff1fa086b68e9b311245ab667b0c910` adds the hardware-validated High Scores workflow on top of the validated Battle Only setup and `thor-v0.4.0`.
-- Standard and Campaign tables synchronize across both screens, Campaign availability follows installed assets, help dialogs restore the active table, and Exit returns directly to Main Menu.
-- Final debug APK SHA-256: `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`.
-- Android build and lint passed. The user passed the focused hardware checklist, including two-way Standard/Campaign switching, direct Exit, rapid taps, help restoration, and physical, touchscreen, mouse, and keyboard regressions.
+- Commit `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34` adds the hardware-validated Succession Wars Roland/Archibald selector on top of the validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
+- The intro uses a non-interactive lower state, the animated selector exposes Roland, Archibald, and Back, campaign selection executes once, and Back returns to New Game without residual selector audio.
+- Final debug APK SHA-256: `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`.
+- Android build and lint passed. The user passed the focused hardware checklist, including both campaigns, Back, intro skipping, rapid taps, and physical, touchscreen, mouse, and keyboard regressions.
 
 ## Agreed product decisions
 

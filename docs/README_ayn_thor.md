@@ -24,6 +24,7 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | Scenario setup | Select Map, player navigation and assignment, faction, handicap, five difficulty levels, Start, Back |
 | Battle Only setup | Select Attacker, Select Defender, previous/next terrain, Defender Control, Reset, Start, Exit |
 | High Scores | Campaign and Exit from Standard; Standard and Exit from Campaign; Campaign follows installed-asset availability |
+| Succession Wars campaign | Non-interactive intro state, then Roland, Archibald, Back |
 | Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
@@ -37,6 +38,8 @@ Scenario Setup player editing follows the native game rules. Standard games reta
 Battle Only Setup shows both sides, defender control, terrain, occupied army slots, and readiness. Hero selection uses the existing upper-screen selector, Start is muted when either active army is invalid, and Start transitions directly to the Battle deck.
 
 High Scores opens the Standard table first. The lower deck switches both displays between Standard and Campaign when the complete Succession Wars campaign assets are installed, restores the active table after a help dialog, and exits directly to Main Menu.
+
+Selecting the original Succession Wars campaign shows a non-interactive lower-screen state while the intro runs, then exposes Roland, Archibald, and Back beside the animated upper selector. Back returns to New Game without residual selector audio, and stale intro or selector taps are cleared during context changes.
 
 If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
 
@@ -106,8 +109,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The current validated development checkpoint is commit `188f36fc3ff1fa086b68e9b311245ab667b0c910`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, Battle Only setup, and High Scores workflows while leaving upstream rendering unchanged. The validated debug APK SHA-256 is `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`.
+The current validated development checkpoint is commit `f35c7ffc4b6e77b9bbec402d46fba15698f1fb34`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, and Succession Wars campaign-selection workflows while leaving upstream rendering unchanged. The validated debug APK SHA-256 is `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`.
 
-Compatible Succession Wars campaign assets are installed on the validation Thor. The next feature planning point is the animated campaign chooser reached after selecting an original or expansion campaign; expansion asset availability must be checked independently. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
+The next feature planning point is the Price of Loyalty four-campaign selector. The validation Thor contains all 24 required expansion campaign maps and all four selector videos; planning should still verify the engine's expansion image-resource gate and cover hover-triggered animations, missing-video behavior, Back semantics, and palette/audio cleanup. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).
