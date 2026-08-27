@@ -160,11 +160,17 @@ void Game::runMainGameLoop()
             break;
         case fheroes2::GameMode::START_GAME:
         case fheroes2::GameMode::START_BATTLE_ONLY_MODE:
-        case fheroes2::GameMode::EDITOR_MAIN_MENU:
-        case fheroes2::GameMode::EDITOR_NEW_MAP:
-        case fheroes2::GameMode::EDITOR_LOAD_MAP:
         case fheroes2::GameMode::QUIT_GAME:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
+            break;
+        case fheroes2::GameMode::EDITOR_MAIN_MENU:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
+            break;
+        case fheroes2::GameMode::EDITOR_NEW_MAP:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
+            break;
+        case fheroes2::GameMode::EDITOR_LOAD_MAP:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
             break;
         default:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
@@ -362,6 +368,7 @@ fheroes2::GameMode Game::MainMenu( const bool isFirstGameRun )
     uint32_t lantern_frame = 0;
 
     const bool isPOLPresent = conf.isPriceOfLoyaltySupported();
+    fheroes2::thor::setEnabledActions( isPOLPresent ? fheroes2::thor::actionMask( fheroes2::thor::Action::MENU_EDITOR ) : 0 );
 
     std::vector<ButtonInfo> buttons{ ButtonInfo{ NEWGAME_DEFAULT, buttonNewGame, buttonNewGame.area(), false, false },
                                      ButtonInfo{ LOADGAME_DEFAULT, buttonLoadGame, buttonLoadGame.area(), false, false },
@@ -390,6 +397,8 @@ fheroes2::GameMode Game::MainMenu( const bool isFirstGameRun )
                 continue;
             }
         }
+
+        const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
 
         bool redrawScreen = false;
 
@@ -448,7 +457,9 @@ fheroes2::GameMode Game::MainMenu( const bool isFirstGameRun )
             return fheroes2::GameMode::MAIN_MENU;
         }
 
-        if ( isPOLPresent && ( HotKeyPressEvent( HotKeyEvent::EDITOR_MAIN_MENU ) || le.MouseClickLeft( buttonEditor.area() ) ) ) {
+        if ( isPOLPresent
+             && ( requestedThorAction == fheroes2::thor::Action::MENU_EDITOR || HotKeyPressEvent( HotKeyEvent::EDITOR_MAIN_MENU )
+                  || le.MouseClickLeft( buttonEditor.area() ) ) ) {
             return fheroes2::GameMode::EDITOR_MAIN_MENU;
         }
 

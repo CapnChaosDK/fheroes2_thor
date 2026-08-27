@@ -51,6 +51,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_SUCCESSION_WARS_CAMPAIGN = 17;
     private static final int CONTEXT_PRICE_OF_LOYALTY_CAMPAIGN = 18;
     private static final int CONTEXT_GAME_SETTINGS = 19;
+    private static final int CONTEXT_EDITOR_MAIN_MENU = 20;
+    private static final int CONTEXT_EDITOR_NEW_MAP_MENU = 21;
+    private static final int CONTEXT_EDITOR_MAP_SIZE_SCRATCH = 22;
+    private static final int CONTEXT_EDITOR_MAP_SIZE_RANDOM = 23;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -150,6 +154,16 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_GAME_SETTINGS_INTERFACE_TYPE = 95;
     private static final int ACTION_GAME_SETTINGS_TEXT_SUPPORT = 96;
     private static final int ACTION_GAME_SETTINGS_CLOSE = 97;
+    private static final int ACTION_MENU_EDITOR = 98;
+    private static final int ACTION_EDITOR_NEW_MAP = 99;
+    private static final int ACTION_EDITOR_LOAD_MAP = 100;
+    private static final int ACTION_EDITOR_EXIT_TO_MAIN_MENU = 101;
+    private static final int ACTION_EDITOR_FROM_SCRATCH = 102;
+    private static final int ACTION_EDITOR_RANDOM_MAP = 103;
+    private static final int ACTION_EDITOR_MAP_SIZE_SMALL = 104;
+    private static final int ACTION_EDITOR_MAP_SIZE_MEDIUM = 105;
+    private static final int ACTION_EDITOR_MAP_SIZE_LARGE = 106;
+    private static final int ACTION_EDITOR_MAP_SIZE_EXTRA_LARGE = 107;
 
     interface KeySender
     {
@@ -251,7 +265,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_GAME_SETTINGS ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_MAP_SIZE_RANDOM ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -542,6 +556,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "SETTINGS", KeyEvent.KEYCODE_T );
                 addAction( "HIGH SCORES", KeyEvent.KEYCODE_H );
                 addAction( "CREDITS", KeyEvent.KEYCODE_C );
+                addAction( "EDITOR", ACTION_MENU_EDITOR, KeyEvent.KEYCODE_E );
                 addAction( "QUIT", KeyEvent.KEYCODE_Q );
                 break;
             case CONTEXT_ADVENTURE_MAP:
@@ -700,6 +715,26 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "TEXT SUPPORT", ACTION_GAME_SETTINGS_TEXT_SUPPORT, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "OKAY / BACK", ACTION_GAME_SETTINGS_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
+            case CONTEXT_EDITOR_MAIN_MENU:
+                contextTitle = "MAP EDITOR";
+                addAction( "NEW MAP", ACTION_EDITOR_NEW_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LOAD MAP", ACTION_EDITOR_LOAD_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MAIN MENU", ACTION_EDITOR_EXIT_TO_MAIN_MENU, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_NEW_MAP_MENU:
+                contextTitle = "NEW MAP";
+                addAction( "FROM SCRATCH", ACTION_EDITOR_FROM_SCRATCH, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "RANDOM", ACTION_EDITOR_RANDOM_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_EDITOR_MAP_SIZE_SCRATCH:
+                contextTitle = "FROM SCRATCH — MAP SIZE";
+                addEditorMapSizeActions();
+                break;
+            case CONTEXT_EDITOR_MAP_SIZE_RANDOM:
+                contextTitle = "RANDOM — MAP SIZE";
+                addEditorMapSizeActions();
+                break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
                 addDialogActions();
@@ -716,6 +751,15 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
             addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+        }
+
+        private void addEditorMapSizeActions()
+        {
+            addAction( "SMALL", ACTION_EDITOR_MAP_SIZE_SMALL, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "MEDIUM", ACTION_EDITOR_MAP_SIZE_MEDIUM, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "LARGE", ACTION_EDITOR_MAP_SIZE_LARGE, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "EXTRA LARGE", ACTION_EDITOR_MAP_SIZE_EXTRA_LARGE, KeyEvent.KEYCODE_UNKNOWN );
+            addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
         }
 
         private void addAction( final String label, final int keyCode )

@@ -198,6 +198,11 @@ namespace
         }
     }
 
+    bool isMainMenuAction( const fheroes2::thor::Action action )
+    {
+        return action == fheroes2::thor::Action::MENU_EDITOR;
+    }
+
     bool isBattleOnlySetupAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
@@ -265,21 +270,48 @@ namespace
         }
     }
 
+    bool isEditorMainMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::EDITOR_NEW_MAP || action == Action::EDITOR_LOAD_MAP || action == Action::EDITOR_EXIT_TO_MAIN_MENU;
+    }
+
+    bool isEditorNewMapMenuAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::EDITOR_FROM_SCRATCH || action == Action::EDITOR_RANDOM_MAP || action == Action::MENU_BACK;
+    }
+
+    bool isEditorMapSizeAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::EDITOR_MAP_SIZE_SMALL || action == Action::EDITOR_MAP_SIZE_MEDIUM || action == Action::EDITOR_MAP_SIZE_LARGE
+               || action == Action::EDITOR_MAP_SIZE_EXTRA_LARGE || action == Action::MENU_BACK;
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
 
-        return context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO || context == UiContext::CASTLE
+        return context == UiContext::MAIN_MENU || context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO
+               || context == UiContext::CASTLE
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
                || context == UiContext::HIGH_SCORES_CAMPAIGN || context == UiContext::SUCCESSION_WARS_CAMPAIGN
-               || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN || context == UiContext::GAME_SETTINGS;
+               || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN || context == UiContext::GAME_SETTINGS || context == UiContext::EDITOR_MAIN_MENU
+               || context == UiContext::EDITOR_NEW_MAP_MENU || context == UiContext::EDITOR_MAP_SIZE_SCRATCH
+               || context == UiContext::EDITOR_MAP_SIZE_RANDOM;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         switch ( context ) {
+        case fheroes2::thor::UiContext::MAIN_MENU:
+            return isMainMenuAction( action );
         case fheroes2::thor::UiContext::BATTLE:
             return isBattleAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_MAP:
@@ -312,6 +344,13 @@ namespace
             return isPriceOfLoyaltyCampaignAction( action );
         case fheroes2::thor::UiContext::GAME_SETTINGS:
             return isGameSettingsAction( action );
+        case fheroes2::thor::UiContext::EDITOR_MAIN_MENU:
+            return isEditorMainMenuAction( action );
+        case fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU:
+            return isEditorNewMapMenuAction( action );
+        case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH:
+        case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM:
+            return isEditorMapSizeAction( action );
         default:
             return false;
         }

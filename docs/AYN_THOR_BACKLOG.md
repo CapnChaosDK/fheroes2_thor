@@ -459,13 +459,34 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Change representative settings, close with Okay / Back, reopen, explicitly relaunch the app, and verify the saved values. Confirm Language is enabled or muted according to the installed assets.
 5. Exercise lower touch, upper touchscreen, mouse, physical controls, configurable hotkeys, right-click help, and rapid mixed taps. Verify Main Menu, New Game, and both validated campaign selectors retain their behavior.
 
+### Editor pre-entry hierarchy
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- Main Menu exposes Editor as a stable semantic lower-screen action. Its enabled state follows the existing Price of Loyalty resource gate, while the other validated Main Menu input paths remain unchanged.
+- The Map Editor menu exposes New Map, Load Map, and Main Menu. New Map exposes From Scratch, Random, and Back; each creation mode then exposes Small, Medium, Large, Extra Large, and Back under a mode-specific lower-screen context.
+- Back restores one visible parent at a time. Main Menu exits the pre-editor hierarchy directly, and context changes clear stale or duplicate lower-screen taps.
+- Load Map, right-click help, random-map configuration, warnings, and other engine-owned modal windows use Dialog context. Cancelling or closing them restores the correct Editor parent without duplicating their logic on Android.
+- Creating or loading a map clears the pre-editor actions and enters the safe Fallback deck before the existing Editor interface starts. In-map File Options, System Options, tools, and information remain later Editor slices.
+- Existing upper-screen mouse, touchscreen, physical-controller, configurable-hotkey, text-support, map-generation, map-loading, and resource-check behavior remains available.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `96C1BDD6C37E7D32632F7580BF22C613A0FD4D20950E60DD054C9BB5428B3808`.
+- All five focused checks passed on the Thor: Main Menu entry and Map Editor synchronization; both creation modes, both size decks, and exact Back behavior; scratch-map entry and Random configuration restoration; Load Map cancellation and loading; and rapid-tap, help, physical-control, upper-touchscreen, mouse, Main Menu, New Game, Settings, and campaign-selector regression coverage.
+
+#### Focused Editor pre-entry validation
+
+1. Enter Editor from Main Menu and verify both displays agree on New Map, Load Map, and Main Menu. Confirm the lower Editor entry follows the installed-resource availability.
+2. Navigate New Map, From Scratch and Random, and both map-size lists. Verify every Back action restores exactly one visible parent and Main Menu exits directly.
+3. Create one scratch map and open the Random configuration for a representative size. Cancel and confirm separately; verify Dialog appears only for the configuration and no pre-editor action fires inside the Editor.
+4. Open Load Map, cancel it, and load an existing map if available. Verify empty-list warnings, cancellation, and load failures restore Map Editor once.
+5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, configurable hotkeys, and text support. Recheck Main Menu, New Game, Settings, and both campaign selectors for regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
-- Editor menus follow the Settings slice.
+- In-map Editor File Options, System Options, tools, and information follow the pre-entry hierarchy as separate focused slices.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria

@@ -46,6 +46,7 @@
 #include "mus.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -59,6 +60,48 @@ namespace
     const std::array<Game::HotKeyEvent, mapSizeCount> mapSizeHotkeys = { Game::HotKeyEvent::MAIN_MENU_MAP_SIZE_SMALL, Game::HotKeyEvent::MAIN_MENU_MAP_SIZE_MEDIUM,
                                                                          Game::HotKeyEvent::MAIN_MENU_MAP_SIZE_LARGE, Game::HotKeyEvent::MAIN_MENU_MAP_SIZE_EXTRA_LARGE };
     const std::array<Maps::MapSize, mapSizeCount> mapSizes = { Maps::SMALL, Maps::MEDIUM, Maps::LARGE, Maps::XLARGE };
+    const std::array<fheroes2::thor::Action, mapSizeCount> thorMapSizeActions = { fheroes2::thor::Action::EDITOR_MAP_SIZE_SMALL,
+                                                                                fheroes2::thor::Action::EDITOR_MAP_SIZE_MEDIUM,
+                                                                                fheroes2::thor::Action::EDITOR_MAP_SIZE_LARGE,
+                                                                                fheroes2::thor::Action::EDITOR_MAP_SIZE_EXTRA_LARGE };
+
+    void setThorEditorMenuState( const fheroes2::thor::UiContext context )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        fheroes2::thor::ActionMask enabledActions = 0;
+        switch ( context ) {
+        case fheroes2::thor::UiContext::EDITOR_MAIN_MENU:
+            enabledActions = fheroes2::thor::actionMask( ThorAction::EDITOR_NEW_MAP ) | fheroes2::thor::actionMask( ThorAction::EDITOR_LOAD_MAP )
+                             | fheroes2::thor::actionMask( ThorAction::EDITOR_EXIT_TO_MAIN_MENU );
+            break;
+        case fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU:
+            enabledActions = fheroes2::thor::actionMask( ThorAction::EDITOR_FROM_SCRATCH ) | fheroes2::thor::actionMask( ThorAction::EDITOR_RANDOM_MAP )
+                             | fheroes2::thor::actionMask( ThorAction::MENU_BACK );
+            break;
+        case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH:
+        case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM:
+            enabledActions = fheroes2::thor::actionMask( ThorAction::MENU_BACK );
+            for ( const ThorAction action : thorMapSizeActions ) {
+                enabledActions |= fheroes2::thor::actionMask( action );
+            }
+            break;
+        default:
+            break;
+        }
+
+        fheroes2::thor::setUiContext( context );
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
+    void showEditorHelp( const std::string & title, const std::string & message, const fheroes2::thor::UiContext parentContext )
+    {
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            fheroes2::showStandardTextMessage( title, message, Dialog::ZERO );
+        }
+        setThorEditorMenuState( parentContext );
+    }
 
     void outputEditorMainMenuInTextSupportMode()
     {
@@ -107,6 +150,7 @@ namespace
 
         Interface::EditorInterface & editorInterface = Interface::EditorInterface::Get();
         if ( editorInterface.generateNewMap( mapSize ) ) {
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
             return editorInterface.startEdit();
         }
         return fheroes2::GameMode::EDITOR_NEW_MAP;
@@ -118,15 +162,24 @@ namespace
         Game::setDisplayFadeIn();
 
         Interface::EditorInterface & editorInterface = Interface::EditorInterface::Get();
-        if ( !editorInterface.updateRandomMapConfiguration( mapSize ) ) {
+        bool configurationAccepted = false;
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            configurationAccepted = editorInterface.updateRandomMapConfiguration( mapSize );
+        }
+        if ( !configurationAccepted ) {
             return fheroes2::GameMode::EDITOR_NEW_MAP;
         }
 
         if ( editorInterface.generateRandomMap( mapSize ) ) {
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
             return editorInterface.startEdit();
         }
 
-        fheroes2::showStandardTextMessage( _( "Warning" ), _( "Failed to generate a random map with given parameters." ), Dialog::OK );
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            fheroes2::showStandardTextMessage( _( "Warning" ), _( "Failed to generate a random map with given parameters." ), Dialog::OK );
+        }
         return fheroes2::GameMode::EDITOR_NEW_MAP;
     }
 }
@@ -195,6 +248,7 @@ namespace Editor
 
         if ( !straightToSelectMapSize ) {
             outputEditorMainMenuInTextSupportMode();
+            setThorEditorMenuState( fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
 
             mapCreationModeButtons.disable();
             buttonBack.disable();
@@ -203,7 +257,8 @@ namespace Editor
             buttonMainMenu.drawShadow( display );
         }
         else {
-            outputEditorMapSizeMenuInTextSupportMode();
+            outputEditorNewMapMenuInTextSupportMode();
+            setThorEditorMenuState( fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
 
             mainModeButtons.disable();
             buttonMainMenu.disable();
@@ -229,11 +284,14 @@ namespace Editor
                 }
             }
 
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+
             if ( buttonNewMap.isEnabled() ) {
                 mainModeButtons.drawOnState( le );
                 buttonMainMenu.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonMainMenu.area() ) );
 
-                if ( le.MouseClickLeft( buttonNewMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_NEW_MAP_MENU ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_NEW_MAP || le.MouseClickLeft( buttonNewMap.area() )
+                     || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_NEW_MAP_MENU ) ) {
                     mainModeButtons.disable();
                     buttonMainMenu.disable();
 
@@ -249,23 +307,28 @@ namespace Editor
                     display.render( background.activeArea() );
 
                     outputEditorNewMapMenuInTextSupportMode();
+                    setThorEditorMenuState( fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
                 }
-                else if ( le.MouseClickLeft( buttonLoadMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_LOAD_MAP_MENU ) ) {
+                else if ( requestedThorAction == fheroes2::thor::Action::EDITOR_LOAD_MAP || le.MouseClickLeft( buttonLoadMap.area() )
+                          || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_LOAD_MAP_MENU ) ) {
                     return fheroes2::GameMode::EDITOR_LOAD_MAP;
                 }
 
-                if ( le.MouseClickLeft( buttonMainMenu.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_EXIT_TO_MAIN_MENU || le.MouseClickLeft( buttonMainMenu.area() )
+                     || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                     return fheroes2::GameMode::MAIN_MENU;
                 }
 
                 if ( le.isMouseRightButtonPressedInArea( buttonNewMap.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "New Map" ), _( "Create a new map, either from scratch or using the random map generator." ), Dialog::ZERO );
+                    showEditorHelp( _( "New Map" ), _( "Create a new map, either from scratch or using the random map generator." ),
+                                    fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
                 }
                 else if ( le.isMouseRightButtonPressedInArea( buttonLoadMap.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "Load Map" ), _( "Load an existing map." ), Dialog::ZERO );
+                    showEditorHelp( _( "Load Map" ), _( "Load an existing map." ), fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
                 }
                 else if ( le.isMouseRightButtonPressedInArea( buttonMainMenu.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "Main Menu" ), _( "Exit the Editor and return to the game's Main Menu." ), Dialog::ZERO );
+                    showEditorHelp( _( "Main Menu" ), _( "Exit the Editor and return to the game's Main Menu." ),
+                                    fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
                 }
             }
             else if ( mapCreationModeButtons.button( 0 ).isEnabled() ) {
@@ -286,19 +349,24 @@ namespace Editor
                     display.render( background.activeArea() );
 
                     outputEditorMapSizeMenuInTextSupportMode();
+                    setThorEditorMenuState( generateRandomMap ? fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM
+                                                             : fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH );
                 };
 
-                if ( le.MouseClickLeft( buttonScratchMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_FROM_SCRATCH_MAP_MENU ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FROM_SCRATCH || le.MouseClickLeft( buttonScratchMap.area() )
+                     || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_FROM_SCRATCH_MAP_MENU ) ) {
                     generateRandomMap = false;
 
                     prepareMapSizeMenu();
                 }
-                else if ( le.MouseClickLeft( buttonRandomMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_RANDOM_MAP_MENU ) ) {
+                else if ( requestedThorAction == fheroes2::thor::Action::EDITOR_RANDOM_MAP || le.MouseClickLeft( buttonRandomMap.area() )
+                          || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_RANDOM_MAP_MENU ) ) {
                     generateRandomMap = true;
 
                     prepareMapSizeMenu();
                 }
-                else if ( le.MouseClickLeft( buttonBack.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                else if ( requestedThorAction == fheroes2::thor::Action::MENU_BACK || le.MouseClickLeft( buttonBack.area() )
+                          || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                     mapCreationModeButtons.disable();
                     buttonBack.disable();
                     emptyDialog.restore();
@@ -314,15 +382,16 @@ namespace Editor
                     display.render( background.activeArea() );
 
                     outputEditorMainMenuInTextSupportMode();
+                    setThorEditorMenuState( fheroes2::thor::UiContext::EDITOR_MAIN_MENU );
                 }
                 else if ( le.isMouseRightButtonPressedInArea( buttonScratchMap.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "From Scratch" ), _( "Start from scratch with a blank map." ), Dialog::ZERO );
+                    showEditorHelp( _( "From Scratch" ), _( "Start from scratch with a blank map." ), fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
                 }
                 else if ( le.isMouseRightButtonPressedInArea( buttonRandomMap.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "Random" ), _( "Create a randomly generated map." ), Dialog::ZERO );
+                    showEditorHelp( _( "Random" ), _( "Create a randomly generated map." ), fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
                 }
                 else if ( le.isMouseRightButtonPressedInArea( buttonBack.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "Back" ), _( "Return to the Editor's main menu options." ), Dialog::ZERO );
+                    showEditorHelp( _( "Back" ), _( "Return to the Editor's main menu options." ), fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
                 }
             }
             else if ( mapSizeButtons.button( 0 ).isEnabled() ) {
@@ -331,7 +400,8 @@ namespace Editor
 
                 // Loop through all map size buttons.
                 for ( size_t i = 0; i < mapSizeCount; ++i ) {
-                    if ( le.MouseClickLeft( mapSizeButtons.button( i ).area() ) || Game::HotKeyPressEvent( mapSizeHotkeys[i] ) ) {
+                    if ( requestedThorAction == thorMapSizeActions[i] || le.MouseClickLeft( mapSizeButtons.button( i ).area() )
+                         || Game::HotKeyPressEvent( mapSizeHotkeys[i] ) ) {
                         if ( generateRandomMap ) {
                             return editNewRandomMap( mapSizes[i] );
                         }
@@ -350,13 +420,15 @@ namespace Editor
                         }
                         StringReplace( message, "%{size}", mapSize );
                         mapSize += " x " + mapSize;
-                        fheroes2::showStandardTextMessage( mapSize, message, Dialog::ZERO );
+                        showEditorHelp( mapSize, message, generateRandomMap ? fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM
+                                                                          : fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH );
 
                         break;
                     }
                 }
 
-                if ( le.MouseClickLeft( buttonBack.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                if ( requestedThorAction == fheroes2::thor::Action::MENU_BACK || le.MouseClickLeft( buttonBack.area() )
+                     || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                     mapSizeButtons.disable();
                     emptyDialog.restore();
 
@@ -369,11 +441,14 @@ namespace Editor
 
                     display.render( background.activeArea() );
 
-                    outputEditorMainMenuInTextSupportMode();
+                    outputEditorNewMapMenuInTextSupportMode();
+                    setThorEditorMenuState( fheroes2::thor::UiContext::EDITOR_NEW_MAP_MENU );
                 }
 
                 else if ( le.isMouseRightButtonPressedInArea( buttonBack.area() ) ) {
-                    fheroes2::showStandardTextMessage( _( "Back" ), _( "Return to the previous menu options." ), Dialog::ZERO );
+                    showEditorHelp( _( "Back" ), _( "Return to the previous menu options." ),
+                                    generateRandomMap ? fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM
+                                                      : fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH );
                 }
             }
         }
@@ -383,6 +458,8 @@ namespace Editor
 
     fheroes2::GameMode menuLoadMap()
     {
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
+
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
         fheroes2::drawEditorMainMenuScreen();
@@ -413,6 +490,7 @@ namespace Editor
         fheroes2::fadeOutDisplay();
         Game::setDisplayFadeIn();
 
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
         return Interface::EditorInterface::Get().startEdit();
     }
 }

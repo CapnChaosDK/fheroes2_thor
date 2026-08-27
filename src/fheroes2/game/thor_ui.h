@@ -36,7 +36,11 @@ namespace fheroes2::thor
         CAMPAIGN_INTRO,
         SUCCESSION_WARS_CAMPAIGN,
         PRICE_OF_LOYALTY_CAMPAIGN,
-        GAME_SETTINGS
+        GAME_SETTINGS,
+        EDITOR_MAIN_MENU,
+        EDITOR_NEW_MAP_MENU,
+        EDITOR_MAP_SIZE_SCRATCH,
+        EDITOR_MAP_SIZE_RANDOM
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -140,7 +144,17 @@ namespace fheroes2::thor
         GAME_SETTINGS_CURSOR_TYPE,
         GAME_SETTINGS_INTERFACE_TYPE,
         GAME_SETTINGS_TEXT_SUPPORT,
-        GAME_SETTINGS_CLOSE
+        GAME_SETTINGS_CLOSE,
+        MENU_EDITOR,
+        EDITOR_NEW_MAP,
+        EDITOR_LOAD_MAP,
+        EDITOR_EXIT_TO_MAIN_MENU,
+        EDITOR_FROM_SCRATCH,
+        EDITOR_RANDOM_MAP,
+        EDITOR_MAP_SIZE_SMALL,
+        EDITOR_MAP_SIZE_MEDIUM,
+        EDITOR_MAP_SIZE_LARGE,
+        EDITOR_MAP_SIZE_EXTRA_LARGE
     };
 
     using ActionMask = uint64_t;
