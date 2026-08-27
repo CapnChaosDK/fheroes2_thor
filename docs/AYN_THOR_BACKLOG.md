@@ -399,10 +399,30 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Rapidly tap the table switch and Exit controls. Verify there are no stacked transitions, delayed actions, or incorrect restored contexts.
 5. Verify upper touchscreen, mouse, physical controls, and keyboard close behavior remain intact. Open and close a High Scores help dialog and verify the correct lower deck restores.
 
+### Succession Wars campaign selector
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-27.
+
+- Selecting Original retains the existing Succession Wars intro video. While it plays, the lower display shows a dedicated non-interactive Campaign Intro state so Campaign-menu taps cannot queue into the selector.
+- The animated Roland/Archibald selector exposes Roland, Archibald, and Back as stable semantic lower-screen actions. A campaign selection executes once and hands off to the existing campaign scenario screen.
+- Back stops selector audio and returns to New Game. Context changes clear stale taps, while upper-screen mouse, touchscreen, physical-controller, configurable-hotkey, and text-support behavior remain available.
+- If the selector video is missing, the existing warning and Roland fallback remain in place; the lower display uses Dialog during the warning and does not expose invalid campaign choices.
+- The Price of Loyalty four-campaign selector remains a separate next slice. The connected Thor contains all 24 required `.HXC` maps and all four expansion selector videos, but its distinct hover-driven animations and four-way selection behavior require focused implementation and validation.
+- Android build and lint pass through the required short `R:` mapping. The candidate APK installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; SHA-256: `587803916FEB3DD1951BE7D5EA91925E30C014875E4AF3692BE00161079395AA`.
+- All five focused checks passed on the Thor: non-interactive intro synchronization; Roland and Archibald selection into their matching first scenarios; Back returning once to New Game without residual audio; intro skipping through physical, upper-touchscreen, mouse, and keyboard paths; and rapid-tap rejection without stacked or stale transitions.
+
+#### Focused Succession Wars selector validation
+
+1. Open New Game, Campaign, Original. Verify the intro plays normally and the lower display shows Campaign Intro without stale Campaign-menu actions.
+2. Let the intro finish and verify the lower display changes to Original Campaign with Roland, Archibald, and Back. Select each campaign separately and verify the matching first scenario opens.
+3. Re-enter the selector and use Back. Verify it returns once to New Game with no leftover selector audio or delayed campaign selection.
+4. Skip the intro through the existing physical, upper-touchscreen, mouse, and keyboard paths and verify the lower selector appears correctly afterward.
+5. Rapidly tap Roland, Archibald, and Back. Verify only one transition occurs and the resulting scenario or New Game context is correct.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
-- Compatible Succession Wars campaign assets are now installed on the Thor. Campaign selection is the next recommended planning point as a separate slice with its own behavior and focused tests. Inspect the video-backed Roland/Archibald selector and the separate four-campaign expansion selector in `game_newgame.cpp`, including missing-video fallbacks, animation behavior, and exit semantics. Check expansion assets independently before including that path in the first proposal.
+- The Succession Wars selector is hardware-validated. Plan the four-campaign Price of Loyalty selector independently next, including its per-choice missing-video behavior, hover-driven animations, and Back semantics.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Later slices include Settings and Editor menus.
 - A safe Menu fallback for an unknown or newly added upstream menu state.

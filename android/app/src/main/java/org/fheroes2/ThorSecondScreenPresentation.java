@@ -47,6 +47,8 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_BATTLE_ONLY_SETUP = 13;
     private static final int CONTEXT_HIGH_SCORES_STANDARD = 14;
     private static final int CONTEXT_HIGH_SCORES_CAMPAIGN = 15;
+    private static final int CONTEXT_CAMPAIGN_INTRO = 16;
+    private static final int CONTEXT_SUCCESSION_WARS_CAMPAIGN = 17;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -132,6 +134,8 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_HIGH_SCORES_VIEW_STANDARD = 81;
     private static final int ACTION_HIGH_SCORES_VIEW_CAMPAIGN = 82;
     private static final int ACTION_HIGH_SCORES_EXIT = 83;
+    private static final int ACTION_CAMPAIGN_SELECT_ROLAND = 84;
+    private static final int ACTION_CAMPAIGN_SELECT_ARCHIBALD = 85;
 
     interface KeySender
     {
@@ -233,7 +237,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HIGH_SCORES_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SUCCESSION_WARS_CAMPAIGN ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -653,6 +657,15 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "HIGH SCORES — CAMPAIGN";
                 addAction( "STANDARD", ACTION_HIGH_SCORES_VIEW_STANDARD, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "EXIT", ACTION_HIGH_SCORES_EXIT, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_CAMPAIGN_INTRO:
+                contextTitle = "CAMPAIGN INTRO PLAYING";
+                break;
+            case CONTEXT_SUCCESSION_WARS_CAMPAIGN:
+                contextTitle = "ORIGINAL CAMPAIGN";
+                addAction( "ROLAND", ACTION_CAMPAIGN_SELECT_ROLAND, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ARCHIBALD", ACTION_CAMPAIGN_SELECT_ARCHIBALD, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";

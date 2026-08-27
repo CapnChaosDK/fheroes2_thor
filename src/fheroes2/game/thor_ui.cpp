@@ -231,6 +231,13 @@ namespace
         return action == Action::HIGH_SCORES_VIEW_STANDARD || action == Action::HIGH_SCORES_EXIT;
     }
 
+    bool isSuccessionWarsCampaignAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::CAMPAIGN_SELECT_ROLAND || action == Action::CAMPAIGN_SELECT_ARCHIBALD || action == Action::MENU_BACK;
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
@@ -239,7 +246,7 @@ namespace
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
-               || context == UiContext::HIGH_SCORES_CAMPAIGN;
+               || context == UiContext::HIGH_SCORES_CAMPAIGN || context == UiContext::SUCCESSION_WARS_CAMPAIGN;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -271,6 +278,8 @@ namespace
             return isHighScoresStandardAction( action );
         case fheroes2::thor::UiContext::HIGH_SCORES_CAMPAIGN:
             return isHighScoresCampaignAction( action );
+        case fheroes2::thor::UiContext::SUCCESSION_WARS_CAMPAIGN:
+            return isSuccessionWarsCampaignAction( action );
         default:
             return false;
         }

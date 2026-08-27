@@ -32,7 +32,9 @@ namespace fheroes2::thor
         SCENARIO_SETUP,
         BATTLE_ONLY_SETUP,
         HIGH_SCORES_STANDARD,
-        HIGH_SCORES_CAMPAIGN
+        HIGH_SCORES_CAMPAIGN,
+        CAMPAIGN_INTRO,
+        SUCCESSION_WARS_CAMPAIGN
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -122,7 +124,9 @@ namespace fheroes2::thor
         BATTLE_ONLY_EXIT,
         HIGH_SCORES_VIEW_STANDARD,
         HIGH_SCORES_VIEW_CAMPAIGN,
-        HIGH_SCORES_EXIT
+        HIGH_SCORES_EXIT,
+        CAMPAIGN_SELECT_ROLAND,
+        CAMPAIGN_SELECT_ARCHIBALD
     };
 
     using ActionMask = uint64_t;

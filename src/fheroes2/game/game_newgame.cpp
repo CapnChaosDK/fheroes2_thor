@@ -193,6 +193,10 @@ fheroes2::GameMode Game::NewSuccessionWarsCampaign()
 {
     Settings::Get().SetGameType( Game::TYPE_CAMPAIGN );
 
+    using ThorAction = fheroes2::thor::Action;
+    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::CAMPAIGN_INTRO );
+    fheroes2::thor::setEnabledActions( 0 );
+
     // Reset all sound and music before playing videos
     AudioManager::ResetAudio();
 
@@ -213,8 +217,12 @@ fheroes2::GameMode Game::NewSuccessionWarsCampaign()
 
     std::unique_ptr<SMKVideoSequence> video = getVideo( "CHOOSE.SMK" );
     if ( !video ) {
-        showMissingVideoFilesWindow();
+        {
+            const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
+            showMissingVideoFilesWindow();
+        }
         campaignSaveData.setCurrentScenarioInfo( { Campaign::ROLAND_CAMPAIGN, 0 } );
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
         return fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
     }
 
@@ -247,14 +255,30 @@ fheroes2::GameMode Game::NewSuccessionWarsCampaign()
     // Make sure that the first run is passed immediately.
     assert( !Game::isCustomDelayNeeded( customDelay ) );
 
+    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::SUCCESSION_WARS_CAMPAIGN );
+    fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_ROLAND )
+                                       | fheroes2::thor::actionMask( ThorAction::CAMPAIGN_SELECT_ARCHIBALD )
+                                       | fheroes2::thor::actionMask( ThorAction::MENU_BACK ) );
+
+    fheroes2::GameMode gameChoice = fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
+
     LocalEvent & le = LocalEvent::Get();
     while ( le.HandleEvents( Game::isCustomDelayNeeded( customDelay ) ) ) {
-        if ( le.MouseClickLeft( campaignRoi[0] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_ROLAND ) ) {
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_ROLAND || le.MouseClickLeft( campaignRoi[0] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_ROLAND ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::ROLAND_CAMPAIGN, 0 } );
             break;
         }
-        if ( le.MouseClickLeft( campaignRoi[1] ) || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_ARCHIBALD ) ) {
+        if ( requestedThorAction == ThorAction::CAMPAIGN_SELECT_ARCHIBALD || le.MouseClickLeft( campaignRoi[1] )
+             || HotKeyPressEvent( HotKeyEvent::CAMPAIGN_ARCHIBALD ) ) {
             campaignSaveData.setCurrentScenarioInfo( { Campaign::ARCHIBALD_CAMPAIGN, 0 } );
+            break;
+        }
+        if ( requestedThorAction == ThorAction::MENU_BACK || HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) ) {
+            Mixer::Stop();
+            gameChoice = fheroes2::GameMode::NEW_GAME;
             break;
         }
 
@@ -294,7 +318,9 @@ fheroes2::GameMode Game::NewSuccessionWarsCampaign()
     // Set the fade-in for the Campaign scenario info.
     setDisplayFadeIn();
 
-    return fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO;
+    fheroes2::thor::setUiContext( gameChoice == fheroes2::GameMode::NEW_GAME ? fheroes2::thor::UiContext::NEW_GAME_MENU : fheroes2::thor::UiContext::DIALOG );
+
+    return gameChoice;
 }
 
 fheroes2::GameMode Game::NewPriceOfLoyaltyCampaign()
