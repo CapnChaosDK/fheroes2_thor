@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `db4297d4b2024247639c21e4407f2d3ed5e1b30a` was pushed to `origin/ayn-thor-dual-screen` on 2026-08-27.
-- It adds the hardware-validated Battle Only setup command deck and information card on top of `thor-v0.4.0`.
-- Final debug APK SHA-256: `63AD483B6067024CE18E92C963A28C51450F11102EE77126EEDDD79CC586FC94`.
-- Android build and lint passed. The user passed the focused hardware checklist, including selector restoration, duplicate-hero rejection, army readiness, defender control, terrain, Reset, Exit, Start, rapid taps, and physical, touchscreen, and mouse regressions.
+- Commit `188f36fc3ff1fa086b68e9b311245ab667b0c910` adds the hardware-validated High Scores workflow on top of the validated Battle Only setup and `thor-v0.4.0`.
+- Standard and Campaign tables synchronize across both screens, Campaign availability follows installed assets, help dialogs restore the active table, and Exit returns directly to Main Menu.
+- Final debug APK SHA-256: `3EF381E02C09A8E566BD83900E18F1461D2EACAB6E8D34EA3D5F7B61643A887A`.
+- Android build and lint passed. The user passed the focused hardware checklist, including two-way Standard/Campaign switching, direct Exit, rapid taps, help restoration, and physical, touchscreen, mouse, and keyboard regressions.
 
 ## Agreed product decisions
 
