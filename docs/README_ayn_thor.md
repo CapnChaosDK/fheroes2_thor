@@ -18,7 +18,7 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 
 | Context | Available actions |
 | --- | --- |
-| Main menu | New Game, Load Game, Settings, High Scores, Credits, Quit |
+| Main menu | New Game, Load Game, Settings, High Scores, Credits, Editor, Quit |
 | New Game menus | Standard, Campaign, Multiplayer, Battle Only, Settings, campaign type, Hot Seat player count, Back |
 | Load Game | Standard, Campaign, Hot Seat, Back; unavailable categories are muted |
 | Scenario setup | Select Map, player navigation and assignment, faction, handicap, five difficulty levels, Start, Back |
@@ -27,6 +27,10 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | Succession Wars campaign | Non-interactive intro state, then Roland, Archibald, Back |
 | Price of Loyalty campaigns | Price of Loyalty, Voyage Home, Wizard's Isle, Descendants, Back |
 | Game Settings | Language, Graphics, Audio, Hot Keys, Cursor Type, Interface Type, Text Support, Okay / Back |
+| Map Editor menus | New Map, Load Map, Main Menu; From Scratch or Random; four map sizes and Back |
+| Map Editor | File Options, System Options |
+| Editor File Options | New Map, Load Map, Start Map, Save Map, Main Menu, Quit, Auto Playtest, Cancel |
+| Editor System Options | Language, Graphics, Audio, Hot Keys, Animation, Passability, Interface Type, Cursor Type, Scroll Speed, Okay / Back |
 | Dialog or fallback | Confirm, Cancel |
 | Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
@@ -46,6 +50,10 @@ Selecting the original Succession Wars campaign shows a non-interactive lower-sc
 Selecting the Price of Loyalty expansion exposes all four campaigns and Back on the lower display while preserving the upper selector's hover animations. Missing-video behavior remains compatible with the engine, and selection or cancellation clears queued actions, audio, and palette state before the next screen.
 
 Game Settings shows the current language, cursor, interface, and text-support states. Direct toggles refresh both displays immediately, unavailable language selection is muted, and the existing Language, Graphics, Audio, and Hot Keys dialogs restore the Settings deck when they close.
+
+The Editor entry hierarchy mirrors New Map, Load Map, From Scratch, Random, map-size selection, and exact Back/Main Menu behavior. Creating or loading a map enters a dedicated Map Editor deck. File Options delegates saving, loading, playtesting, confirmations, and transitions to the existing editor logic.
+
+Editor System Options shows the current language, animation, passability, cursor, interface, and scroll-speed states. Direct changes retain the editor's existing redraw, rebuild, and persistence paths; child dialogs temporarily use the Dialog deck and restore System Options once when they close.
 
 If battles open directly in automatic or quick resolution, open **Settings**, select **Battles**, and cycle the option until it reads **Manual**. This is the standard fheroes2 `auto resolve battles` setting and is independent of the Thor command deck.
 
@@ -115,8 +123,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest committed validated development checkpoint is `f395e0a8d`. It provides semantic controls, read-only information cards, and navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, Game Settings, and both campaign-selection workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
+The latest hardware-validated source checkpoint is `0ff1bb67e`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the Editor pre-entry, File Options, and System Options workflows while leaving upstream rendering unchanged. The debug APK SHA-256 is `51664E906A2EBE207CBB888CAD49E16CAA2BCFA14734C390DD852938994157FA`.
 
-The next feature planning point is the Editor menu hierarchy. Interactive tools such as a touch radar, hero quick-selection list, or drag-and-drop army management remain separate future milestones.
+The next focused feature planning point is the in-map Editor Map Specifications workflow. Editor tools, richer map information, touch radar, hero quick-selection, and drag-and-drop army management remain separate later milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

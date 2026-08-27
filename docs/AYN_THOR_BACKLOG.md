@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `f395e0a8d` is the latest hardware-validated development checkpoint. It adds the navigable Game Settings workflow on top of both campaign selectors, validated Battle Only setup, High Scores workflow, and `thor-v0.4.0`.
-- Game Settings exposes all seven engine-owned settings groups plus Okay / Back, live state synchronization, safe language availability, configuration persistence, and exact restoration from child dialogs.
-- Debug APK SHA-256: `3D5254C2970770B5268FAA955CA2F1800E30226EFE04FDC0899EF6B32BCBC2EB`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused settings, persistence, dialog-restoration, rapid-tap, input, menu, and campaign regression checks.
+- Commit `0ff1bb67e` is the latest hardware-validated source checkpoint. It adds in-map Editor System Options on top of the validated Editor pre-entry hierarchy, File Options, Game Settings, both campaign selectors, Battle Only setup, High Scores, and `thor-v0.4.0`.
+- Editor System Options exposes all ten engine-owned actions, live information synchronization, safe language availability, configuration persistence, immediate editor redraw/rebuild behavior, and exact restoration from child dialogs.
+- Debug APK SHA-256: `51664E906A2EBE207CBB888CAD49E16CAA2BCFA14734C390DD852938994157FA`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused Editor synchronization, settings, persistence, dialog-restoration, rapid-tap, input, and regression checks.
 
 ## Agreed product decisions
 
@@ -519,6 +519,13 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 3. Open and close Language, Graphics, Audio, and Hot Keys. Verify Dialog appears for each child, restores System Options once, and Language is enabled or muted according to the installed assets.
 4. Close and reopen System Options, then explicitly relaunch the app and return to the Editor. Verify changed settings persist and the Editor remains usable after interface rebuilds.
 5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, and hotkeys. Recheck File Options, Editor pre-entry, and established Main Menu workflows for regressions.
+
+### Next recommended planning point
+
+- Plan the in-map Editor Map Specifications workflow as the next focused slice.
+- Inspect the existing specifications window before proposing which stable lower-screen actions and summaries belong in the first slice. Preserve its engine-owned map validation, nested detail windows, and mutation logic.
+- Define exact Dialog restoration and Okay/Back behavior, plus a short manual regression checklist covering the validated Editor pre-entry, File Options, and System Options workflows.
+- Keep Editor tools and richer map information as separate later slices; do not discard or silently fold them into Map Specifications.
 
 ### Later menu slices
 
