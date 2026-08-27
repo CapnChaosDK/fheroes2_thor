@@ -17,23 +17,23 @@
 - Release source commit: `503ef2318ca254329748ce443ee69271bcc2bf41`.
 - Release APK SHA-256: `2520C1C55BC954DFA2E1F91FF37A7BE2BE75305FEEE6B1BA22D5E0FE8930D01F`.
 - v0.4.0 contains the hardware-validated Scenario Setup player-editing workflow in addition to the navigable Load Game and Scenario Setup controls from v0.3.0.
-- Latest hardware-validated source commit: `0ff1bb67e`.
-- This checkpoint adds the navigable Editor pre-entry hierarchy plus in-map File Options and System Options on top of the previously validated menu, gameplay-control, and information-card workflows. Its final debug APK SHA-256 is `51664E906A2EBE207CBB888CAD49E16CAA2BCFA14734C390DD852938994157FA`.
+- Latest hardware-validated source commit: `d7212d69f`.
+- This checkpoint adds the navigable in-map Editor Map Specifications workflow on top of the validated Editor pre-entry, File Options, System Options, menu, gameplay-control, and information-card workflows. Its final debug APK SHA-256 is `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- Editor pre-entry, in-map File Options, in-map System Options, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, live information synchronization, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
-- The latest hardware-validated source implementation is `0ff1bb67e`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `51664E906A2EBE207CBB888CAD49E16CAA2BCFA14734C390DD852938994157FA`.
+- Editor pre-entry, in-map File Options, System Options, Map Specifications, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, live information synchronization, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
+- The latest hardware-validated source implementation is `d7212d69f`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `068C22872A88D01BD4AC8AE199370819672268E8ADF000648B70858B5B4C0377`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is the in-map Editor Map Specifications workflow. Treat Editor tools and richer map information as separate later slices.
-- Inspect the existing specifications window and plan stable lower-screen entry/actions, availability, child-window restoration, and Okay/Back semantics without duplicating editor-owned validation or mutation logic.
+- The next focused feature planning point is Editor tools. Treat richer map information as a separate later slice.
+- Inspect the existing Editor tool hierarchy and plan stable lower-screen entry/actions and availability without duplicating editor-owned placement, erasure, selection, or validation logic.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated Editor pre-entry, File Options, System Options, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Retain the validated Editor pre-entry, File Options, System Options, Map Specifications, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 
@@ -61,7 +61,7 @@
 
 - APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Package/activity: `org.fheroes2.thor/org.fheroes2.GameActivity`.
-- The last device endpoint was `192.168.68.81:39585`, but wireless ADB ports can change. Run `adb devices` before install or launch.
+- The last device endpoint was `192.168.68.81:46343`, but wireless ADB ports can change. Run `adb devices` before install or launch.
 - Launch the explicit game activity after installation; do not use `monkey`, which can open the asset Toolset instead.
 - The lower Android display was display ID 4. Its last SurfaceFlinger physical ID was `4630946482288158084`; re-check after panel toggles or reboot.
 
