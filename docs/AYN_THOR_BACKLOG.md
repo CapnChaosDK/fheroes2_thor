@@ -480,6 +480,26 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Open Load Map, cancel it, and load an existing map if available. Verify empty-list warnings, cancellation, and load failures restore Map Editor once.
 5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, physical controls, configurable hotkeys, and text support. Recheck Main Menu, New Game, Settings, and both campaign selectors for regressions.
 
+### In-map Editor File Options
+
+Status: `passed`; behavior and focused acceptance tests approved and hardware-validated on 2026-08-27.
+
+- Entering a created or loaded map replaces the generic fallback deck with a dedicated Map Editor context. This first in-map slice exposes File Options while System Options, tools, specifications, and richer map information remain separate later slices.
+- File Options mirrors the existing engine-owned New Map, Load Map, Start Map, Save Map, Main Menu, Quit, Auto Playtest, and Cancel actions without duplicating their validation, saving, playtest, or transition logic on Android.
+- Engine-owned confirmations, warnings, save/load windows, and help use Dialog context. Cancelled or failed operations restore File Options exactly once, while Cancel returns to Map Editor.
+- Starting another workflow clears stale lower-screen actions, and semantic operations reject queued rapid taps until the active operation or nested dialog completes.
+- Existing upper-screen mouse, touchscreen, physical-controller, configurable-hotkey, and text-support behavior remains available.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `486EDBAA21185F2D44AF5C0E9F4FBF303657FE6EF03CA05D1E36BA8A2AD8DE16`.
+- All five focused checks passed on the Thor: created and loaded maps entered the dedicated Map Editor deck; File Options and nested confirmations restored correctly; save behavior did not duplicate; Start Map, Auto Playtest, Main Menu, and Quit followed existing transition rules; and rapid taps, physical controls, upper touchscreen, mouse, hotkeys, Editor pre-entry, and established Main Menu workflows retained their behavior.
+
+#### Focused in-map Editor File Options validation
+
+1. Create and load a map, and verify the lower screen enters Map Editor and File Options matches the upper menu.
+2. Exercise New Map and Load Map confirmations. Cancel each and verify File Options restores once; confirm each and verify the correct pre-entry workflow appears.
+3. Save a map, including cancellation and any overwrite prompt. Verify no duplicate save occurs and Map Editor restores afterward.
+4. Test Start Map with invalid and valid maps, Auto Playtest, Main Menu, and Quit. Verify failed or cancelled operations restore File Options, while confirmed transitions occur exactly once.
+5. Test Cancel/Back, help, rapid mixed taps, physical controls, upper touchscreen, mouse, and hotkeys. Recheck Editor pre-entry and established Main Menu workflows for regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.

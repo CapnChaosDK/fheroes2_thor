@@ -80,6 +80,7 @@
 #include "settings.h"
 #include "spell.h"
 #include "system.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -109,6 +110,28 @@ namespace fheroes2
 namespace
 {
     const uint32_t mapUpdateFlags = Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR;
+
+    fheroes2::thor::ActionMask getThorEditorFileActions()
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        return fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_NEW_MAP ) | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_LOAD_MAP )
+               | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_START_MAP ) | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_SAVE_MAP )
+               | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_MAIN_MENU ) | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_QUIT )
+               | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_AUTO_PLAYTEST ) | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_CANCEL );
+    }
+
+    void setThorEditorInterfaceState()
+    {
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_INTERFACE );
+        fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS ) );
+    }
+
+    void setThorEditorFileOptionsState()
+    {
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_FILE_OPTIONS );
+        fheroes2::thor::setEnabledActions( getThorEditorFileActions() );
+    }
 
     // In original Editor map name is limited to 17 characters.
     // However, we have no such limitation but to be reasonable we still have a limit.
@@ -1568,6 +1591,8 @@ namespace Interface
         LocalEvent & le = LocalEvent::Get();
         Cursor & cursor = Cursor::Get();
 
+        setThorEditorInterfaceState();
+
         while ( res == fheroes2::GameMode::CANCEL ) {
             if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
                 if ( processEditorExitEvent() == fheroes2::GameMode::QUIT_GAME ) {
@@ -1577,6 +1602,18 @@ namespace Interface
                 }
 
                 continue;
+            }
+
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS ) {
+                fheroes2::thor::setEnabledActions( 0 );
+                res = eventFileDialog();
+                if ( res == fheroes2::GameMode::CANCEL ) {
+                    setThorEditorInterfaceState();
+                    continue;
+                }
+
+                break;
             }
 
             bool isCursorOverGameArea = false;
@@ -2039,6 +2076,7 @@ namespace Interface
 
         Game::setDisplayFadeIn();
 
+        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
         fheroes2::fadeOutDisplay();
 
         return res;
@@ -2065,6 +2103,7 @@ namespace Interface
     fheroes2::GameMode EditorInterface::eventFileDialog()
     {
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::EDITOR_FILE_OPTIONS );
 
         fheroes2::Display & display = fheroes2::Display::instance();
         const Settings & conf = Settings::Get();
@@ -2091,21 +2130,36 @@ namespace Interface
 
         LocalEvent & le = LocalEvent::Get();
 
-        while ( le.HandleEvents() ) {
+        while ( true ) {
+            setThorEditorFileOptionsState();
+
+            if ( !le.HandleEvents() ) {
+                return fheroes2::GameMode::CANCEL;
+            }
+
             optionButtons.drawOnState( le );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
-            if ( le.MouseClickLeft( buttonNewMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_NEW_MAP_MENU ) ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                // Reject rapid follow-up taps until this operation has completed or its dialog has closed.
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_NEW_MAP || le.MouseClickLeft( buttonNewMap.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_NEW_MAP_MENU ) ) {
                 if ( eventNewMap() == fheroes2::GameMode::EDITOR_NEW_MAP ) {
                     return fheroes2::GameMode::EDITOR_NEW_MAP;
                 }
             }
-            if ( le.MouseClickLeft( buttonLoadMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_LOAD_GAME ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_LOAD_MAP || le.MouseClickLeft( buttonLoadMap.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_LOAD_GAME ) ) {
                 if ( eventLoadMap() == fheroes2::GameMode::EDITOR_LOAD_MAP ) {
                     return fheroes2::GameMode::EDITOR_LOAD_MAP;
                 }
             }
-            if ( le.MouseClickLeft( buttonSaveMap.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SAVE_GAME ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_SAVE_MAP || le.MouseClickLeft( buttonSaveMap.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SAVE_GAME ) ) {
                 // Special case: since we show a window about file saving we don't want to display the current dialog anymore.
                 background.hideWindow();
                 display.render( background.totalArea() );
@@ -2113,12 +2167,14 @@ namespace Interface
                 return fheroes2::GameMode::CANCEL;
             }
 
-            if ( le.MouseClickLeft( buttonQuit.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_QUIT || le.MouseClickLeft( buttonQuit.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) ) {
                 if ( processEditorExitEvent() == fheroes2::GameMode::QUIT_GAME ) {
                     return fheroes2::GameMode::QUIT_GAME;
                 }
             }
-            if ( le.MouseClickLeft( buttonMainMenu.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_TO_GAME_MAIN_MENU ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_MAIN_MENU || le.MouseClickLeft( buttonMainMenu.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::EDITOR_TO_GAME_MAIN_MENU ) ) {
                 if ( fheroes2::showStandardTextMessage( _( "Main Menu" ),
                                                         _( "Do you wish to return to the game's Main Menu? (Any unsaved changes to the current map will be lost.)" ),
                                                         Dialog::YES | Dialog::NO )
@@ -2126,7 +2182,7 @@ namespace Interface
                     return fheroes2::GameMode::MAIN_MENU;
                 }
             }
-            else if ( le.MouseClickLeft( buttonStartMap.area() ) ) {
+            else if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_START_MAP || le.MouseClickLeft( buttonStartMap.area() ) ) {
                 if ( !Get()._prepareMapForGameplay() ) {
                     continue;
                 }
@@ -2138,14 +2194,14 @@ namespace Interface
                     return fheroes2::GameMode::NEW_STANDARD;
                 }
             }
-            else if ( le.MouseClickLeft( buttonAutoPlaytest.area() ) ) {
+            else if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_AUTO_PLAYTEST || le.MouseClickLeft( buttonAutoPlaytest.area() ) ) {
                 if ( Get()._runAutoPlaytest() ) {
                     return fheroes2::GameMode::CANCEL;
                 }
 
                 display.render( background.totalArea() );
             }
-            else if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
+            else if ( requestedThorAction == fheroes2::thor::Action::EDITOR_FILE_CANCEL || le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
                 return fheroes2::GameMode::CANCEL;
             }
 

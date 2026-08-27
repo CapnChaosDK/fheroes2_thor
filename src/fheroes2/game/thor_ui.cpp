@@ -292,6 +292,30 @@ namespace
                || action == Action::EDITOR_MAP_SIZE_EXTRA_LARGE || action == Action::MENU_BACK;
     }
 
+    bool isEditorInterfaceAction( const fheroes2::thor::Action action )
+    {
+        return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS;
+    }
+
+    bool isEditorFileOptionsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::EDITOR_FILE_NEW_MAP:
+        case Action::EDITOR_FILE_LOAD_MAP:
+        case Action::EDITOR_FILE_START_MAP:
+        case Action::EDITOR_FILE_SAVE_MAP:
+        case Action::EDITOR_FILE_MAIN_MENU:
+        case Action::EDITOR_FILE_QUIT:
+        case Action::EDITOR_FILE_AUTO_PLAYTEST:
+        case Action::EDITOR_FILE_CANCEL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
@@ -304,7 +328,8 @@ namespace
                || context == UiContext::HIGH_SCORES_CAMPAIGN || context == UiContext::SUCCESSION_WARS_CAMPAIGN
                || context == UiContext::PRICE_OF_LOYALTY_CAMPAIGN || context == UiContext::GAME_SETTINGS || context == UiContext::EDITOR_MAIN_MENU
                || context == UiContext::EDITOR_NEW_MAP_MENU || context == UiContext::EDITOR_MAP_SIZE_SCRATCH
-               || context == UiContext::EDITOR_MAP_SIZE_RANDOM;
+               || context == UiContext::EDITOR_MAP_SIZE_RANDOM || context == UiContext::EDITOR_INTERFACE
+               || context == UiContext::EDITOR_FILE_OPTIONS;
     }
 
     bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
@@ -351,6 +376,10 @@ namespace
         case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_SCRATCH:
         case fheroes2::thor::UiContext::EDITOR_MAP_SIZE_RANDOM:
             return isEditorMapSizeAction( action );
+        case fheroes2::thor::UiContext::EDITOR_INTERFACE:
+            return isEditorInterfaceAction( action );
+        case fheroes2::thor::UiContext::EDITOR_FILE_OPTIONS:
+            return isEditorFileOptionsAction( action );
         default:
             return false;
         }

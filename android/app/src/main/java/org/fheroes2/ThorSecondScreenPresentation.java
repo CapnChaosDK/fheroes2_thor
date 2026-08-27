@@ -55,6 +55,8 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_EDITOR_NEW_MAP_MENU = 21;
     private static final int CONTEXT_EDITOR_MAP_SIZE_SCRATCH = 22;
     private static final int CONTEXT_EDITOR_MAP_SIZE_RANDOM = 23;
+    private static final int CONTEXT_EDITOR_INTERFACE = 24;
+    private static final int CONTEXT_EDITOR_FILE_OPTIONS = 25;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -164,6 +166,15 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_EDITOR_MAP_SIZE_MEDIUM = 105;
     private static final int ACTION_EDITOR_MAP_SIZE_LARGE = 106;
     private static final int ACTION_EDITOR_MAP_SIZE_EXTRA_LARGE = 107;
+    private static final int ACTION_EDITOR_OPEN_FILE_OPTIONS = 108;
+    private static final int ACTION_EDITOR_FILE_NEW_MAP = 109;
+    private static final int ACTION_EDITOR_FILE_LOAD_MAP = 110;
+    private static final int ACTION_EDITOR_FILE_START_MAP = 111;
+    private static final int ACTION_EDITOR_FILE_SAVE_MAP = 112;
+    private static final int ACTION_EDITOR_FILE_MAIN_MENU = 113;
+    private static final int ACTION_EDITOR_FILE_QUIT = 114;
+    private static final int ACTION_EDITOR_FILE_AUTO_PLAYTEST = 115;
+    private static final int ACTION_EDITOR_FILE_CANCEL = 116;
 
     interface KeySender
     {
@@ -265,7 +276,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_MAP_SIZE_RANDOM ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_FILE_OPTIONS ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
                 return;
@@ -734,6 +745,21 @@ final class ThorSecondScreenPresentation extends Presentation
             case CONTEXT_EDITOR_MAP_SIZE_RANDOM:
                 contextTitle = "RANDOM — MAP SIZE";
                 addEditorMapSizeActions();
+                break;
+            case CONTEXT_EDITOR_INTERFACE:
+                contextTitle = "MAP EDITOR";
+                addAction( "FILE OPTIONS", ACTION_EDITOR_OPEN_FILE_OPTIONS, KeyEvent.KEYCODE_F );
+                break;
+            case CONTEXT_EDITOR_FILE_OPTIONS:
+                contextTitle = "EDITOR — FILE OPTIONS";
+                addAction( "NEW MAP", ACTION_EDITOR_FILE_NEW_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LOAD MAP", ACTION_EDITOR_FILE_LOAD_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "START MAP", ACTION_EDITOR_FILE_START_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SAVE MAP", ACTION_EDITOR_FILE_SAVE_MAP, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MAIN MENU", ACTION_EDITOR_FILE_MAIN_MENU, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "QUIT", ACTION_EDITOR_FILE_QUIT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "AUTO PLAYTEST", ACTION_EDITOR_FILE_AUTO_PLAYTEST, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CANCEL", ACTION_EDITOR_FILE_CANCEL, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_DIALOG:
                 contextTitle = "DIALOG";
