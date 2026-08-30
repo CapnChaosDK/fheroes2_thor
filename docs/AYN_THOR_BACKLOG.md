@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `92621eaeb` is the latest hardware-validated source checkpoint and the `thor-v0.6.0` release source. It adds hero and castle quick-selection lists on top of the validated touch minimap, live Editor map information, and every earlier workflow.
-- Revisioned native snapshots expose current kingdom collections and focus state; selection requests are resolved on the SDL thread through existing focus paths. Android owns only list presentation and paging.
-- Debug APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused list order, status, paging, focus, centering, refresh, Back, movement-gating, rapid-input, minimap, Adventure, dialog, physical-control, touchscreen, mouse, hotkey, and established regression checks.
+- Commit `3bdb1a02086d2e11a7cac86c5da23afc687e16e2` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- This checkpoint adds the Expanded Adventure Map on the lower display. It reuses engine-owned radar pixels and viewport state, adds revisioned current-kingdom hero and settlement markers, selects through native focus paths, and preserves the validated Heroes/Towns lists and normal Adventure restoration.
+- Debug APK SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed focused radar rendering, hero/town selection and centering, empty-map tap and drag navigation, list restoration, Back, compact-minimap, and normal-control checks.
 
 ## Agreed product decisions
 
@@ -677,7 +677,10 @@ The focused Thor validation passed: the expanded radar renders correctly; hero a
 
 ## Next recommended planning point
 
-- Select the next focused command-deck slice from the deferred marker enhancements or interactive second-screen tools, then propose its behavior and manual acceptance tests before implementation.
+- Add fog-aware allied, enemy, and neutral hero and settlement markers to the Expanded Adventure Map as a focused read-only slice.
+- Native code must own object discovery, current-player relations, fog visibility, marker position, and marker category. Android should render only the revisioned visible-marker snapshot and must never infer or retain hidden-object state.
+- Keep current-kingdom markers selectable through the validated focus path. Treat non-owned markers as informational unless a later proposal explicitly establishes a safe native interaction.
+- Before implementation, propose the exact visibility/color behavior and focused manual acceptance tests, then wait for user approval.
 
 ## Milestone 4: interactive second-screen tools
 

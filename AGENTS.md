@@ -17,21 +17,21 @@
 - Release source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
 - Release APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
 - v0.6.0 contains the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, and every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
-- Latest hardware-validated source commit: `92621eaeb`.
-- This checkpoint adds revisioned native hero and settlement lists with paging, current-focus highlighting, direct SDL-thread focus selection, exact Adventure restoration, and stale-input rejection. Its final debug APK SHA-256 is `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- Latest hardware-validated source commit: `3bdb1a02086d2e11a7cac86c5da23afc687e16e2`.
+- This development checkpoint adds the Expanded Adventure Map on the lower display with engine-owned radar rendering, current-kingdom hero and settlement markers, direct native focus selection, tap and drag viewport navigation, validated Heroes/Towns list restoration, and exact Back behavior. Its final debug APK SHA-256 is `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- Hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Validation covers native hero and settlement order, status, focus highlighting, paging, direct selection, upper centering, information and minimap synchronization, live kingdom refresh, Back behavior, movement gating, rapid taps, multitouch, and every previously validated Editor, menu, gameplay, dialog, physical-control, touchscreen, mouse, and hotkey workflow.
-- The latest hardware-validated source implementation is `92621eaeb`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- The Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Expanded-map validation covers radar rendering, current-kingdom hero and town markers, native focus and upper centering, empty-map tap and drag navigation, Heroes/Towns restoration, Back behavior, and compact-minimap/control regression. Earlier validation covers native list ordering, status, paging, rapid input, multitouch, and every previously validated Editor, menu, gameplay, dialog, physical-control, touchscreen, mouse, and hotkey workflow.
+- The latest hardware-validated source implementation is `3bdb1a020`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is hero and castle markers on the touch minimap.
-- Inspect the existing engine-owned radar snapshot, kingdom collections, focus selection, and viewport bridge, then plan a focused marker slice without duplicating positions, ownership, fog, availability, or focus state in Android.
+- The next focused feature planning point is fog-aware allied, enemy, and neutral hero and settlement markers on the Expanded Adventure Map.
+- Inspect the engine-owned radar visibility rules, kingdom relations, world-object collections, and current marker snapshot, then plan a read-only marker slice without duplicating positions, ownership, alliance, fog, or availability state in Android. Hidden objects must never be exposed through the lower-screen snapshot.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
 - Retain the validated quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 

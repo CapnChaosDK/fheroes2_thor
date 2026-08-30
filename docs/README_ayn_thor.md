@@ -126,8 +126,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest hardware-validated source checkpoint is `92621eaeb`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, the complete Editor workflow with live map information, touch-minimap viewport control, and hero and castle quick-selection lists while leaving upstream rendering and gameplay ownership unchanged. Its APK SHA-256 is `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`. The latest published prerelease is [`thor-v0.6.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.6.0), sourced from `92621eaeb`.
+The latest hardware-validated source checkpoint is `3bdb1a020`. It provides the Expanded Adventure Map with engine-owned radar rendering, current-kingdom hero and town markers, native focus selection, and tap/drag viewport navigation on top of semantic controls, read-only information cards, navigable game menus, both campaign selectors, the complete Editor workflow, touch-minimap viewport control, and hero and castle quick-selection lists. Its APK SHA-256 is `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`. The latest published prerelease remains [`thor-v0.6.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.6.0), sourced from `92621eaeb`.
 
-The next focused feature planning point is engine-owned hero and castle markers on the touch minimap. Drag-and-drop army management, configurable layouts, and haptics remain separate later milestones.
+The next focused feature planning point is fog-aware allied, enemy, and neutral hero and settlement markers on the Expanded Adventure Map. Native code must decide relations and visibility so the lower display cannot expose hidden objects; non-owned markers remain informational in the initial slice. Drag-and-drop army management, configurable layouts, and haptics remain separate later milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

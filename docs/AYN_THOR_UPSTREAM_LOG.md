@@ -6,10 +6,10 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.6.0` at `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`
-- Latest hardware-validated source commit: `92621eaeb`
-- Development APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`
+- Latest hardware-validated source commit: `3bdb1a02086d2e11a7cac86c5da23afc687e16e2`
+- Development APK SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`
 - Release APK: `fheroes2-thor-v0.6.0-debug.apk`; SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
-- Hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, the complete Editor workflow, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is engine-owned hero and castle minimap markers.
+- The Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, the complete Editor workflow, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is fog-aware allied, enemy, and neutral markers on the Expanded Adventure Map.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint
