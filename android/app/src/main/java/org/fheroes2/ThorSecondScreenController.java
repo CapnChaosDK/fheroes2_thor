@@ -53,8 +53,13 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                         Log.w( LOG_TAG, "Ignoring an invalid information snapshot revision.", ex );
                     }
                 }
+                final int[] radarSnapshot = activity.getThorRadarSnapshot( radarRevision );
+                if ( radarSnapshot != null && radarSnapshot.length >= 3 ) {
+                    radarRevision = radarSnapshot[2];
+                }
                 ( (ThorSecondScreenPresentation)presentation )
-                    .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot );
+                    .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot,
+                                   activity.isThorViewportControlEnabled(), radarSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -63,6 +68,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private Presentation presentation;
     private boolean isStarted;
     private long informationRevision = -1;
+    private long radarRevision = -1;
 
     ThorSecondScreenController( final GameActivity activity )
     {
@@ -131,8 +137,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         dismissPresentation();
 
         final ThorSecondScreenPresentation newPresentation
-            = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction );
+            = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction,
+                                                activity::enqueueThorViewportRequest );
         informationRevision = -1;
+        radarRevision = -1;
         newPresentation.setOnDismissListener( dialog -> {
             if ( presentation == dialog ) {
                 presentation = null;
@@ -180,6 +188,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
             presentation = null;
         }
         informationRevision = -1;
+        radarRevision = -1;
     }
 
     private void sendKey( final int keyCode, final boolean pressed )

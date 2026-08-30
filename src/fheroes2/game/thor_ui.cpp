@@ -11,7 +11,9 @@
 #include "thor_ui.h"
 
 #include <atomic>
+#include <cmath>
 #include <deque>
+#include <limits>
 #include <mutex>
 #include <utility>
 
@@ -27,6 +29,11 @@ namespace
     std::deque<fheroes2::thor::Action> actionQueue;
     std::mutex informationMutex;
     fheroes2::thor::InformationSnapshot informationSnapshot;
+    std::mutex radarMutex;
+    fheroes2::thor::RadarSnapshot radarSnapshot;
+    std::mutex viewportRequestMutex;
+    fheroes2::thor::ViewportRequest viewportRequest;
+    std::atomic<bool> viewportControlEnabled{ false };
 
     bool isBattleAction( const fheroes2::thor::Action action )
     {
@@ -564,12 +571,19 @@ namespace fheroes2::thor
         if ( previousContext != context ) {
             enabledActions.store( 0, std::memory_order_release );
             actionQueue.clear();
+            viewportControlEnabled.store( false, std::memory_order_release );
+
+            {
+                std::lock_guard<std::mutex> viewportLock( viewportRequestMutex );
+                viewportRequest = {};
+            }
 
             std::lock_guard<std::mutex> informationLock( informationMutex );
             InformationSnapshot emptySnapshot;
             emptySnapshot.context = context;
             emptySnapshot.revision = informationSnapshot.revision + 1;
             informationSnapshot = std::move( emptySnapshot );
+
         }
     }
 
@@ -656,6 +670,81 @@ namespace fheroes2::thor
         informationSnapshot = std::move( snapshot );
     }
 
+    bool getRadarSnapshot( const uint64_t knownRevision, RadarSnapshot & snapshot )
+    {
+        std::lock_guard<std::mutex> lock( radarMutex );
+        if ( radarSnapshot.revision == knownRevision ) {
+            return false;
+        }
+
+        snapshot = radarSnapshot;
+        return true;
+    }
+
+    void publishRadarSnapshot( RadarSnapshot snapshot )
+    {
+        std::lock_guard<std::mutex> lock( radarMutex );
+        if ( radarSnapshot.version == snapshot.version && radarSnapshot.context == snapshot.context && radarSnapshot.width == snapshot.width
+             && radarSnapshot.height == snapshot.height && radarSnapshot.worldWidth == snapshot.worldWidth && radarSnapshot.worldHeight == snapshot.worldHeight
+             && radarSnapshot.viewportX == snapshot.viewportX && radarSnapshot.viewportY == snapshot.viewportY
+             && radarSnapshot.viewportWidth == snapshot.viewportWidth && radarSnapshot.viewportHeight == snapshot.viewportHeight
+             && radarSnapshot.pixels == snapshot.pixels ) {
+            return;
+        }
+
+        snapshot.revision = radarSnapshot.revision + 1;
+        radarSnapshot = std::move( snapshot );
+    }
+
+    bool enqueueViewportRequest( const float normalizedX, const float normalizedY )
+    {
+        if ( !std::isfinite( normalizedX ) || !std::isfinite( normalizedY ) || normalizedX < 0.0F || normalizedX > 1.0F || normalizedY < 0.0F
+             || normalizedY > 1.0F || !isViewportControlEnabled() ) {
+            return false;
+        }
+
+        const UiContext context = getUiContext();
+        if ( context != UiContext::ADVENTURE_MAP && context != UiContext::EDITOR_INTERFACE ) {
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock( viewportRequestMutex );
+        if ( context != getUiContext() || !isViewportControlEnabled() ) {
+            return false;
+        }
+
+        viewportRequest = { context, normalizedX, normalizedY, true };
+        return true;
+    }
+
+    ViewportRequest takeViewportRequest()
+    {
+        std::lock_guard<std::mutex> lock( viewportRequestMutex );
+        ViewportRequest request = viewportRequest;
+        viewportRequest = {};
+        if ( !request.valid || request.context != getUiContext() || !isViewportControlEnabled() ) {
+            return {};
+        }
+
+        return request;
+    }
+
+    bool isViewportControlEnabled()
+    {
+        return viewportControlEnabled.load( std::memory_order_acquire );
+    }
+
+    void setViewportControlEnabled( const bool enabled )
+    {
+        const UiContext context = getUiContext();
+        const bool allowed = enabled && ( context == UiContext::ADVENTURE_MAP || context == UiContext::EDITOR_INTERFACE );
+        viewportControlEnabled.store( allowed, std::memory_order_release );
+        if ( !allowed ) {
+            std::lock_guard<std::mutex> lock( viewportRequestMutex );
+            viewportRequest = {};
+        }
+    }
+
     UiContextGuard::UiContextGuard( const UiContext context )
         : _previousContext( getUiContext() )
     {
@@ -682,6 +771,54 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
 extern "C" JNIEXPORT jlong JNICALL Java_org_fheroes2_GameActivity_nativeGetThorEnabledActionMask( JNIEnv *, jclass )
 {
     return static_cast<jlong>( fheroes2::thor::getEnabledActions() );
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeIsThorViewportControlEnabled( JNIEnv *, jclass )
+{
+    return fheroes2::thor::isViewportControlEnabled() ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorViewportRequest( JNIEnv *, jclass, const jfloat normalizedX,
+                                                                                                         const jfloat normalizedY )
+{
+    return fheroes2::thor::enqueueViewportRequest( normalizedX, normalizedY ) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jintArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorRadarSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    fheroes2::thor::RadarSnapshot snapshot;
+    if ( !fheroes2::thor::getRadarSnapshot( static_cast<uint64_t>( knownRevision ), snapshot ) ) {
+        return nullptr;
+    }
+
+    constexpr jsize headerSize = 12;
+    const size_t pixelCount = snapshot.pixels.size();
+    if ( pixelCount > static_cast<size_t>( std::numeric_limits<jsize>::max() - headerSize ) ) {
+        return nullptr;
+    }
+
+    std::vector<jint> values( headerSize + pixelCount );
+    values[0] = snapshot.version;
+    values[1] = static_cast<jint>( snapshot.context );
+    values[2] = static_cast<jint>( snapshot.revision );
+    values[3] = snapshot.width;
+    values[4] = snapshot.height;
+    values[5] = snapshot.worldWidth;
+    values[6] = snapshot.worldHeight;
+    values[7] = snapshot.viewportX;
+    values[8] = snapshot.viewportY;
+    values[9] = snapshot.viewportWidth;
+    values[10] = snapshot.viewportHeight;
+    values[11] = static_cast<jint>( pixelCount );
+    for ( size_t index = 0; index < pixelCount; ++index ) {
+        values[headerSize + index] = static_cast<jint>( snapshot.pixels[index] );
+    }
+
+    jintArray result = env->NewIntArray( static_cast<jsize>( values.size() ) );
+    if ( result != nullptr ) {
+        env->SetIntArrayRegion( result, 0, static_cast<jsize>( values.size() ), values.data() );
+    }
+    return result;
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorInformationSnapshot( JNIEnv * env, jclass, const jlong knownRevision )

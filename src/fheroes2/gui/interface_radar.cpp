@@ -23,6 +23,7 @@
 
 #include "interface_radar.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 
@@ -34,6 +35,7 @@
 #include "icn.h"
 #include "interface_base.h"
 #include "interface_gamearea.h"
+#include "image_palette.h"
 #include "localevent.h"
 #include "maps_tiles.h"
 #include "mp2.h"
@@ -41,6 +43,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "translations.h"
+#include "thor_ui.h"
 #include "ui_constants.h"
 #include "ui_dialog.h"
 #include "world.h"
@@ -224,6 +227,15 @@ void Interface::Radar::_redraw( const bool redrawMapObjects )
 
             // Force set radar ROI for the whole world to be prepared to fully update radar when it will be shown.
             _roi = { 0, 0, world.w(), world.h() };
+
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+            if ( fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::ADVENTURE_MAP ) {
+                if ( redrawMapObjects ) {
+                    RedrawObjects( Players::FriendColors(), ViewWorldMode::OnlyVisible );
+                }
+                publishThorSnapshot();
+            }
+#endif
             return;
         }
     }
@@ -247,6 +259,7 @@ void Interface::Radar::_redraw( const bool redrawMapObjects )
 
         _cursorArea.show();
         RedrawCursor();
+        publishThorSnapshot();
     }
 }
 
@@ -278,6 +291,62 @@ void Interface::Radar::redrawForEditor( const bool renderMapObjects )
 
     _cursorArea.show();
     RedrawCursor();
+    publishThorSnapshot();
+}
+
+bool Interface::Radar::SetCenterFromNormalizedPosition( const float normalizedX, const float normalizedY )
+{
+    if ( world.w() < 1 || world.h() < 1 ) {
+        return false;
+    }
+
+    GameArea & gameArea = _interface.getGameArea();
+    const fheroes2::Rect previousVisibleRoi = gameArea.GetVisibleTileROI();
+    const float clampedX = std::clamp( normalizedX, 0.0F, 1.0F );
+    const float clampedY = std::clamp( normalizedY, 0.0F, 1.0F );
+    gameArea.SetCenter( { static_cast<int32_t>( clampedX * world.w() ), static_cast<int32_t>( clampedY * world.h() ) } );
+
+    const fheroes2::Rect visibleRoi = gameArea.GetVisibleTileROI();
+    if ( visibleRoi.x == previousVisibleRoi.x && visibleRoi.y == previousVisibleRoi.y ) {
+        return false;
+    }
+
+    _interface.setRedraw( REDRAW_RADAR_CURSOR );
+    gameArea.SetRedraw();
+    return true;
+}
+
+void Interface::Radar::publishThorSnapshot() const
+{
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+    const fheroes2::thor::UiContext context = fheroes2::thor::getUiContext();
+    if ( context != fheroes2::thor::UiContext::ADVENTURE_MAP && context != fheroes2::thor::UiContext::EDITOR_INTERFACE ) {
+        return;
+    }
+
+    fheroes2::thor::RadarSnapshot snapshot;
+    snapshot.context = context;
+    snapshot.width = _map.width();
+    snapshot.height = _map.height();
+    snapshot.worldWidth = world.w();
+    snapshot.worldHeight = world.h();
+
+    const fheroes2::Rect visibleRoi = _interface.getGameArea().GetVisibleTileROI();
+    snapshot.viewportX = visibleRoi.x;
+    snapshot.viewportY = visibleRoi.y;
+    snapshot.viewportWidth = visibleRoi.width;
+    snapshot.viewportHeight = visibleRoi.height;
+
+    const size_t pixelCount = static_cast<size_t>( snapshot.width ) * snapshot.height;
+    snapshot.pixels.resize( pixelCount );
+    const uint8_t * indexedPixels = _map.image();
+    const auto palette = fheroes2::getNormalizedRGBGamePalette();
+    for ( size_t index = 0; index < pixelCount; ++index ) {
+        snapshot.pixels[index] = palette[indexedPixels[index]].getBGRA();
+    }
+
+    fheroes2::thor::publishRadarSnapshot( std::move( snapshot ) );
+#endif
 }
 
 void Interface::Radar::RedrawObjects( const PlayerColorsSet playerColor, const ViewWorldMode flags )

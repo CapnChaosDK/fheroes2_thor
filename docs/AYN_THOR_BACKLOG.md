@@ -583,6 +583,27 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five map-information checks passed on the Thor, including map metadata, tile and object descriptions, live edit and Undo/Redo refresh, exact information-card restoration, rapid pointer movement, lower-screen actions, and physical, touchscreen, mouse, hotkey, and established Editor regressions.
 
+### Touch minimap viewport control
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-30.
+
+- The Adventure Map and base Map Editor information panels add a lower-screen minimap beside their existing information cards. The minimap uses a revisioned copy of the engine-owned radar pixels and visible-tile ROI, preserving native fog, terrain, object, ownership, and viewport rules without Android-owned map interpretation.
+- A single-finger tap or drag submits normalized coordinates to a coalescing native mailbox. The SDL thread consumes only the newest request and recenters through the existing `GameArea` path; lower input never selects a tile, plots a route, changes focus, moves a hero, or edits the map.
+- Viewport requests are accepted only in the live Adventure Map and base Editor contexts. They are cleared across context changes, disabled during hero movement, and rejected for stale contexts, cancellation, and multitouch.
+- The minimap remains synchronized with upper scrolling, radar redraws, fog and object changes, Editor edits, and Undo/Redo. Existing command buttons, information cards, modal restoration, and physical, upper-touchscreen, mouse, and hotkey paths remain unchanged.
+- Hero and castle quick-selection markers, zoom gestures, haptics, configurable layouts, and other richer interactive tools remain deferred.
+- Android build and lint passed through the required short `R:` mapping on 2026-08-30. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `5259ED2DD2E2EE109ACC4CFC9AAC773BEF4CA9633A13638565685888583BC31C`.
+
+#### Focused touch minimap validation
+
+1. On representative Adventure maps, compare terrain, fog, ownership colors, and the viewport outline with the upper radar. Scroll and change focused heroes and towns to verify synchronization.
+2. Tap the center, edges, and corners, then drag across the minimap. Verify accurate clamped camera movement without tile selection, route creation, hero movement, or focus changes.
+3. In newly created and loaded Editor maps of different sizes, pan from the lower minimap and verify edits plus Undo/Redo update it without changing the active tool.
+4. Open Hero, Castle, File and System Options, Map Specifications, Editor Tools, selectors, help, and dialogs. Verify minimap input is unavailable there and returns correctly afterward.
+5. Exercise rapid drags, multitouch, cancelled touches, upper radar hide/show, physical controls, upper touchscreen, mouse, hotkeys, and established Adventure and Editor workflows without regression.
+
+All five touch-minimap checks passed on the Thor, including Adventure radar fidelity and viewport synchronization, clamped tap and drag navigation without gameplay side effects, Editor editing and Undo/Redo synchronization, exact context restoration and input gating, rapid drag, multitouch, cancellation, upper-radar visibility, physical-control, touchscreen, mouse, hotkey, and established Adventure and Editor regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -609,13 +630,13 @@ All five map-information checks passed on the Thor, including map metadata, tile
 
 ## Next recommended planning point
 
-- Plan touch radar or minimap viewport control as the next focused slice while preserving every validated gameplay, menu, information-card, and Editor workflow.
+- Plan hero and castle quick-selection lists as a separate focused slice while preserving every validated gameplay, menu, information-card, Editor, and minimap workflow.
 
 ## Milestone 4: interactive second-screen tools
 
 Status: `deferred`
 
-- Touch radar or minimap with upper-screen viewport control.
+- Touch radar or minimap with upper-screen viewport control is hardware-validated; retain it without regression.
 - Hero and castle quick-selection lists.
 - Optional drag-and-drop army management after semantic actions are proven safe.
 - Configurable layouts, button sizing, left/right-handed modes, and controls-only battery-saving mode.

@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace fheroes2::thor
 {
@@ -293,6 +294,32 @@ namespace fheroes2::thor
         std::string resources;
     };
 
+    struct RadarSnapshot
+    {
+        static constexpr int32_t currentVersion = 1;
+
+        int32_t version{ currentVersion };
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        int32_t width{ 0 };
+        int32_t height{ 0 };
+        int32_t worldWidth{ 0 };
+        int32_t worldHeight{ 0 };
+        int32_t viewportX{ 0 };
+        int32_t viewportY{ 0 };
+        int32_t viewportWidth{ 0 };
+        int32_t viewportHeight{ 0 };
+        std::vector<uint32_t> pixels;
+    };
+
+    struct ViewportRequest
+    {
+        UiContext context{ UiContext::FALLBACK };
+        float normalizedX{ 0.0F };
+        float normalizedY{ 0.0F };
+        bool valid{ false };
+    };
+
     constexpr int32_t actionMaskBit( const Action action )
     {
         const int32_t actionId = static_cast<int32_t>( action );
@@ -323,6 +350,15 @@ namespace fheroes2::thor
     void setEnabledActions( ActionMask actions );
     InformationSnapshot getInformationSnapshot();
     void publishInformationSnapshot( InformationSnapshot snapshot );
+    bool getRadarSnapshot( uint64_t knownRevision, RadarSnapshot & snapshot );
+    void publishRadarSnapshot( RadarSnapshot snapshot );
+
+    // Lower-screen pointer movement is coalesced into one latest-position request. The SDL
+    // thread remains the sole owner of viewport changes and rejects requests after context changes.
+    bool enqueueViewportRequest( float normalizedX, float normalizedY );
+    ViewportRequest takeViewportRequest();
+    bool isViewportControlEnabled();
+    void setViewportControlEnabled( bool enabled );
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

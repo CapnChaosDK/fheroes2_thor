@@ -75,6 +75,9 @@ namespace Interface
         void QueueEventProcessing();
         bool QueueEventProcessingForWorldView( ViewWorld::ZoomROIs & roi ) const;
 
+        // Recenter the engine-owned viewport from normalized radar coordinates.
+        bool SetCenterFromNormalizedPosition( float normalizedX, float normalizedY );
+
         // Do not call this method directly, use Interface::AdventureMap::redraw() instead to avoid issues in the "no interface" mode.
         // The name of this method starts from _ on purpose to do not mix with other public methods.
         void _redraw( const bool redrawMapObjects );
@@ -91,6 +94,7 @@ namespace Interface
 
         void RedrawObjects( const PlayerColorsSet playerColor, const ViewWorldMode flags );
         void RedrawCursor( const fheroes2::Rect * roiRectangle = nullptr );
+        void publishThorSnapshot() const;
 
         RadarType _radarType;
         BaseInterface & _interface;

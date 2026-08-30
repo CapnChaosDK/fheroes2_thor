@@ -15,6 +15,7 @@ import java.util.List;
 
 import android.app.Presentation;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -295,15 +296,23 @@ final class ThorSecondScreenPresentation extends Presentation
         boolean send( int action );
     }
 
+    interface ViewportSender
+    {
+        boolean send( float normalizedX, float normalizedY );
+    }
+
     private final KeySender keySender;
     private final ActionSender actionSender;
+    private final ViewportSender viewportSender;
     private CommandDeckView commandDeckView;
 
-    ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender )
+    ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender,
+                                  final ViewportSender viewportSender )
     {
         super( context, display );
         this.keySender = keySender;
         this.actionSender = actionSender;
+        this.viewportSender = viewportSender;
     }
 
     @Override
@@ -320,7 +329,7 @@ final class ThorSecondScreenPresentation extends Presentation
             window.getDecorView().setSystemUiVisibility( View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY );
         }
 
-        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender );
+        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender, viewportSender );
         setContentView( commandDeckView );
     }
 
@@ -333,10 +342,11 @@ final class ThorSecondScreenPresentation extends Presentation
         super.onStop();
     }
 
-    void setGameState( final int context, final long enabledActions, final String[] informationSnapshot )
+    void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled,
+                       final int[] radarSnapshot )
     {
         if ( commandDeckView != null ) {
-            commandDeckView.setGameState( context, enabledActions, informationSnapshot );
+            commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot );
         }
     }
 
@@ -357,6 +367,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private final KeySender keySender;
         private final ActionSender actionSender;
+        private final ViewportSender viewportSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -371,35 +382,85 @@ final class ThorSecondScreenPresentation extends Presentation
         private String informationDetail = "";
         private String informationDate = "";
         private String informationResources = "";
+        private final RectF radarBounds = new RectF();
+        private Bitmap radarBitmap;
+        private int radarContext = -1;
+        private long radarRevision = -1;
+        private int radarWorldWidth;
+        private int radarWorldHeight;
+        private int radarViewportX;
+        private int radarViewportY;
+        private int radarViewportWidth;
+        private int radarViewportHeight;
+        private boolean viewportControlEnabled;
+        private boolean radarGestureActive;
 
-        CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender )
+        CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender )
         {
             super( context );
             this.keySender = keySender;
             this.actionSender = actionSender;
+            this.viewportSender = viewportSender;
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L, null );
+            setGameState( CONTEXT_FALLBACK, -1L, null, false, null );
         }
 
-        void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot )
+        void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot,
+                           final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot )
         {
             final int context
                 = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_TOOL_ERASE ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
-            if ( gameContext == context && enabledActions == requestedEnabledActions && !informationChanged ) {
+            final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
+            if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled
+                 && !informationChanged && !radarChanged ) {
                 return;
             }
 
-            releasePressedButton();
             final boolean contextChanged = gameContext != context;
+            if ( contextChanged || enabledActions != requestedEnabledActions || ( viewportControlEnabled && !requestedViewportControlEnabled ) ) {
+                releasePressedButton();
+            }
             gameContext = context;
             enabledActions = requestedEnabledActions;
+            viewportControlEnabled = requestedViewportControlEnabled;
+            if ( !viewportControlEnabled ) {
+                radarGestureActive = false;
+            }
             if ( contextChanged || ( informationChanged && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP ) ) ) {
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
             }
             invalidate();
+        }
+
+        private boolean applyRadarSnapshot( final int[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 12 || snapshot[0] != 1 || snapshot[2] == radarRevision ) {
+                return false;
+            }
+
+            radarRevision = snapshot[2];
+            radarContext = snapshot[1];
+            final int width = snapshot[3];
+            final int height = snapshot[4];
+            final int pixelCount = snapshot[11];
+            if ( width <= 0 || height <= 0 || pixelCount != width * height || snapshot.length != 12 + pixelCount ) {
+                radarBitmap = null;
+                radarWorldWidth = 0;
+                radarWorldHeight = 0;
+                return true;
+            }
+
+            radarWorldWidth = snapshot[5];
+            radarWorldHeight = snapshot[6];
+            radarViewportX = snapshot[7];
+            radarViewportY = snapshot[8];
+            radarViewportWidth = snapshot[9];
+            radarViewportHeight = snapshot[10];
+            radarBitmap = Bitmap.createBitmap( snapshot, 12, width, width, height, Bitmap.Config.ARGB_8888 );
+            return true;
         }
 
         private boolean applyInformationSnapshot( final String[] snapshot )
@@ -488,6 +549,17 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setColor( PANEL_INNER_COLOR );
             canvas.drawRoundRect( new RectF( innerPanel.left + 3, innerPanel.top + 3, innerPanel.right - 3, innerPanel.bottom - 3 ), 10, 10, paint );
 
+            final RectF informationPanel = new RectF( innerPanel );
+            if ( hasRadarSnapshot() ) {
+                final float radarSize = innerPanel.height() - 16f;
+                radarBounds.set( innerPanel.left + 8f, innerPanel.top + 8f, innerPanel.left + 8f + radarSize, innerPanel.top + 8f + radarSize );
+                drawRadar( canvas );
+                informationPanel.left = radarBounds.right + 20f;
+            }
+            else {
+                radarBounds.setEmpty();
+            }
+
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
                    || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS
                    || gameContext == CONTEXT_EDITOR_INTERFACE || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
@@ -495,10 +567,10 @@ final class ThorSecondScreenPresentation extends Presentation
                    || gameContext == CONTEXT_EDITOR_MAP_SPEC_LOSS || ( gameContext >= CONTEXT_EDITOR_TOOLS && gameContext <= CONTEXT_EDITOR_TOOL_ERASE ) )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
                 if ( gameContext == CONTEXT_BATTLE ) {
-                    drawBattleInformationCard( canvas, innerPanel );
+                    drawBattleInformationCard( canvas, informationPanel );
                 }
                 else {
-                    drawInformationCard( canvas, innerPanel );
+                    drawInformationCard( canvas, informationPanel );
                 }
             }
             else {
@@ -635,12 +707,20 @@ final class ThorSecondScreenPresentation extends Presentation
         @Override
         public boolean onTouchEvent( final MotionEvent event )
         {
-            if ( event.getActionIndex() != 0 ) {
+            final int action = event.getActionMasked();
+            if ( action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_POINTER_UP ) {
+                radarGestureActive = false;
+                releasePressedButton();
                 return true;
             }
 
-            final int action = event.getActionMasked();
             if ( action == MotionEvent.ACTION_DOWN ) {
+                if ( event.getPointerCount() == 1 && viewportControlEnabled && hasRadarSnapshot()
+                     && radarBounds.contains( event.getX(), event.getY() ) ) {
+                    radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
+                    return true;
+                }
+
                 pressedButton = buttonAt( event.getX(), event.getY() );
                 if ( pressedButton != null ) {
                     pressedButton.sentSemantically = pressedButton.action != ACTION_NONE && actionSender.send( pressedButton.action );
@@ -653,6 +733,16 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( action == MotionEvent.ACTION_MOVE ) {
+                if ( radarGestureActive ) {
+                    if ( event.getPointerCount() == 1 ) {
+                        radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
+                    }
+                    else {
+                        radarGestureActive = false;
+                    }
+                    return true;
+                }
+
                 if ( pressedButton != null && !pressedButton.bounds.contains( event.getX(), event.getY() ) ) {
                     releasePressedButton();
                 }
@@ -660,11 +750,23 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ) {
+                radarGestureActive = false;
                 releasePressedButton();
                 return true;
             }
 
             return true;
+        }
+
+        private boolean sendViewportRequest( final float x, final float y )
+        {
+            if ( radarBounds.isEmpty() || !viewportControlEnabled ) {
+                return false;
+            }
+
+            final float normalizedX = Math.max( 0f, Math.min( 1f, ( x - radarBounds.left ) / radarBounds.width() ) );
+            final float normalizedY = Math.max( 0f, Math.min( 1f, ( y - radarBounds.top ) / radarBounds.height() ) );
+            return viewportSender.send( normalizedX, normalizedY );
         }
 
         private void rebuildActions()
@@ -1044,6 +1146,37 @@ final class ThorSecondScreenPresentation extends Presentation
             addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
         }
 
+        private boolean hasRadarSnapshot()
+        {
+            return ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_EDITOR_INTERFACE ) && radarContext == gameContext && radarBitmap != null
+                   && radarWorldWidth > 0 && radarWorldHeight > 0;
+        }
+
+        private void drawRadar( final Canvas canvas )
+        {
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( Color.BLACK );
+            canvas.drawRect( radarBounds, paint );
+            paint.setFilterBitmap( false );
+            canvas.drawBitmap( radarBitmap, null, radarBounds, paint );
+
+            final float viewportLeft = Math.max( 0, radarViewportX ) / (float)radarWorldWidth;
+            final float viewportTop = Math.max( 0, radarViewportY ) / (float)radarWorldHeight;
+            final float viewportRight = Math.min( radarWorldWidth, radarViewportX + radarViewportWidth ) / (float)radarWorldWidth;
+            final float viewportBottom = Math.min( radarWorldHeight, radarViewportY + radarViewportHeight ) / (float)radarWorldHeight;
+            final RectF viewport = new RectF( radarBounds.left + viewportLeft * radarBounds.width(), radarBounds.top + viewportTop * radarBounds.height(),
+                                              radarBounds.left + viewportRight * radarBounds.width(), radarBounds.top + viewportBottom * radarBounds.height() );
+
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 4f );
+            paint.setColor( Color.WHITE );
+            canvas.drawRect( viewport, paint );
+            paint.setStrokeWidth( 3f );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            canvas.drawRect( radarBounds, paint );
+            paint.setStyle( Paint.Style.FILL );
+        }
+
         private void addBrushActions()
         {
             addAction( "1 × 1", ACTION_EDITOR_BRUSH_SMALL, KeyEvent.KEYCODE_UNKNOWN );
@@ -1127,6 +1260,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void releasePressedButton()
         {
+            radarGestureActive = false;
             if ( pressedButton != null ) {
                 if ( !pressedButton.sentSemantically ) {
                     keySender.send( pressedButton.keyCode, false );

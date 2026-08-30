@@ -1180,6 +1180,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
     };
 
     publishThorInformation();
+    fheroes2::thor::setViewportControlEnabled( true );
 
     while ( res == fheroes2::GameMode::CANCEL ) {
         if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
@@ -1193,6 +1194,11 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         }
 
         publishThorInformation();
+        fheroes2::thor::setViewportControlEnabled( !isHeroMoving );
+        const fheroes2::thor::ViewportRequest thorViewportRequest = fheroes2::thor::takeViewportRequest();
+        if ( thorViewportRequest.valid ) {
+            _radar.SetCenterFromNormalizedPosition( thorViewportRequest.normalizedX, thorViewportRequest.normalizedY );
+        }
 
 #if defined( WITH_DEBUG )
         {
@@ -1741,6 +1747,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         }
     }
 
+    fheroes2::thor::setViewportControlEnabled( false );
     fheroes2::thor::setEnabledActions( 0 );
     return res;
 }

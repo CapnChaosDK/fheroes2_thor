@@ -130,6 +130,7 @@ namespace
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_TOOLS ) );
+        fheroes2::thor::setViewportControlEnabled( true );
 
         fheroes2::thor::InformationSnapshot snapshot;
         snapshot.context = fheroes2::thor::UiContext::EDITOR_INTERFACE;
@@ -1629,6 +1630,11 @@ namespace Interface
                 }
 
                 continue;
+            }
+
+            const fheroes2::thor::ViewportRequest thorViewportRequest = fheroes2::thor::takeViewportRequest();
+            if ( thorViewportRequest.valid ) {
+                _radar.SetCenterFromNormalizedPosition( thorViewportRequest.normalizedX, thorViewportRequest.normalizedY );
             }
 
             const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
