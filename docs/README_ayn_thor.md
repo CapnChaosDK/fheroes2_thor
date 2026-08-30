@@ -123,8 +123,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest hardware-validated source checkpoint is `601eb7ef5` and is published as prerelease [`thor-v0.5.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.5.0). It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the Editor pre-entry, File Options, System Options, Map Specifications, and Editor Tools workflows while leaving upstream rendering unchanged. The release APK is `fheroes2-thor-v0.5.0-debug.apk`; SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+The latest hardware-validated source checkpoint is `f997f90a0`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the complete Editor workflow with live map, tile, and object information while leaving upstream rendering unchanged. Its development APK SHA-256 is `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`. The latest published prerelease remains [`thor-v0.5.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.5.0), sourced from `601eb7ef5`.
 
-The next focused feature planning point is richer map information. Touch radar, hero quick-selection, and drag-and-drop army management remain separate later milestones.
+The next focused feature planning point is touch radar or minimap viewport control. Hero quick-selection and drag-and-drop army management remain separate later milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

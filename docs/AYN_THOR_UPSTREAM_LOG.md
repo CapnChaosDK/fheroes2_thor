@@ -6,10 +6,10 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.5.0` at `601eb7ef5139a9922426417e27b1c5f60e061db3`
-- Latest hardware-validated source commit: `601eb7ef5`
-- Development APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`
-- Release APK: `fheroes2-thor-v0.5.0-debug.apk` with the same SHA-256.
-- Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is richer map information.
+- Latest hardware-validated source commit: `f997f90a0`
+- Development APK SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`
+- Release APK: `fheroes2-thor-v0.5.0-debug.apk`; SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is touch radar or minimap viewport control.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

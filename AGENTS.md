@@ -17,30 +17,30 @@
 - Release source commit: `601eb7ef5139a9922426417e27b1c5f60e061db3`.
 - Release APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
 - v0.5.0 contains the hardware-validated Battle Only setup, High Scores, both campaign selectors, Game Settings, and complete Map Editor workflow: pre-entry, map creation/loading, File Options, System Options, transactional Map Specifications, and all nine Editor Tools.
-- Latest hardware-validated source commit: `601eb7ef5`.
-- This checkpoint adds the navigable in-map Editor Tools hierarchy on top of every previously validated menu, gameplay-control, information-card, and Editor workflow. Its final debug APK SHA-256 is `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- Latest hardware-validated source commit: `f997f90a0`.
+- This checkpoint adds live read-only in-map Editor map information on top of every previously validated menu, gameplay-control, information-card, and Editor workflow. Its final debug APK SHA-256 is `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, all nine native tool modes, terrain and brush selection, object selectors and placement, Detail Edit/Move/Copy, erase filters, Magnify, live Undo/Redo availability, information synchronization, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
-- The latest hardware-validated source implementation is `601eb7ef5`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
+- Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, all nine native tool modes, terrain and brush selection, object selectors and placement, Detail Edit/Move/Copy, erase filters, Magnify, live Undo/Redo availability, map metadata, tile and object descriptions, live information refresh, persisted configuration, language availability, rapid taps, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
+- The latest hardware-validated source implementation is `f997f90a0`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is richer map information.
-- Inspect the existing Editor map state and information-card bridge, then plan a focused read-only lower-screen information slice without duplicating editor-owned state, validation, or rendering logic.
+- The next focused feature planning point is touch radar or minimap viewport control.
+- Inspect the existing native radar, viewport-coordinate conversion, and dual-screen input bridge, then plan a focused navigation slice without duplicating engine-owned map state, movement rules, or rendering logic.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Retain the validated Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 
 - Always build through a short temporary drive mapping. The full Windows path can exceed the Android NDK path limit while creating `*.cflags.tmp` files.
 - Known local tools:
   - Android SDK: `C:\Users\steen\AppData\Local\Android\Sdk`
-  - JDK 17: `C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17\jdk-17.0.20.1+1`
+  - JDK 17: `C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-full\jdk-17.0.20.1+1`
   - ADB: `C:\Users\steen\AppData\Local\Android\Sdk\platform-tools\adb.exe`
 - Repeatable build from the repository root:
 
@@ -49,7 +49,7 @@
   subst.exe R: $thorRoot
   try {
       Set-Location R:\android
-      $env:JAVA_HOME = 'C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17\jdk-17.0.20.1+1'
+      $env:JAVA_HOME = 'C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-full\jdk-17.0.20.1+1'
       $env:ANDROID_HOME = 'C:\Users\steen\AppData\Local\Android\Sdk'
       .\gradlew.bat --no-daemon :app:assembleDebug :app:lintDebug
   }

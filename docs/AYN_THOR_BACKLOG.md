@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `601eb7ef5` is the latest hardware-validated source checkpoint and the source of `thor-v0.5.0`. It adds in-map Editor Tools on top of the validated Editor pre-entry hierarchy, File Options, System Options, Map Specifications, Game Settings, both campaign selectors, Battle Only setup, High Scores, and earlier releases.
-- Editor Tools exposes all nine native tool modes, their terrain, brush, object, Detail, and Erase options, Magnify, and live Undo/Redo availability while keeping placement, dragging, area selection, editing, moving, copying, validation, erasure, and history engine-owned.
-- Debug APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused tool synchronization, placement, history, selector-restoration, rapid-tap, input, and regression checks.
+- Commit `f997f90a0` is the latest hardware-validated source checkpoint. It adds live read-only in-map Editor map information on top of the `thor-v0.5.0` Editor Tools release and every earlier validated workflow.
+- The base Editor card shows map name, dimensions, difficulty, player count, live tile coordinates and terrain, and the same engine-owned object descriptions used by the right-click popup. Identical snapshots are deduplicated, and editing, validation, history, and rendering remain engine-owned.
+- Debug APK SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused metadata, tile/object description, edit/Undo/Redo refresh, card-restoration, rapid-pointer, input, and established Editor regression checks.
 
 ## Agreed product decisions
 
@@ -589,7 +589,7 @@ All five map-information checks passed on the Thor, including map metadata, tile
 - The Succession Wars and Price of Loyalty selectors are hardware-validated. Retain their selection behavior, missing-video handling, hover-driven animations, Back semantics, and physical-input compatibility without regression.
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
-- In-map Editor File Options, System Options, Map Specifications, and Editor Tools are hardware-validated; richer map information remains a separate later slice.
+- In-map Editor File Options, System Options, Map Specifications, Editor Tools, and live map information are hardware-validated.
 - A safe Menu fallback for an unknown or newly added upstream menu state.
 
 ### Acceptance criteria
@@ -606,6 +606,10 @@ All five map-information checks passed on the Thor, including map metadata, tile
 - Give the user a short, focused hardware checklist and wait for their manual results before recording validation or publishing a checkpoint.
 - Avoid extended ADB-driven UI navigation, repeated screenshots, and exhaustive automated device interaction unless the user explicitly asks for it or a reported failure needs targeted diagnosis. This keeps validation efficient and avoids excessive token use.
 - Preserve previously validated behavior through focused regression items rather than replaying every earlier workflow automatically.
+
+## Next recommended planning point
+
+- Plan touch radar or minimap viewport control as the next focused slice while preserving every validated gameplay, menu, information-card, and Editor workflow.
 
 ## Milestone 4: interactive second-screen tools
 
