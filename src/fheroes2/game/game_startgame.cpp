@@ -1115,7 +1115,8 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_OPTIONS )
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_PUZZLE_MAP )
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_KINGDOM_SUMMARY )
-                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_VIEW_WORLD );
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_VIEW_WORLD )
+                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPEN_MAP_OVERVIEW );
 
         const VecHeroes & heroes = myKingdom.GetHeroes();
         if ( std::any_of( heroes.begin(), heroes.end(), []( const Heroes * hero ) {
@@ -1187,7 +1188,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         fheroes2::thor::SelectionSnapshot snapshot;
         snapshot.context = context;
 
-        if ( context == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST ) {
+        if ( context == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST || context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
             const Heroes * focusedHero = GetFocusHeroes();
             for ( const Heroes * hero : myKingdom.GetHeroes() ) {
                 assert( hero != nullptr );
@@ -1197,10 +1198,14 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 entry.detail = hero->Modes( Heroes::SLEEPER ) ? "SLEEPING" : "AWAKE";
                 entry.detail += "  |  MOVE " + std::to_string( hero->GetMovePoints() ) + " / " + std::to_string( hero->GetMaxMovePoints() );
                 entry.selected = hero == focusedHero;
+                entry.kind = fheroes2::thor::SelectionEntry::Kind::HERO;
+                entry.x = hero->GetCenter().x;
+                entry.y = hero->GetCenter().y;
                 snapshot.entries.emplace_back( std::move( entry ) );
             }
         }
-        else if ( context == fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST ) {
+
+        if ( context == fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST || context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
             const Castle * focusedCastle = GetFocusCastle();
             for ( const Castle * castle : myKingdom.GetCastles() ) {
                 assert( castle != nullptr );
@@ -1209,6 +1214,9 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 entry.name = castle->GetName();
                 entry.detail = castle->isCastle() ? "CASTLE" : "TOWN";
                 entry.selected = castle == focusedCastle;
+                entry.kind = fheroes2::thor::SelectionEntry::Kind::CASTLE;
+                entry.x = castle->GetCenter().x;
+                entry.y = castle->GetCenter().y;
                 snapshot.entries.emplace_back( std::move( entry ) );
             }
         }
@@ -1218,6 +1226,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
 
     publishThorInformation();
     fheroes2::thor::setViewportControlEnabled( true );
+    fheroes2::thor::UiContext selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP;
 
     while ( res == fheroes2::GameMode::CANCEL ) {
         if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
@@ -1238,7 +1247,8 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
             bool closeSelection = false;
             const fheroes2::thor::SelectionRequest selectionRequest = fheroes2::thor::takeSelectionRequest();
             if ( selectionRequest.valid ) {
-                if ( thorContext == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST ) {
+                if ( thorContext == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST
+                     && selectionRequest.kind == fheroes2::thor::SelectionEntry::Kind::HERO ) {
                     const VecHeroes & heroes = myKingdom.GetHeroes();
                     const auto hero = std::find_if( heroes.begin(), heroes.end(), [&selectionRequest]( const Heroes * value ) {
                         return value != nullptr && value->GetID() == selectionRequest.id;
@@ -1249,7 +1259,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                         closeSelection = true;
                     }
                 }
-                else {
+                else if ( selectionRequest.kind == fheroes2::thor::SelectionEntry::Kind::CASTLE ) {
                     const VecCastles & castles = myKingdom.GetCastles();
                     const auto castle = std::find_if( castles.begin(), castles.end(), [&selectionRequest]( const Castle * value ) {
                         return value != nullptr && value->GetIndex() == selectionRequest.id;
@@ -1268,13 +1278,50 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
             }
 
             if ( closeSelection ) {
-                fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_MAP );
-                publishThorInformation();
+                fheroes2::thor::setUiContext( selectionReturnContext );
+                if ( selectionReturnContext == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
+                    publishThorSelection( selectionReturnContext );
+                    _radar.SetRedraw( REDRAW_RADAR );
+                }
+                else {
+                    publishThorInformation();
+                }
             }
             continue;
         }
 
-        publishThorInformation();
+        const bool isThorOverview = thorContext == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW;
+        if ( isThorOverview ) {
+            publishThorSelection( thorContext );
+            const fheroes2::thor::SelectionRequest selectionRequest = fheroes2::thor::takeSelectionRequest();
+            if ( selectionRequest.valid ) {
+                if ( selectionRequest.kind == fheroes2::thor::SelectionEntry::Kind::HERO ) {
+                    const VecHeroes & heroes = myKingdom.GetHeroes();
+                    const auto hero = std::find_if( heroes.begin(), heroes.end(), [&selectionRequest]( const Heroes * value ) {
+                        return value != nullptr && value->GetID() == selectionRequest.id;
+                    } );
+                    if ( hero != heroes.end() ) {
+                        SetFocus( *hero, false );
+                        RedrawFocus();
+                    }
+                }
+                else {
+                    const VecCastles & castles = myKingdom.GetCastles();
+                    const auto castle = std::find_if( castles.begin(), castles.end(), [&selectionRequest]( const Castle * value ) {
+                        return value != nullptr && value->GetIndex() == selectionRequest.id;
+                    } );
+                    if ( castle != castles.end() ) {
+                        SetFocus( *castle );
+                        RedrawFocus();
+                    }
+                }
+                publishThorSelection( thorContext );
+            }
+        }
+
+        if ( !isThorOverview ) {
+            publishThorInformation();
+        }
         fheroes2::thor::setViewportControlEnabled( !isHeroMoving );
         const fheroes2::thor::ViewportRequest thorViewportRequest = fheroes2::thor::takeViewportRequest();
         if ( thorViewportRequest.valid ) {
@@ -1310,7 +1357,11 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
             }
         }
         else {
-            fheroes2::thor::setEnabledActions( getEnabledThorActions() );
+            const fheroes2::thor::ActionMask overviewActions
+                = fheroes2::thor::actionMask( ThorAction::ADVENTURE_OVERVIEW_OPEN_HERO_LIST )
+                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST )
+                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OVERVIEW_BACK );
+            fheroes2::thor::setEnabledActions( isThorOverview ? overviewActions : getEnabledThorActions() );
             requestedThorAction = fheroes2::thor::takeAction();
 
             if ( requestedThorAction != ThorAction::NONE ) {
@@ -1322,10 +1373,12 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     EventNextTown();
                     break;
                 case ThorAction::ADVENTURE_OPEN_HERO_LIST:
+                    selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP;
                     fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
                     publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
                     break;
                 case ThorAction::ADVENTURE_OPEN_CASTLE_LIST:
+                    selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP;
                     fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
                     publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
                     break;
@@ -1359,6 +1412,25 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 case ThorAction::ADVENTURE_DIG_ARTIFACT:
                     res = EventDigArtifact();
                     break;
+                case ThorAction::ADVENTURE_OPEN_MAP_OVERVIEW:
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW );
+                    publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW );
+                    _radar.SetRedraw( REDRAW_RADAR );
+                    break;
+                case ThorAction::ADVENTURE_OVERVIEW_OPEN_HERO_LIST:
+                    selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW;
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
+                    publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
+                    break;
+                case ThorAction::ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST:
+                    selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW;
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
+                    publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
+                    break;
+                case ThorAction::ADVENTURE_OVERVIEW_BACK:
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_MAP );
+                    publishThorInformation();
+                    break;
                 case ThorAction::NONE:
                 case ThorAction::ADVENTURE_SELECTION_BACK:
                 default:
@@ -1368,8 +1440,17 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
             // Hotkeys
             else if ( le.isAnyKeyPressed() ) {
                 // Adventure map control
-                if ( HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                if ( HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) ) {
                     res = Game::processExitEvent();
+                }
+                else if ( HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                    if ( isThorOverview ) {
+                        fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_MAP );
+                        publishThorInformation();
+                    }
+                    else {
+                        res = Game::processExitEvent();
+                    }
                 }
                 else if ( HotKeyPressEvent( Game::HotKeyEvent::WORLD_END_TURN ) ) {
                     res = EventEndTurn();

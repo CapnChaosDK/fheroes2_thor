@@ -229,7 +229,8 @@ void Interface::Radar::_redraw( const bool redrawMapObjects )
             _roi = { 0, 0, world.w(), world.h() };
 
 #if defined( ANDROID ) && defined( TARGET_AYN_THOR )
-            if ( fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::ADVENTURE_MAP ) {
+            const fheroes2::thor::UiContext context = fheroes2::thor::getUiContext();
+            if ( context == fheroes2::thor::UiContext::ADVENTURE_MAP || context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
                 if ( redrawMapObjects ) {
                     RedrawObjects( Players::FriendColors(), ViewWorldMode::OnlyVisible );
                 }
@@ -320,7 +321,8 @@ void Interface::Radar::publishThorSnapshot() const
 {
 #if defined( ANDROID ) && defined( TARGET_AYN_THOR )
     const fheroes2::thor::UiContext context = fheroes2::thor::getUiContext();
-    if ( context != fheroes2::thor::UiContext::ADVENTURE_MAP && context != fheroes2::thor::UiContext::EDITOR_INTERFACE ) {
+    if ( context != fheroes2::thor::UiContext::ADVENTURE_MAP && context != fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW
+         && context != fheroes2::thor::UiContext::EDITOR_INTERFACE ) {
         return;
     }
 

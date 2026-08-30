@@ -75,6 +75,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_EDITOR_TOOL_ERASE = 40;
     private static final int CONTEXT_ADVENTURE_HERO_LIST = 41;
     private static final int CONTEXT_ADVENTURE_CASTLE_LIST = 42;
+    private static final int CONTEXT_ADVENTURE_MAP_OVERVIEW = 43;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -290,6 +291,13 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_ADVENTURE_OPEN_HERO_LIST = 211;
     private static final int ACTION_ADVENTURE_OPEN_CASTLE_LIST = 212;
     private static final int ACTION_ADVENTURE_SELECTION_BACK = 213;
+    private static final int ACTION_ADVENTURE_OPEN_MAP_OVERVIEW = 214;
+    private static final int ACTION_ADVENTURE_OVERVIEW_OPEN_HERO_LIST = 215;
+    private static final int ACTION_ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST = 216;
+    private static final int ACTION_ADVENTURE_OVERVIEW_BACK = 217;
+
+    private static final int SELECTION_KIND_HERO = 1;
+    private static final int SELECTION_KIND_CASTLE = 2;
 
     private static final int SELECTION_PAGE_SIZE = 8;
     private static final int LOCAL_PREVIOUS_PAGE = 1;
@@ -312,7 +320,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
     interface SelectionSender
     {
-        boolean send( int context, long revision, int id );
+        boolean send( int context, long revision, int kind, int id );
     }
 
     private final KeySender keySender;
@@ -411,6 +419,10 @@ final class ThorSecondScreenPresentation extends Presentation
         private int radarViewportHeight;
         private boolean viewportControlEnabled;
         private boolean radarGestureActive;
+        private boolean radarGestureMoved;
+        private float radarDownX;
+        private float radarDownY;
+        private SelectionEntry radarTapMarker;
         private int selectionContext = -1;
         private long selectionRevision = -1;
         private final List<SelectionEntry> selectionEntries = new ArrayList<>();
@@ -433,7 +445,7 @@ final class ThorSecondScreenPresentation extends Presentation
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final String[] requestedSelectionSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_ADVENTURE_CASTLE_LIST ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_ADVENTURE_MAP_OVERVIEW ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
@@ -527,18 +539,20 @@ final class ThorSecondScreenPresentation extends Presentation
                 final int context = Integer.parseInt( snapshot[1] );
                 final long revision = Long.parseLong( snapshot[2] );
                 final int count = Integer.parseInt( snapshot[3] );
-                if ( version != 1 || revision == selectionRevision || count < 0 || snapshot.length != 4 + count * 4 ) {
+                if ( version != 2 || revision == selectionRevision || count < 0 || snapshot.length != 4 + count * 7 ) {
                     return false;
                 }
 
                 final List<SelectionEntry> entries = new ArrayList<>( count );
                 int selectedIndex = -1;
                 for ( int index = 0; index < count; ++index ) {
-                    final int offset = 4 + index * 4;
+                    final int offset = 4 + index * 7;
                     final int id = Integer.parseInt( snapshot[offset] );
                     final boolean selected = "1".equals( snapshot[offset + 3] );
                     entries.add( new SelectionEntry( id, snapshot[offset + 1] == null ? "" : snapshot[offset + 1],
-                                                     snapshot[offset + 2] == null ? "" : snapshot[offset + 2], selected ) );
+                                                     snapshot[offset + 2] == null ? "" : snapshot[offset + 2], selected,
+                                                     Integer.parseInt( snapshot[offset + 4] ), Integer.parseInt( snapshot[offset + 5] ),
+                                                     Integer.parseInt( snapshot[offset + 6] ) ) );
                     if ( selected ) {
                         selectedIndex = index;
                     }
@@ -568,7 +582,12 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             super.onDraw( canvas );
             drawStoneBackground( canvas );
-            drawReservedInformationPanel( canvas );
+            if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                drawExpandedMap( canvas );
+            }
+            else {
+                drawReservedInformationPanel( canvas );
+            }
 
             for ( final CommandButton button : buttons ) {
                 drawButton( canvas, button );
@@ -788,7 +807,14 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( action == MotionEvent.ACTION_DOWN ) {
                 if ( event.getPointerCount() == 1 && viewportControlEnabled && hasRadarSnapshot()
                      && radarBounds.contains( event.getX(), event.getY() ) ) {
-                    radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
+                    radarGestureActive = true;
+                    radarGestureMoved = false;
+                    radarDownX = event.getX();
+                    radarDownY = event.getY();
+                    radarTapMarker = gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? markerAt( radarDownX, radarDownY ) : null;
+                    if ( gameContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                        radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
+                    }
                     return true;
                 }
 
@@ -796,7 +822,8 @@ final class ThorSecondScreenPresentation extends Presentation
                 if ( pressedButton != null ) {
                     if ( pressedButton.selectionId >= 0 ) {
                         pressedButton.sentSemantically
-                            = selectionContext == gameContext && selectionSender.send( gameContext, selectionRevision, pressedButton.selectionId );
+                            = selectionContext == gameContext
+                              && selectionSender.send( gameContext, selectionRevision, pressedButton.selectionKind, pressedButton.selectionId );
                     }
                     else if ( pressedButton.localCommand != 0 ) {
                         changeSelectionPage( pressedButton.localCommand );
@@ -816,6 +843,17 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( action == MotionEvent.ACTION_MOVE ) {
                 if ( radarGestureActive ) {
                     if ( event.getPointerCount() == 1 ) {
+                        if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                            final float deltaX = event.getX() - radarDownX;
+                            final float deltaY = event.getY() - radarDownY;
+                            if ( !radarGestureMoved && deltaX * deltaX + deltaY * deltaY > 18f * 18f ) {
+                                radarGestureMoved = true;
+                                radarTapMarker = null;
+                            }
+                            if ( !radarGestureMoved ) {
+                                return true;
+                            }
+                        }
                         radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
                     }
                     else {
@@ -830,8 +868,24 @@ final class ThorSecondScreenPresentation extends Presentation
                 return true;
             }
 
-            if ( action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ) {
+            if ( action == MotionEvent.ACTION_UP ) {
+                if ( radarGestureActive && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && !radarGestureMoved ) {
+                    if ( radarTapMarker != null && selectionContext == gameContext ) {
+                        selectionSender.send( gameContext, selectionRevision, radarTapMarker.kind, radarTapMarker.id );
+                    }
+                    else {
+                        sendViewportRequest( event.getX(), event.getY() );
+                    }
+                }
                 radarGestureActive = false;
+                radarTapMarker = null;
+                releasePressedButton();
+                return true;
+            }
+
+            if ( action == MotionEvent.ACTION_CANCEL ) {
+                radarGestureActive = false;
+                radarTapMarker = null;
                 releasePressedButton();
                 return true;
             }
@@ -896,6 +950,13 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "KINGDOM", ACTION_ADVENTURE_KINGDOM_SUMMARY, KeyEvent.KEYCODE_K );
                 addAction( "VIEW WORLD", ACTION_ADVENTURE_VIEW_WORLD, KeyEvent.KEYCODE_V );
                 addAction( "DIG", ACTION_ADVENTURE_DIG_ARTIFACT, KeyEvent.KEYCODE_D );
+                addAction( "MAP", ACTION_ADVENTURE_OPEN_MAP_OVERVIEW, KeyEvent.KEYCODE_UNKNOWN );
+                break;
+            case CONTEXT_ADVENTURE_MAP_OVERVIEW:
+                contextTitle = "KINGDOM MAP";
+                addAction( "HEROES", ACTION_ADVENTURE_OVERVIEW_OPEN_HERO_LIST, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TOWNS", ACTION_ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BACK", ACTION_ADVENTURE_OVERVIEW_BACK, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_ADVENTURE_HERO_LIST:
                 contextTitle = "SELECT HERO";
@@ -1254,8 +1315,56 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private boolean hasRadarSnapshot()
         {
-            return ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_EDITOR_INTERFACE ) && radarContext == gameContext && radarBitmap != null
-                   && radarWorldWidth > 0 && radarWorldHeight > 0;
+            final boolean matchingContext
+                = radarContext == gameContext
+                  || ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW
+                       && ( radarContext == CONTEXT_ADVENTURE_MAP || radarContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) );
+            return ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW || gameContext == CONTEXT_EDITOR_INTERFACE )
+                   && matchingContext && radarBitmap != null && radarWorldWidth > 0 && radarWorldHeight > 0;
+        }
+
+        private void drawExpandedMap( final Canvas canvas )
+        {
+            final float margin = getMargin();
+            final float gap = margin * 0.55f;
+            final float sideWidth = Math.max( 220f, Math.min( 280f, getWidth() * 0.22f ) );
+            final float mapSize = Math.min( getHeight() - 2f * margin, getWidth() - 3f * margin - sideWidth );
+            final float mapTop = ( getHeight() - mapSize ) * 0.5f;
+            radarBounds.set( margin, mapTop, margin + mapSize, mapTop + mapSize );
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( PANEL_INNER_COLOR );
+            canvas.drawRect( radarBounds, paint );
+            if ( hasRadarSnapshot() ) {
+                drawRadar( canvas );
+            }
+
+            final RectF sidePanel = new RectF( radarBounds.right + gap, margin, getWidth() - margin, getHeight() - margin );
+            paint.setColor( PANEL_COLOR );
+            canvas.drawRoundRect( sidePanel, 18f, 18f, paint );
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 4f );
+            paint.setColor( GOLD_COLOR );
+            canvas.drawRoundRect( sidePanel, 18f, 18f, paint );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setColor( TEXT_COLOR );
+            paint.setTextSize( 32f );
+            canvas.drawText( "KINGDOM MAP", sidePanel.centerX(), sidePanel.top + 54f, paint );
+
+            SelectionEntry focused = null;
+            for ( final SelectionEntry entry : selectionEntries ) {
+                if ( entry.selected ) {
+                    focused = entry;
+                    break;
+                }
+            }
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, focused == null ? "NO SELECTION" : focused.name, sidePanel.centerX(), sidePanel.top + 103f, sidePanel.width() - 28f, 25f );
+            paint.setColor( MUTED_TEXT_COLOR );
+            drawFittedText( canvas, "● HERO     ■ TOWN", sidePanel.centerX(), sidePanel.top + 143f, sidePanel.width() - 24f, 21f );
         }
 
         private void drawRadar( final Canvas canvas )
@@ -1277,10 +1386,98 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setStrokeWidth( 4f );
             paint.setColor( Color.WHITE );
             canvas.drawRect( viewport, paint );
+            if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                drawOverviewMarkers( canvas );
+            }
+            paint.setStyle( Paint.Style.STROKE );
             paint.setStrokeWidth( 3f );
             paint.setColor( GOLD_LIGHT_COLOR );
             canvas.drawRect( radarBounds, paint );
             paint.setStyle( Paint.Style.FILL );
+        }
+
+        private void drawOverviewMarkers( final Canvas canvas )
+        {
+            if ( selectionContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                return;
+            }
+
+            for ( final SelectionEntry entry : selectionEntries ) {
+                if ( entry.x < 0 || entry.y < 0 ) {
+                    continue;
+                }
+
+                final float x = markerScreenX( entry );
+                final float y = markerScreenY( entry );
+                if ( entry.selected ) {
+                    paint.setStyle( Paint.Style.STROKE );
+                    paint.setStrokeWidth( 6f );
+                    paint.setColor( Color.WHITE );
+                    canvas.drawCircle( x, y, 25f, paint );
+                    paint.setStrokeWidth( 3f );
+                    paint.setColor( GOLD_LIGHT_COLOR );
+                    canvas.drawCircle( x, y, 20f, paint );
+                }
+
+                paint.setStyle( Paint.Style.FILL );
+                paint.setColor( entry.kind == SELECTION_KIND_HERO ? Color.rgb( 80, 190, 255 ) : Color.rgb( 255, 178, 70 ) );
+                if ( entry.kind == SELECTION_KIND_HERO ) {
+                    canvas.drawCircle( x, y, 14f, paint );
+                }
+                else {
+                    canvas.drawRect( x - 14f, y - 14f, x + 14f, y + 14f, paint );
+                }
+                paint.setStyle( Paint.Style.STROKE );
+                paint.setStrokeWidth( 3f );
+                paint.setColor( Color.BLACK );
+                if ( entry.kind == SELECTION_KIND_HERO ) {
+                    canvas.drawCircle( x, y, 14f, paint );
+                }
+                else {
+                    canvas.drawRect( x - 14f, y - 14f, x + 14f, y + 14f, paint );
+                }
+            }
+            paint.setStyle( Paint.Style.FILL );
+        }
+
+        private float markerScreenX( final SelectionEntry entry )
+        {
+            float x = radarBounds.left + ( entry.x + 0.5f ) * radarBounds.width() / radarWorldWidth;
+            for ( final SelectionEntry other : selectionEntries ) {
+                if ( other != entry && other.x == entry.x && other.y == entry.y && other.kind != entry.kind ) {
+                    x += entry.kind == SELECTION_KIND_HERO ? -18f : 18f;
+                    break;
+                }
+            }
+            return x;
+        }
+
+        private float markerScreenY( final SelectionEntry entry )
+        {
+            return radarBounds.top + ( entry.y + 0.5f ) * radarBounds.height() / radarWorldHeight;
+        }
+
+        private SelectionEntry markerAt( final float x, final float y )
+        {
+            if ( selectionContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                return null;
+            }
+
+            SelectionEntry nearest = null;
+            float nearestDistanceSquared = 44f * 44f;
+            for ( final SelectionEntry entry : selectionEntries ) {
+                if ( entry.x < 0 || entry.y < 0 ) {
+                    continue;
+                }
+                final float deltaX = x - markerScreenX( entry );
+                final float deltaY = y - markerScreenY( entry );
+                final float distanceSquared = deltaX * deltaX + deltaY * deltaY;
+                if ( distanceSquared < nearestDistanceSquared ) {
+                    nearest = entry;
+                    nearestDistanceSquared = distanceSquared;
+                }
+            }
+            return nearest;
         }
 
         private void addBrushActions()
@@ -1307,7 +1504,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 final int lastIndex = Math.min( selectionEntries.size(), firstIndex + SELECTION_PAGE_SIZE );
                 for ( int index = firstIndex; index < lastIndex; ++index ) {
                     final SelectionEntry entry = selectionEntries.get( index );
-                    buttons.add( new CommandButton( entry.name, entry.detail, entry.id, entry.selected ) );
+                    buttons.add( new CommandButton( entry.name, entry.detail, entry.kind, entry.id, entry.selected ) );
                 }
             }
 
@@ -1337,6 +1534,20 @@ final class ThorSecondScreenPresentation extends Presentation
 
             final float margin = getMargin();
             final float gap = margin * 0.55f;
+            if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                final float sideWidth = Math.max( 220f, Math.min( 280f, width * 0.22f ) );
+                final float mapSize = Math.min( height - 2f * margin, width - 3f * margin - sideWidth );
+                final float left = margin + mapSize + gap;
+                final float right = width - margin;
+                final float top = margin + 178f;
+                final float buttonGap = 18f;
+                final float buttonHeight = Math.min( 190f, ( height - top - margin - 2f * buttonGap ) / 3f );
+                for ( int index = 0; index < buttons.size(); ++index ) {
+                    final float buttonTop = top + index * ( buttonHeight + buttonGap );
+                    buttons.get( index ).bounds.set( left, buttonTop, right, buttonTop + buttonHeight );
+                }
+                return;
+            }
             final float top = height * 0.265f;
             final boolean selectionList = gameContext == CONTEXT_ADVENTURE_HERO_LIST || gameContext == CONTEXT_ADVENTURE_CASTLE_LIST;
             final int columns = selectionList ? 2 : ( buttons.size() <= 2 || buttons.size() == 4 ? 2 : ( buttons.size() <= 6 ? 3 : 4 ) );
@@ -1396,6 +1607,8 @@ final class ThorSecondScreenPresentation extends Presentation
         void releasePressedButton()
         {
             radarGestureActive = false;
+            radarGestureMoved = false;
+            radarTapMarker = null;
             if ( pressedButton != null ) {
                 if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                     keySender.send( pressedButton.keyCode, false );
@@ -1414,6 +1627,7 @@ final class ThorSecondScreenPresentation extends Presentation
         final int action;
         final int keyCode;
         final int selectionId;
+        final int selectionKind;
         final int localCommand;
         final boolean selected;
         final RectF bounds = new RectF();
@@ -1421,27 +1635,28 @@ final class ThorSecondScreenPresentation extends Presentation
 
         CommandButton( final String label, final int action, final int keyCode )
         {
-            this( label, "", action, keyCode, -1, 0, false );
+            this( label, "", action, keyCode, -1, 0, 0, false );
         }
 
-        CommandButton( final String label, final String detail, final int selectionId, final boolean selected )
+        CommandButton( final String label, final String detail, final int selectionKind, final int selectionId, final boolean selected )
         {
-            this( label, detail, ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, selectionId, 0, selected );
+            this( label, detail, ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, selectionId, selectionKind, 0, selected );
         }
 
         CommandButton( final String label, final int localCommand )
         {
-            this( label, "", ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, -1, localCommand, false );
+            this( label, "", ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, -1, 0, localCommand, false );
         }
 
-        private CommandButton( final String label, final String detail, final int action, final int keyCode, final int selectionId, final int localCommand,
-                               final boolean selected )
+        private CommandButton( final String label, final String detail, final int action, final int keyCode, final int selectionId, final int selectionKind,
+                               final int localCommand, final boolean selected )
         {
             this.label = label;
             this.detail = detail;
             this.action = action;
             this.keyCode = keyCode;
             this.selectionId = selectionId;
+            this.selectionKind = selectionKind;
             this.localCommand = localCommand;
             this.selected = selected;
         }
@@ -1453,13 +1668,19 @@ final class ThorSecondScreenPresentation extends Presentation
         final String name;
         final String detail;
         final boolean selected;
+        final int kind;
+        final int x;
+        final int y;
 
-        SelectionEntry( final int id, final String name, final String detail, final boolean selected )
+        SelectionEntry( final int id, final String name, final String detail, final boolean selected, final int kind, final int x, final int y )
         {
             this.id = id;
             this.name = name;
             this.detail = detail;
             this.selected = selected;
+            this.kind = kind;
+            this.x = x;
+            this.y = y;
         }
     }
 }

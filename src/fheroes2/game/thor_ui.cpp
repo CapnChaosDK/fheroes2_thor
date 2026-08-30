@@ -78,6 +78,7 @@ namespace
         case Action::ADVENTURE_DIG_ARTIFACT:
         case Action::ADVENTURE_OPEN_HERO_LIST:
         case Action::ADVENTURE_OPEN_CASTLE_LIST:
+        case Action::ADVENTURE_OPEN_MAP_OVERVIEW:
             return true;
         case Action::NONE:
         default:
@@ -214,6 +215,14 @@ namespace
     bool isAdventureSelectionAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::ADVENTURE_SELECTION_BACK;
+    }
+
+    bool isAdventureOverviewAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        return action == Action::ADVENTURE_OVERVIEW_OPEN_HERO_LIST || action == Action::ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST
+               || action == Action::ADVENTURE_OVERVIEW_BACK;
     }
 
     bool isMainMenuAction( const fheroes2::thor::Action action )
@@ -480,6 +489,7 @@ namespace
 
         return context == UiContext::MAIN_MENU || context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO
                || context == UiContext::CASTLE || context == UiContext::ADVENTURE_HERO_LIST || context == UiContext::ADVENTURE_CASTLE_LIST
+               || context == UiContext::ADVENTURE_MAP_OVERVIEW
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
@@ -505,6 +515,8 @@ namespace
         case fheroes2::thor::UiContext::ADVENTURE_HERO_LIST:
         case fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST:
             return isAdventureSelectionAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW:
+            return isAdventureOverviewAction( action );
         case fheroes2::thor::UiContext::HERO:
             return isHeroAction( action );
         case fheroes2::thor::UiContext::CASTLE:
@@ -727,7 +739,7 @@ namespace fheroes2::thor
         }
 
         const UiContext context = getUiContext();
-        if ( context != UiContext::ADVENTURE_MAP && context != UiContext::EDITOR_INTERFACE ) {
+        if ( context != UiContext::ADVENTURE_MAP && context != UiContext::ADVENTURE_MAP_OVERVIEW && context != UiContext::EDITOR_INTERFACE ) {
             return false;
         }
 
@@ -760,7 +772,8 @@ namespace fheroes2::thor
     void setViewportControlEnabled( const bool enabled )
     {
         const UiContext context = getUiContext();
-        const bool allowed = enabled && ( context == UiContext::ADVENTURE_MAP || context == UiContext::EDITOR_INTERFACE );
+        const bool allowed
+            = enabled && ( context == UiContext::ADVENTURE_MAP || context == UiContext::ADVENTURE_MAP_OVERVIEW || context == UiContext::EDITOR_INTERFACE );
         viewportControlEnabled.store( allowed, std::memory_order_release );
         if ( !allowed ) {
             std::lock_guard<std::mutex> lock( viewportRequestMutex );
@@ -787,7 +800,7 @@ namespace fheroes2::thor
                                && std::equal( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), snapshot.entries.begin(),
                                               []( const SelectionEntry & left, const SelectionEntry & right ) {
                                                   return left.id == right.id && left.name == right.name && left.detail == right.detail
-                                                         && left.selected == right.selected;
+                                                         && left.selected == right.selected && left.kind == right.kind && left.x == right.x && left.y == right.y;
                                               } );
         if ( unchanged ) {
             return;
@@ -798,9 +811,9 @@ namespace fheroes2::thor
         selectionRequest = {};
     }
 
-    bool enqueueSelectionRequest( const UiContext context, const uint64_t revision, const int32_t id )
+    bool enqueueSelectionRequest( const UiContext context, const uint64_t revision, const SelectionEntry::Kind kind, const int32_t id )
     {
-        if ( context != UiContext::ADVENTURE_HERO_LIST && context != UiContext::ADVENTURE_CASTLE_LIST ) {
+        if ( context != UiContext::ADVENTURE_HERO_LIST && context != UiContext::ADVENTURE_CASTLE_LIST && context != UiContext::ADVENTURE_MAP_OVERVIEW ) {
             return false;
         }
 
@@ -809,14 +822,14 @@ namespace fheroes2::thor
             return false;
         }
 
-        const auto entry = std::find_if( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), [id]( const SelectionEntry & value ) {
-            return value.id == id;
+        const auto entry = std::find_if( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), [kind, id]( const SelectionEntry & value ) {
+            return value.kind == kind && value.id == id;
         } );
         if ( entry == selectionSnapshot.entries.end() ) {
             return false;
         }
 
-        selectionRequest = { context, revision, id, true };
+        selectionRequest = { context, revision, id, kind, true };
         return true;
     }
 
@@ -835,6 +848,11 @@ namespace fheroes2::thor
     UiContextGuard::UiContextGuard( const UiContext context )
         : _previousContext( getUiContext() )
     {
+        // The expanded map is a lower-screen-only transient view. Any upper-screen dialog
+        // closes it and returns to the ordinary Adventure deck when the dialog exits.
+        if ( _previousContext == UiContext::ADVENTURE_MAP_OVERVIEW ) {
+            _previousContext = UiContext::ADVENTURE_MAP;
+        }
         setUiContext( context );
     }
 
@@ -872,10 +890,13 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorSelectionRequest( JNIEnv *, jclass, const jint context,
-                                                                                                          const jlong revision, const jint id )
+                                                                                                          const jlong revision, const jint kind,
+                                                                                                          const jint id )
 {
-    return fheroes2::thor::enqueueSelectionRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ), id ) ? JNI_TRUE
-                                                                                                                                                : JNI_FALSE;
+    return fheroes2::thor::enqueueSelectionRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ),
+                                                    static_cast<fheroes2::thor::SelectionEntry::Kind>( kind ), id )
+               ? JNI_TRUE
+               : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorSelectionSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
@@ -886,7 +907,7 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
     }
 
     constexpr size_t headerSize = 4;
-    constexpr size_t fieldsPerEntry = 4;
+    constexpr size_t fieldsPerEntry = 7;
     if ( snapshot.entries.size() > ( static_cast<size_t>( std::numeric_limits<jsize>::max() ) - headerSize ) / fieldsPerEntry ) {
         return nullptr;
     }
@@ -914,6 +935,9 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
         values.emplace_back( entry.name );
         values.emplace_back( entry.detail );
         values.emplace_back( entry.selected ? "1" : "0" );
+        values.emplace_back( std::to_string( static_cast<int32_t>( entry.kind ) ) );
+        values.emplace_back( std::to_string( entry.x ) );
+        values.emplace_back( std::to_string( entry.y ) );
     }
 
     for ( jsize index = 0; index < fieldCount; ++index ) {

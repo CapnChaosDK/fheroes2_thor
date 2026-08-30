@@ -625,6 +625,32 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five quick-selection checks passed on the Thor, including hero and settlement order, status, focus highlighting, paging, direct selection, upper centering, information and minimap synchronization, live kingdom collection refresh, Back behavior, movement gating, rapid taps, multitouch, and Adventure, dialog, physical-control, touchscreen, mouse, and hotkey regressions.
 
+### Expanded Adventure Map
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-30.
+
+- The normal Adventure deck adds a dedicated Map command without replacing View World or any established action. It opens a lower-screen-only overview using roughly 940 square pixels while the upper Adventure Map remains active.
+- The overview reuses the engine-owned radar pixels, fog and ownership rendering, visible-tile ROI, and viewport bridge. Android does not interpret map terrain or visibility.
+- A revisioned native selection snapshot adds current-player hero and settlement identity, kind, world position, and focus state. Android presents circular hero and square settlement markers, a focused halo, and a visual offset when a hero and settlement share a tile; native code revalidates every selection against the live kingdom collections.
+- A marker tap focuses and centers the matching entity while keeping the overview open. An empty tap recenters the viewport, and movement beyond the touch slop becomes viewport dragging without selecting a marker. Multitouch, cancellation, stale revisions, movement, and context changes reject pending input.
+- Heroes and Towns open the validated lower-screen selection lists and return to the overview. Back or physical Cancel restores the ordinary Adventure deck without changing focus. The compact Adventure and Editor minimaps remain unchanged.
+- Enemy, allied, neutral, fog-dependent, label, clustering, zoom, sprite, and configurable marker support remains deferred.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `7CED56F9A281262DD9A6195DA561336222416CD9A3965B82609348C2346BC08F`. The APK installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed game activity and the companion presentation window on display 4.
+- The initial device run exposed a solid-color expanded map because the lower-only context transition could arrive without a freshly tagged radar snapshot. The corrective candidate explicitly republishes the current engine radar when the overview opens or is restored and retains the last valid Adventure radar during that transition. Build and lint pass; corrected APK SHA-256: `FB4AFA4EB98F0206351AEB010023588847CD1D1839AABDACE3490AC244FA7BC8`. It installed successfully and was explicitly relaunched on the Thor.
+- The first correction did not resolve the solid sand-color overview. The user confirmed the compact minimap is correct before opening the overview, becomes blank after closing it, and recovers as soon as upper-map movement triggers a normal radar redraw. The next correction therefore removes the direct snapshot publication and schedules a full engine `REDRAW_RADAR` on overview entry and list restoration, ensuring map pixels are rebuilt through the same path that recovers the compact minimap. Build and lint pass; candidate APK SHA-256: `1782F784A5C8CCA89E7D59183036285AACEE95D2FE2BE4BA446B38A36B031218`. The candidate installed successfully and was explicitly relaunched on the Thor.
+- The full-redraw correction also retained the failure. Targeted runtime diagnostics then confirmed a valid context-43 radar snapshot (`144 x 144`, `72 x 72` world, 976 pixel transitions), a valid Android bitmap, and correct `886 x 886` expanded bounds. This isolates the fault to large bitmap magnification on the Thor secondary-display Canvas rather than native data or context gating. The next candidate pre-scales the radar bitmap to its expanded dimensions before drawing it 1:1. Build and lint pass; APK SHA-256: `7A909270A3E82853A6A40B745FBE5576B4478C1C5AD99951421E664A0BC1A302`. It installed successfully and was explicitly relaunched on the Thor.
+- The pre-scaled and software-rendered candidates retained the solid map. A targeted lower-display screenshot exposed the exact color as the overview's gold border color (`RGB 255, 230, 154`): marker drawing restored the shared Android `Paint` to fill mode, so the final border operation covered the bitmap, viewport, and markers. The corrected candidate explicitly restores stroke mode before drawing the border and removes the diagnostic logging, pre-scaling, and software-layer workarounds. Build and lint pass; APK SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`. It installed successfully and was explicitly relaunched on the Thor.
+
+#### Focused expanded-map validation
+
+1. Open Map on small, medium, and maximum maps. Verify the overview is large and readable, matches terrain, fog, and ownership, and Back restores Adventure exactly once.
+2. With several heroes and settlements, verify marker position, type, and focus highlighting. Select several markers and confirm exact upper centering plus portrait, information, path, lists, and focus synchronization.
+3. Test adjacent and overlapping entities, including a visiting hero at a settlement. Confirm deterministic selection without accidental route creation or movement.
+4. Tap empty areas and drag across the map and markers. Confirm smooth clamped viewport navigation, clear tap-versus-drag behavior, and safe rapid-tap and multitouch rejection.
+5. Exercise hero movement, dialogs, Hero and Castle screens, turn changes, physical controls, upper touchscreen, mouse, hotkeys, compact minimap, lists, and View World without regression.
+
+The focused Thor validation passed: the expanded radar renders correctly; hero and town marker selection focuses and centers the matching upper-map object; empty taps and drags move the viewport without moving a hero; Heroes and Towns return to the overview; and Back restores the normal deck with its compact minimap and controls working.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -651,7 +677,7 @@ All five quick-selection checks passed on the Thor, including hero and settlemen
 
 ## Next recommended planning point
 
-- Plan hero and castle markers on the existing touch minimap as a separate focused slice, using engine-owned positions and ownership while preserving the validated list selection and viewport-control paths.
+- Select the next focused command-deck slice from the deferred marker enhancements or interactive second-screen tools, then propose its behavior and manual acceptance tests before implementation.
 
 ## Milestone 4: interactive second-screen tools
 

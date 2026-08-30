@@ -95,7 +95,6 @@ namespace Interface
         void RedrawObjects( const PlayerColorsSet playerColor, const ViewWorldMode flags );
         void RedrawCursor( const fheroes2::Rect * roiRectangle = nullptr );
         void publishThorSnapshot() const;
-
         RadarType _radarType;
         BaseInterface & _interface;
 

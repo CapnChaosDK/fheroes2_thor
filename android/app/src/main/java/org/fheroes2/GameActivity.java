@@ -49,7 +49,7 @@ public final class GameActivity extends SDLActivity
     private static native boolean nativeIsThorViewportControlEnabled();
     private static native boolean nativeEnqueueThorViewportRequest( float normalizedX, float normalizedY );
     private static native String[] nativeGetThorSelectionSnapshot( long knownRevision );
-    private static native boolean nativeEnqueueThorSelectionRequest( int context, long revision, int id );
+    private static native boolean nativeEnqueueThorSelectionRequest( int context, long revision, int kind, int id );
 
     int getThorUiContext()
     {
@@ -137,10 +137,10 @@ public final class GameActivity extends SDLActivity
         }
     }
 
-    boolean enqueueThorSelectionRequest( final int context, final long revision, final int id )
+    boolean enqueueThorSelectionRequest( final int context, final long revision, final int kind, final int id )
     {
         try {
-            return nativeEnqueueThorSelectionRequest( context, revision, id );
+            return nativeEnqueueThorSelectionRequest( context, revision, kind, id );
         }
         catch ( final UnsatisfiedLinkError ex ) {
             return false;

@@ -60,7 +60,8 @@ namespace fheroes2::thor
         EDITOR_TOOL_ROADS,
         EDITOR_TOOL_ERASE,
         ADVENTURE_HERO_LIST,
-        ADVENTURE_CASTLE_LIST
+        ADVENTURE_CASTLE_LIST,
+        ADVENTURE_MAP_OVERVIEW
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -280,7 +281,11 @@ namespace fheroes2::thor
         EDITOR_ERASE_STREAMS,
         ADVENTURE_OPEN_HERO_LIST,
         ADVENTURE_OPEN_CASTLE_LIST,
-        ADVENTURE_SELECTION_BACK
+        ADVENTURE_SELECTION_BACK,
+        ADVENTURE_OPEN_MAP_OVERVIEW,
+        ADVENTURE_OVERVIEW_OPEN_HERO_LIST,
+        ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST,
+        ADVENTURE_OVERVIEW_BACK
     };
 
     using ActionMask = uint64_t;
@@ -327,15 +332,24 @@ namespace fheroes2::thor
 
     struct SelectionEntry
     {
+        enum class Kind : int32_t
+        {
+            HERO = 1,
+            CASTLE = 2
+        };
+
         int32_t id{ -1 };
         std::string name;
         std::string detail;
         bool selected{ false };
+        Kind kind{ Kind::HERO };
+        int32_t x{ -1 };
+        int32_t y{ -1 };
     };
 
     struct SelectionSnapshot
     {
-        static constexpr int32_t currentVersion = 1;
+        static constexpr int32_t currentVersion = 2;
 
         int32_t version{ currentVersion };
         UiContext context{ UiContext::FALLBACK };
@@ -348,6 +362,7 @@ namespace fheroes2::thor
         UiContext context{ UiContext::FALLBACK };
         uint64_t revision{ 0 };
         int32_t id{ -1 };
+        SelectionEntry::Kind kind{ SelectionEntry::Kind::HERO };
         bool valid{ false };
     };
 
@@ -392,7 +407,7 @@ namespace fheroes2::thor
     void setViewportControlEnabled( bool enabled );
     bool getSelectionSnapshot( uint64_t knownRevision, SelectionSnapshot & snapshot );
     void publishSelectionSnapshot( SelectionSnapshot snapshot );
-    bool enqueueSelectionRequest( UiContext context, uint64_t revision, int32_t id );
+    bool enqueueSelectionRequest( UiContext context, uint64_t revision, SelectionEntry::Kind kind, int32_t id );
     SelectionRequest takeSelectionRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.
