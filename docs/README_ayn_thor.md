@@ -32,7 +32,8 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | Editor File Options | New Map, Load Map, Start Map, Save Map, Main Menu, Quit, Auto Playtest, Cancel |
 | Editor System Options | Language, Graphics, Audio, Hot Keys, Animation, Passability, Interface Type, Cursor Type, Scroll Speed, Okay / Back |
 | Dialog or fallback | Confirm, Cancel |
-| Adventure map | Next Hero, Next Town, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
+| Adventure map | Next Hero, Next Town, Heroes, Towns, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
+| Adventure hero/town lists | Native kingdom order, compact status, current-focus highlight, paging, direct selection, Back |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
 | Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Upgrade, Exit |
 | Battle | Spell, Wait/Defend, Auto, Quick Combat, Retreat, Surrender, Options, Turn Order |
@@ -50,6 +51,8 @@ Selecting the original Succession Wars campaign shows a non-interactive lower-sc
 Selecting the Price of Loyalty expansion exposes all four campaigns and Back on the lower display while preserving the upper selector's hover animations. Missing-video behavior remains compatible with the engine, and selection or cancellation clears queued actions, audio, and palette state before the next screen.
 
 Game Settings shows the current language, cursor, interface, and text-support states. Direct toggles refresh both displays immediately, unavailable language selection is muted, and the existing Language, Graphics, Audio, and Hot Keys dialogs restore the Settings deck when they close.
+
+The Adventure information panel includes an engine-owned minimap for clamped upper-screen viewport navigation. Heroes and Towns open revisioned lower-screen lists in native kingdom order; selection is revalidated and applied on the SDL thread through the existing focus paths, then returns directly to Adventure.
 
 The Editor entry hierarchy mirrors New Map, Load Map, From Scratch, Random, map-size selection, and exact Back/Main Menu behavior. Creating or loading a map enters a dedicated Map Editor deck. File Options delegates saving, loading, playtesting, confirmations, and transitions to the existing editor logic.
 
@@ -123,8 +126,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest hardware-validated source checkpoint is `f997f90a0`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, and the complete Editor workflow with live map, tile, and object information while leaving upstream rendering unchanged. Its development APK SHA-256 is `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`. The latest published prerelease remains [`thor-v0.5.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.5.0), sourced from `601eb7ef5`.
+The latest hardware-validated source checkpoint is `92621eaeb`. It provides semantic controls, read-only information cards, navigable game menus, both campaign selectors, the complete Editor workflow with live map information, touch-minimap viewport control, and hero and castle quick-selection lists while leaving upstream rendering and gameplay ownership unchanged. Its APK SHA-256 is `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`. The latest published prerelease is [`thor-v0.6.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.6.0), sourced from `92621eaeb`.
 
-The next focused feature planning point is touch radar or minimap viewport control. Hero quick-selection and drag-and-drop army management remain separate later milestones.
+The next focused feature planning point is engine-owned hero and castle markers on the touch minimap. Drag-and-drop army management, configurable layouts, and haptics remain separate later milestones.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

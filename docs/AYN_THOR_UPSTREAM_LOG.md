@@ -5,11 +5,11 @@ Use this log for every official-upstream assessment or integration. Keep validat
 ## Current Thor handoff baseline
 
 - Branch: `ayn-thor-dual-screen`
-- Latest published release: `thor-v0.5.0` at `601eb7ef5139a9922426417e27b1c5f60e061db3`
-- Latest hardware-validated source commit: `f997f90a0`
-- Development APK SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`
-- Release APK: `fheroes2-thor-v0.5.0-debug.apk`; SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
-- Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is touch radar or minimap viewport control.
+- Latest published release: `thor-v0.6.0` at `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`
+- Latest hardware-validated source commit: `92621eaeb`
+- Development APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`
+- Release APK: `fheroes2-thor-v0.6.0-debug.apk`; SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- Hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, the complete Editor workflow, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused planning point is engine-owned hero and castle minimap markers.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

@@ -19,7 +19,7 @@ You can find a complete list of all of our changes and enhancements in [**this p
 
 ## AYN Thor dual-screen edition
 
-This fork adds an AYN Thor-specific Android build. The game runs at 1920 x 1080 on the upper display while the lower display provides a Heroes II-styled, context-sensitive command deck and information panel, including navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, Game Settings, both campaign selectors, and the complete Map Editor workflow with live map, tile, and object information. The Thor package can be installed alongside the official Android build.
+This fork adds an AYN Thor-specific Android build. The game runs at 1920 x 1080 on the upper display while the lower display provides a Heroes II-styled, context-sensitive command deck and information panel, including navigable New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, Game Settings, both campaign selectors, the complete Map Editor workflow with live map information, touch-minimap viewport control, and hero and castle quick-selection lists. The Thor package can be installed alongside the official Android build.
 
 Download the current test APK from the [Thor releases page](https://github.com/CapnChaosDK/fheroes2_thor/releases). Build, installation, dual-screen, and diagnostic instructions are available in the [AYN Thor guide](docs/README_ayn_thor.md).
 

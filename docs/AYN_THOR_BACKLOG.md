@@ -6,19 +6,19 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.5.0` was published on 2026-08-27 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.5.0
-- Source commit: `601eb7ef5139a9922426417e27b1c5f60e061db3`.
-- APK: `fheroes2-thor-v0.5.0-debug.apk`.
-- APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
-- The release adds the hardware-validated Battle Only setup, High Scores, both campaign selectors, Game Settings, and complete Map Editor workflow: pre-entry, creation/loading, File Options, System Options, transactional Map Specifications, and all nine native Editor Tools.
+- `thor-v0.6.0` was published on 2026-08-30 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.6.0
+- Source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
+- APK: `fheroes2-thor-v0.6.0-debug.apk`.
+- APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- The release adds the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, and live Editor map information on top of every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
 
 ## Latest validated development checkpoint
 
-- Commit `8706addb5` is the latest hardware-validated source checkpoint. It adds touch minimap viewport control for the Adventure Map and base Map Editor on top of the `thor-v0.5.0` Editor Tools release, live Editor map information, and every earlier validated workflow.
-- The lower minimap uses revisioned engine-owned radar pixels and visible-tile ROI data. Single-finger taps and drags are coalesced into native viewport requests consumed on the SDL thread, while context changes, hero movement, stale input, cancellation, and multitouch are rejected without duplicating map or gameplay state in Android.
-- Debug APK SHA-256: `5259ED2DD2E2EE109ACC4CFC9AAC773BEF4CA9633A13638565685888583BC31C`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused radar fidelity, viewport synchronization, clamped tap/drag navigation, no-gameplay-side-effect, Editor edit/Undo/Redo, context-restoration, input-gating, rapid-drag, multitouch, cancellation, upper-radar visibility, physical-control, touchscreen, mouse, hotkey, and established Adventure and Editor regression checks.
+- Commit `92621eaeb` is the latest hardware-validated source checkpoint and the `thor-v0.6.0` release source. It adds hero and castle quick-selection lists on top of the validated touch minimap, live Editor map information, and every earlier workflow.
+- Revisioned native snapshots expose current kingdom collections and focus state; selection requests are resolved on the SDL thread through existing focus paths. Android owns only list presentation and paging.
+- Debug APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused list order, status, paging, focus, centering, refresh, Back, movement-gating, rapid-input, minimap, Adventure, dialog, physical-control, touchscreen, mouse, hotkey, and established regression checks.
 
 ## Agreed product decisions
 

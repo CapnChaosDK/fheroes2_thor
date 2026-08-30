@@ -13,27 +13,27 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.5.0`.
-- Release source commit: `601eb7ef5139a9922426417e27b1c5f60e061db3`.
-- Release APK SHA-256: `24BE278EA3FBE2CC447FB2BDDEF9B21220CD5F97A020C87668796ECD25F1B200`.
-- v0.5.0 contains the hardware-validated Battle Only setup, High Scores, both campaign selectors, Game Settings, and complete Map Editor workflow: pre-entry, map creation/loading, File Options, System Options, transactional Map Specifications, and all nine Editor Tools.
-- Latest hardware-validated source commit: `8706addb5`.
-- This checkpoint adds touch minimap viewport control for the Adventure Map and base Map Editor on top of every previously validated menu, gameplay-control, information-card, and Editor workflow. Its final debug APK SHA-256 is `5259ED2DD2E2EE109ACC4CFC9AAC773BEF4CA9633A13638565685888583BC31C`.
+- Latest published release: `thor-v0.6.0`.
+- Release source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
+- Release APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+- v0.6.0 contains the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, and every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- Latest hardware-validated source commit: `92621eaeb`.
+- This checkpoint adds revisioned native hero and settlement lists with paging, current-focus highlighting, direct SDL-thread focus selection, exact Adventure restoration, and stale-input rejection. Its final debug APK SHA-256 is `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- Touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Editor validation covers entry and map creation/loading, exact parent restoration, File Options and its confirmations/transitions, all ten System Options actions, transactional Map Specifications including player, victory/loss, alliance, child-editor, Okay/Back, and history behavior, all nine native tool modes, terrain and brush selection, object selectors and placement, Detail Edit/Move/Copy, erase filters, Magnify, live Undo/Redo availability, map metadata, tile and object descriptions, live information refresh, touch-minimap radar fidelity and clamped viewport navigation, persisted configuration, language availability, rapid taps and drags, multitouch rejection, help, and physical, touchscreen, mouse, hotkey, and established-menu regressions.
-- The latest hardware-validated source implementation is `8706addb5`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `5259ED2DD2E2EE109ACC4CFC9AAC773BEF4CA9633A13638565685888583BC31C`.
+- Hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Validation covers native hero and settlement order, status, focus highlighting, paging, direct selection, upper centering, information and minimap synchronization, live kingdom refresh, Back behavior, movement gating, rapid taps, multitouch, and every previously validated Editor, menu, gameplay, dialog, physical-control, touchscreen, mouse, and hotkey workflow.
+- The latest hardware-validated source implementation is `92621eaeb`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is hero and castle quick-selection lists.
-- Inspect the existing native focus selection, kingdom-owned hero and castle collections, information snapshots, and dual-screen input bridge, then plan a focused selection slice without duplicating engine-owned focus, availability, ordering, or rendering logic.
+- The next focused feature planning point is hero and castle markers on the touch minimap.
+- Inspect the existing engine-owned radar snapshot, kingdom collections, focus selection, and viewport bridge, then plan a focused marker slice without duplicating positions, ownership, fog, availability, or focus state in Android.
 - Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
-- Retain the validated touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
+- Retain the validated quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
 
