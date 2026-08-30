@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `f997f90a0` is the latest hardware-validated source checkpoint. It adds live read-only in-map Editor map information on top of the `thor-v0.5.0` Editor Tools release and every earlier validated workflow.
-- The base Editor card shows map name, dimensions, difficulty, player count, live tile coordinates and terrain, and the same engine-owned object descriptions used by the right-click popup. Identical snapshots are deduplicated, and editing, validation, history, and rendering remain engine-owned.
-- Debug APK SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused metadata, tile/object description, edit/Undo/Redo refresh, card-restoration, rapid-pointer, input, and established Editor regression checks.
+- Commit `8706addb5` is the latest hardware-validated source checkpoint. It adds touch minimap viewport control for the Adventure Map and base Map Editor on top of the `thor-v0.5.0` Editor Tools release, live Editor map information, and every earlier validated workflow.
+- The lower minimap uses revisioned engine-owned radar pixels and visible-tile ROI data. Single-finger taps and drags are coalesced into native viewport requests consumed on the SDL thread, while context changes, hero movement, stale input, cancellation, and multitouch are rejected without duplicating map or gameplay state in Android.
+- Debug APK SHA-256: `5259ED2DD2E2EE109ACC4CFC9AAC773BEF4CA9633A13638565685888583BC31C`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused radar fidelity, viewport synchronization, clamped tap/drag navigation, no-gameplay-side-effect, Editor edit/Undo/Redo, context-restoration, input-gating, rapid-drag, multitouch, cancellation, upper-radar visibility, physical-control, touchscreen, mouse, hotkey, and established Adventure and Editor regression checks.
 
 ## Agreed product decisions
 
