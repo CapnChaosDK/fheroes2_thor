@@ -78,7 +78,7 @@ namespace
         return {};
     }
 
-    std::string getObjectInfoText( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat )
+    std::string getMainTileObjectInfoText( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat )
     {
         const MP2::MapObjectType type = tile.getMainObjectType();
         switch ( type ) {
@@ -243,19 +243,21 @@ namespace
 
 namespace Editor
 {
+    std::string getObjectInfoText( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat )
+    {
+        const int32_t mainTileIndex = Maps::Tile::getIndexOfMainTile( tile );
+        if ( mainTileIndex != -1 ) {
+            return getMainTileObjectInfoText( world.getTile( mainTileIndex ), mapFormat );
+        }
+
+        return getMainTileObjectInfoText( tile, mapFormat );
+    }
+
     void showPopupWindow( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat )
     {
         DEBUG_LOG( DBG_DEVEL, DBG_INFO, '\n' << tile.String() )
 
-        std::string infoString;
-        const int32_t mainTileIndex = Maps::Tile::getIndexOfMainTile( tile );
-
-        if ( mainTileIndex != -1 ) {
-            infoString = getObjectInfoText( world.getTile( mainTileIndex ), mapFormat );
-        }
-        else {
-            infoString = getObjectInfoText( tile, mapFormat );
-        }
+        std::string infoString = getObjectInfoText( tile, mapFormat );
 
         infoString += "\n[";
         infoString += std::to_string( tile.GetIndex() % world.w() );

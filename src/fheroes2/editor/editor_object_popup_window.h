@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace Maps
 {
     class Tile;
@@ -32,5 +34,8 @@ namespace Maps
 
 namespace Editor
 {
+    // Returns the same engine-owned description that is displayed in the Editor's right-click popup.
+    std::string getObjectInfoText( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat );
+
     void showPopupWindow( const Maps::Tile & tile, const Maps::Map_Format::MapFormat & mapFormat );
 }

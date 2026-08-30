@@ -40,6 +40,7 @@
 #include "dialog_random_map_generator.h"
 #include "dialog_selectitems.h"
 #include "direction.h"
+#include "difficulty.h"
 #include "editor_castle_details_window.h"
 #include "editor_event_details_window.h"
 #include "editor_map_specs_window.h"
@@ -122,13 +123,35 @@ namespace
                | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_AUTO_PLAYTEST ) | fheroes2::thor::actionMask( ThorAction::EDITOR_FILE_CANCEL );
     }
 
-    void setThorEditorInterfaceState()
+    void setThorEditorInterfaceState( const Maps::Map_Format::MapFormat & mapFormat, const int32_t tileIndex )
     {
         fheroes2::thor::setUiContext( fheroes2::thor::UiContext::EDITOR_INTERFACE );
         fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS )
                                            | fheroes2::thor::actionMask( fheroes2::thor::Action::EDITOR_OPEN_TOOLS ) );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::EDITOR_INTERFACE;
+        snapshot.title = mapFormat.name.empty() ? _( "Map Editor" ) : mapFormat.name;
+        snapshot.category = _( "Map Information" );
+        snapshot.date = std::to_string( mapFormat.width ) + " x " + std::to_string( mapFormat.width ) + "   " + Difficulty::String( mapFormat.difficulty );
+
+        const int playerCount = Color::Count( mapFormat.availablePlayerColors );
+        if ( tileIndex >= 0 && tileIndex < static_cast<int32_t>( mapFormat.tiles.size() ) ) {
+            const Maps::Tile & tile = world.getTile( tileIndex );
+            snapshot.detail = Editor::getObjectInfoText( tile, mapFormat );
+            std::replace( snapshot.detail.begin(), snapshot.detail.end(), '\n', ' ' );
+            snapshot.resources = "[" + std::to_string( tileIndex % mapFormat.width ) + "; " + std::to_string( tileIndex / mapFormat.width ) + "]   "
+                                 + _( "Terrain" ) + ": " + Maps::Ground::String( tile.GetGround() ) + "   " + _( "Players" ) + ": "
+                                 + std::to_string( playerCount );
+        }
+        else {
+            snapshot.detail = _( "Point at a tile on the upper map" );
+            snapshot.resources = _( "Players" ) + std::string( ": " ) + std::to_string( playerCount );
+        }
+
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
     }
 
     void setThorEditorFileOptionsState()
@@ -1595,7 +1618,7 @@ namespace Interface
         LocalEvent & le = LocalEvent::Get();
         Cursor & cursor = Cursor::Get();
 
-        setThorEditorInterfaceState();
+        setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
 
         while ( res == fheroes2::GameMode::CANCEL ) {
             if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
@@ -1613,7 +1636,7 @@ namespace Interface
                 fheroes2::thor::setEnabledActions( 0 );
                 res = eventFileDialog();
                 if ( res == fheroes2::GameMode::CANCEL ) {
-                    setThorEditorInterfaceState();
+                    setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
                     continue;
                 }
 
@@ -1622,13 +1645,13 @@ namespace Interface
             if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS ) {
                 fheroes2::thor::setEnabledActions( 0 );
                 Editor::openEditorSettings();
-                setThorEditorInterfaceState();
+                setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
                 continue;
             }
             if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS ) {
                 fheroes2::thor::setEnabledActions( 0 );
                 openMapSpecificationsDialog();
-                setThorEditorInterfaceState();
+                setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
                 continue;
             }
             if ( requestedThorAction == fheroes2::thor::Action::EDITOR_OPEN_TOOLS ) {
@@ -1640,6 +1663,9 @@ namespace Interface
             if ( requestedThorAction != fheroes2::thor::Action::NONE && thorContext >= fheroes2::thor::UiContext::EDITOR_TOOLS
                  && thorContext <= fheroes2::thor::UiContext::EDITOR_TOOL_ERASE ) {
                 _editorPanel.queueEventProcessing( requestedThorAction );
+                if ( fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::EDITOR_INTERFACE ) {
+                    setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
+                }
                 continue;
             }
 
@@ -2072,6 +2098,10 @@ namespace Interface
             }
 
             assert( res == fheroes2::GameMode::CANCEL );
+
+            if ( fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::EDITOR_INTERFACE ) {
+                setThorEditorInterfaceState( _mapFormat, _tileUnderCursor );
+            }
 
             // Map objects animation
             if ( Game::validateAnimationDelay( Game::DelayType::MAPS_DELAY ) ) {

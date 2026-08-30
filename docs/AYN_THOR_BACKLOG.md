@@ -562,9 +562,26 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 4. Exercise Detail Edit/Move/Copy and every Erase filter and brush size. Verify edits use the established history behavior and the lower information card remains synchronized.
 5. Exercise rapid mixed taps, selector cancellation, right-click help, upper touchscreen, mouse, physical controls, hotkeys, Magnify, Undo/Redo, File Options, System Options, Map Specifications, Editor entry, and established menu regressions.
 
-### Next recommended planning point
+### In-map Editor map information
 
-- Plan richer map information as the next separate slice while preserving every validated Editor workflow.
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-30.
+
+- The base Map Editor deck uses the reserved lower-screen panel for read-only map information: map name, dimensions, difficulty, and available-player count.
+- Pointing at the upper map adds live tile coordinates, terrain, and the same engine-owned object description used by the Editor's right-click popup. This includes existing resource amounts, monster counts, ownership, artifact, road, and multi-tile-object handling without a second metadata interpretation path.
+- The snapshot follows pointer movement, edits, Undo/Redo, loaded maps, and committed Map Specification changes. The existing information bridge suppresses identical snapshots.
+- File Options remains modal, while System Options, Map Specifications, and Editor Tools retain their validated context-specific cards. No new semantic command or editable Android-owned state is introduced.
+- Deeper aggregate map statistics, validation diagnostics, and dedicated object-metadata views remain deferred as possible later slices.
+- Android build and lint passed through the required short `R:` mapping on 2026-08-30. The candidate installed successfully and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `CD7DA44BA26E7F961210B1B102D480272106C067A72EF2BC3117D36EEC069A80`.
+
+#### Focused in-map Editor map information validation
+
+1. Create and load representative maps. Verify name, size, difficulty, and player count match Map Specifications.
+2. Point at empty terrain, roads, resources, monsters, capturable objects, and multi-tile objects. Verify coordinates, terrain, and descriptions match the existing right-click information.
+3. Under and around the pointer, change terrain, place, move, copy, and erase objects, then use Undo and Redo. Verify the card refreshes without stale values.
+4. Open and close File Options, System Options, Map Specifications, Editor Tools, selectors, help, and other dialogs. Verify each existing card appears in its context and the map card returns correctly.
+5. Exercise rapid pointer movement and lower-screen taps, upper touch, mouse, physical controls, and hotkeys. Recheck all validated Editor workflows for regressions.
+
+All five map-information checks passed on the Thor, including map metadata, tile and object descriptions, live edit and Undo/Redo refresh, exact information-card restoration, rapid pointer movement, lower-screen actions, and physical, touchscreen, mouse, hotkey, and established Editor regressions.
 
 ### Later menu slices
 

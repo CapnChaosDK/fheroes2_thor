@@ -490,7 +490,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
                    || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS
-                   || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
+                   || gameContext == CONTEXT_EDITOR_INTERFACE || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
                    || gameContext == CONTEXT_EDITOR_MAP_SPEC_PLAYERS || gameContext == CONTEXT_EDITOR_MAP_SPEC_VICTORY
                    || gameContext == CONTEXT_EDITOR_MAP_SPEC_LOSS || ( gameContext >= CONTEXT_EDITOR_TOOLS && gameContext <= CONTEXT_EDITOR_TOOL_ERASE ) )
                  && informationContext == gameContext && informationRevision >= 0 && !informationTitle.isEmpty() ) {
