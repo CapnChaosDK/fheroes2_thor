@@ -57,9 +57,18 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                 if ( radarSnapshot != null && radarSnapshot.length >= 3 ) {
                     radarRevision = radarSnapshot[2];
                 }
+                final String[] selectionSnapshot = activity.getThorSelectionSnapshot( selectionRevision );
+                if ( selectionSnapshot != null && selectionSnapshot.length >= 3 ) {
+                    try {
+                        selectionRevision = Long.parseLong( selectionSnapshot[2] );
+                    }
+                    catch ( final NumberFormatException ex ) {
+                        Log.w( LOG_TAG, "Ignoring an invalid selection snapshot revision.", ex );
+                    }
+                }
                 ( (ThorSecondScreenPresentation)presentation )
                     .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot,
-                                   activity.isThorViewportControlEnabled(), radarSnapshot );
+                                   activity.isThorViewportControlEnabled(), radarSnapshot, selectionSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -69,6 +78,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private boolean isStarted;
     private long informationRevision = -1;
     private long radarRevision = -1;
+    private long selectionRevision = -1;
 
     ThorSecondScreenController( final GameActivity activity )
     {
@@ -138,9 +148,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
 
         final ThorSecondScreenPresentation newPresentation
             = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction,
-                                                activity::enqueueThorViewportRequest );
+                                                activity::enqueueThorViewportRequest, activity::enqueueThorSelectionRequest );
         informationRevision = -1;
         radarRevision = -1;
+        selectionRevision = -1;
         newPresentation.setOnDismissListener( dialog -> {
             if ( presentation == dialog ) {
                 presentation = null;
@@ -189,6 +200,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         }
         informationRevision = -1;
         radarRevision = -1;
+        selectionRevision = -1;
     }
 
     private void sendKey( final int keyCode, final boolean pressed )

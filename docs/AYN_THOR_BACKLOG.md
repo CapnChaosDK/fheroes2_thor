@@ -604,6 +604,27 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five touch-minimap checks passed on the Thor, including Adventure radar fidelity and viewport synchronization, clamped tap and drag navigation without gameplay side effects, Editor editing and Undo/Redo synchronization, exact context restoration and input gating, rapid drag, multitouch, cancellation, upper-radar visibility, physical-control, touchscreen, mouse, hotkey, and established Adventure and Editor regressions.
 
+### Hero and castle quick-selection lists
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-30.
+
+- The Adventure Map deck retains Next Hero and Next Town and adds dedicated Heroes and Towns commands. Each opens a lower-screen-only selection list while the upper Adventure Map remains visible.
+- Revisioned native snapshots expose every current kingdom-owned hero or settlement in the engine collection order, with native identity, name, compact status, and current-focus state. Android owns only presentation and paging.
+- A list tap submits the snapshot revision and stable native identifier. The SDL thread rejects stale or mismatched requests, resolves the entry against the current kingdom collection, and selects it through the existing `SetFocus(...)` and `RedrawFocus()` paths.
+- Successful selection centers the upper viewport and returns to Adventure immediately. Back restores Adventure without changing focus. Lists and requests are unavailable during hero movement, dialogs, and every non-Adventure context.
+- Minimap entity markers, portraits or sprites, list-driven dialog opening, reordering, long-press behavior, army drag-and-drop, and configurable layouts remain deferred.
+- Android build and lint passed through the required short `R:` mapping. The candidate installed successfully and was explicitly launched on the connected Thor as `org.fheroes2.thor/org.fheroes2.GameActivity`; APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
+
+#### Focused hero and castle quick-selection validation
+
+1. With several heroes including sleeping and exhausted heroes, verify native order, status, current highlight, paging, and direct selection. Confirm upper centering, information, minimap, path, and portrait synchronization.
+2. With several towns and castles, verify names and types, paging, direct focus, upper centering, icon selection, information, and minimap synchronization.
+3. Recruit or dismiss a hero and gain or lose a settlement where practical. Verify reopening the list reflects the current native collections without stale entries.
+4. Exercise Back, rapid taps, context changes, multitouch, and hero movement. Verify there are no stacked screens, duplicate selections, unintended routes or movement, dialogs, or stale focus.
+5. Recheck Next Hero, Next Town, all Adventure commands, touch-minimap navigation, Hero and Castle dialogs, physical controls, upper touchscreen, mouse, and hotkeys.
+
+All five quick-selection checks passed on the Thor, including hero and settlement order, status, focus highlighting, paging, direct selection, upper centering, information and minimap synchronization, live kingdom collection refresh, Back behavior, movement gating, rapid taps, multitouch, and Adventure, dialog, physical-control, touchscreen, mouse, and hotkey regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -630,14 +651,14 @@ All five touch-minimap checks passed on the Thor, including Adventure radar fide
 
 ## Next recommended planning point
 
-- Plan hero and castle quick-selection lists as a separate focused slice while preserving every validated gameplay, menu, information-card, Editor, and minimap workflow.
+- Plan hero and castle markers on the existing touch minimap as a separate focused slice, using engine-owned positions and ownership while preserving the validated list selection and viewport-control paths.
 
 ## Milestone 4: interactive second-screen tools
 
 Status: `deferred`
 
 - Touch radar or minimap with upper-screen viewport control is hardware-validated; retain it without regression.
-- Hero and castle quick-selection lists.
+- Hero and castle quick-selection lists are hardware-validated; retain native ordering, focus ownership, revision checks, paging, and exact Adventure restoration without regression.
 - Optional drag-and-drop army management after semantic actions are proven safe.
 - Configurable layouts, button sizing, left/right-handed modes, and controls-only battery-saving mode.
 - Optional haptics and configurable long-press actions.

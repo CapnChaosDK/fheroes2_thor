@@ -73,6 +73,8 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_EDITOR_TOOL_STREAMS = 38;
     private static final int CONTEXT_EDITOR_TOOL_ROADS = 39;
     private static final int CONTEXT_EDITOR_TOOL_ERASE = 40;
+    private static final int CONTEXT_ADVENTURE_HERO_LIST = 41;
+    private static final int CONTEXT_ADVENTURE_CASTLE_LIST = 42;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -285,6 +287,13 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_EDITOR_ERASE_HEROES = 208;
     private static final int ACTION_EDITOR_ERASE_ROADS = 209;
     private static final int ACTION_EDITOR_ERASE_STREAMS = 210;
+    private static final int ACTION_ADVENTURE_OPEN_HERO_LIST = 211;
+    private static final int ACTION_ADVENTURE_OPEN_CASTLE_LIST = 212;
+    private static final int ACTION_ADVENTURE_SELECTION_BACK = 213;
+
+    private static final int SELECTION_PAGE_SIZE = 8;
+    private static final int LOCAL_PREVIOUS_PAGE = 1;
+    private static final int LOCAL_NEXT_PAGE = 2;
 
     interface KeySender
     {
@@ -301,18 +310,25 @@ final class ThorSecondScreenPresentation extends Presentation
         boolean send( float normalizedX, float normalizedY );
     }
 
+    interface SelectionSender
+    {
+        boolean send( int context, long revision, int id );
+    }
+
     private final KeySender keySender;
     private final ActionSender actionSender;
     private final ViewportSender viewportSender;
+    private final SelectionSender selectionSender;
     private CommandDeckView commandDeckView;
 
     ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender,
-                                  final ViewportSender viewportSender )
+                                  final ViewportSender viewportSender, final SelectionSender selectionSender )
     {
         super( context, display );
         this.keySender = keySender;
         this.actionSender = actionSender;
         this.viewportSender = viewportSender;
+        this.selectionSender = selectionSender;
     }
 
     @Override
@@ -329,7 +345,7 @@ final class ThorSecondScreenPresentation extends Presentation
             window.getDecorView().setSystemUiVisibility( View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY );
         }
 
-        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender, viewportSender );
+        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender );
         setContentView( commandDeckView );
     }
 
@@ -343,10 +359,10 @@ final class ThorSecondScreenPresentation extends Presentation
     }
 
     void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled,
-                       final int[] radarSnapshot )
+                       final int[] radarSnapshot, final String[] selectionSnapshot )
     {
         if ( commandDeckView != null ) {
-            commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot );
+            commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot, selectionSnapshot );
         }
     }
 
@@ -368,6 +384,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final KeySender keySender;
         private final ActionSender actionSender;
         private final ViewportSender viewportSender;
+        private final SelectionSender selectionSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -394,27 +411,34 @@ final class ThorSecondScreenPresentation extends Presentation
         private int radarViewportHeight;
         private boolean viewportControlEnabled;
         private boolean radarGestureActive;
+        private int selectionContext = -1;
+        private long selectionRevision = -1;
+        private final List<SelectionEntry> selectionEntries = new ArrayList<>();
+        private int selectionPage;
 
-        CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender )
+        CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
+                         final SelectionSender selectionSender )
         {
             super( context );
             this.keySender = keySender;
             this.actionSender = actionSender;
             this.viewportSender = viewportSender;
+            this.selectionSender = selectionSender;
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L, null, false, null );
+            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null );
         }
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot,
-                           final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot )
+                           final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final String[] requestedSelectionSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_EDITOR_TOOL_ERASE ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_ADVENTURE_CASTLE_LIST ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
+            final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled
-                 && !informationChanged && !radarChanged ) {
+                 && !informationChanged && !radarChanged && !selectionChanged ) {
                 return;
             }
 
@@ -428,7 +452,8 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( !viewportControlEnabled ) {
                 radarGestureActive = false;
             }
-            if ( contextChanged || ( informationChanged && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP ) ) ) {
+            if ( contextChanged || selectionChanged
+                 || ( informationChanged && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP ) ) ) {
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
             }
@@ -484,6 +509,46 @@ final class ThorSecondScreenPresentation extends Presentation
                 informationDetail = snapshot[5] == null ? "" : snapshot[5];
                 informationDate = snapshot[6] == null ? "" : snapshot[6];
                 informationResources = snapshot[7] == null ? "" : snapshot[7];
+                return true;
+            }
+            catch ( final NumberFormatException ex ) {
+                return false;
+            }
+        }
+
+        private boolean applySelectionSnapshot( final String[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 4 ) {
+                return false;
+            }
+
+            try {
+                final int version = Integer.parseInt( snapshot[0] );
+                final int context = Integer.parseInt( snapshot[1] );
+                final long revision = Long.parseLong( snapshot[2] );
+                final int count = Integer.parseInt( snapshot[3] );
+                if ( version != 1 || revision == selectionRevision || count < 0 || snapshot.length != 4 + count * 4 ) {
+                    return false;
+                }
+
+                final List<SelectionEntry> entries = new ArrayList<>( count );
+                int selectedIndex = -1;
+                for ( int index = 0; index < count; ++index ) {
+                    final int offset = 4 + index * 4;
+                    final int id = Integer.parseInt( snapshot[offset] );
+                    final boolean selected = "1".equals( snapshot[offset + 3] );
+                    entries.add( new SelectionEntry( id, snapshot[offset + 1] == null ? "" : snapshot[offset + 1],
+                                                     snapshot[offset + 2] == null ? "" : snapshot[offset + 2], selected ) );
+                    if ( selected ) {
+                        selectedIndex = index;
+                    }
+                }
+
+                selectionContext = context;
+                selectionRevision = revision;
+                selectionEntries.clear();
+                selectionEntries.addAll( entries );
+                selectionPage = selectedIndex < 0 ? 0 : selectedIndex / SELECTION_PAGE_SIZE;
                 return true;
             }
             catch ( final NumberFormatException ex ) {
@@ -676,7 +741,7 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRoundRect( shadow, 17, 17, paint );
 
             final boolean enabled = isEnabled( button );
-            paint.setColor( !enabled ? PANEL_COLOR : ( button == pressedButton ? BUTTON_PRESSED_COLOR : BUTTON_COLOR ) );
+            paint.setColor( !enabled ? PANEL_COLOR : ( button == pressedButton || button.selected ? BUTTON_PRESSED_COLOR : BUTTON_COLOR ) );
             canvas.drawRoundRect( button.bounds, 17, 17, paint );
 
             paint.setStyle( Paint.Style.STROKE );
@@ -700,8 +765,14 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( measuredTextWidth > maximumTextWidth ) {
                 paint.setTextSize( paint.getTextSize() * maximumTextWidth / measuredTextWidth );
             }
-            final float baseline = button.bounds.centerY() - ( paint.ascent() + paint.descent() ) / 2;
+            final float baseline = button.detail.isEmpty() ? button.bounds.centerY() - ( paint.ascent() + paint.descent() ) / 2 : button.bounds.centerY() - 7f;
             canvas.drawText( button.label, button.bounds.centerX(), baseline, paint );
+
+            if ( !button.detail.isEmpty() ) {
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+                paint.setColor( enabled ? GOLD_LIGHT_COLOR : MUTED_TEXT_COLOR );
+                drawFittedText( canvas, button.detail, button.bounds.centerX(), button.bounds.centerY() + 28f, maximumTextWidth, 22f );
+            }
         }
 
         @Override
@@ -723,8 +794,18 @@ final class ThorSecondScreenPresentation extends Presentation
 
                 pressedButton = buttonAt( event.getX(), event.getY() );
                 if ( pressedButton != null ) {
-                    pressedButton.sentSemantically = pressedButton.action != ACTION_NONE && actionSender.send( pressedButton.action );
-                    if ( !pressedButton.sentSemantically ) {
+                    if ( pressedButton.selectionId >= 0 ) {
+                        pressedButton.sentSemantically
+                            = selectionContext == gameContext && selectionSender.send( gameContext, selectionRevision, pressedButton.selectionId );
+                    }
+                    else if ( pressedButton.localCommand != 0 ) {
+                        changeSelectionPage( pressedButton.localCommand );
+                        return true;
+                    }
+                    else {
+                        pressedButton.sentSemantically = pressedButton.action != ACTION_NONE && actionSender.send( pressedButton.action );
+                    }
+                    if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                         keySender.send( pressedButton.keyCode, true );
                     }
                     invalidate();
@@ -769,6 +850,21 @@ final class ThorSecondScreenPresentation extends Presentation
             return viewportSender.send( normalizedX, normalizedY );
         }
 
+        private void changeSelectionPage( final int command )
+        {
+            final int pageCount = Math.max( 1, ( selectionEntries.size() + SELECTION_PAGE_SIZE - 1 ) / SELECTION_PAGE_SIZE );
+            if ( command == LOCAL_PREVIOUS_PAGE && selectionPage > 0 ) {
+                --selectionPage;
+            }
+            else if ( command == LOCAL_NEXT_PAGE && selectionPage + 1 < pageCount ) {
+                ++selectionPage;
+            }
+            releasePressedButton();
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
+            invalidate();
+        }
+
         private void rebuildActions()
         {
             buttons.clear();
@@ -788,6 +884,8 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "ADVENTURE MAP";
                 addAction( "NEXT HERO", ACTION_ADVENTURE_NEXT_HERO, KeyEvent.KEYCODE_H );
                 addAction( "NEXT TOWN", ACTION_ADVENTURE_NEXT_TOWN, KeyEvent.KEYCODE_T );
+                addAction( "HEROES", ACTION_ADVENTURE_OPEN_HERO_LIST, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TOWNS", ACTION_ADVENTURE_OPEN_CASTLE_LIST, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "MOVE", ACTION_ADVENTURE_MOVE, KeyEvent.KEYCODE_M );
                 addAction( "ACTION", ACTION_ADVENTURE_DEFAULT_ACTION, KeyEvent.KEYCODE_SPACE );
                 addAction( "SPELL", ACTION_ADVENTURE_CAST_SPELL, KeyEvent.KEYCODE_C );
@@ -798,6 +896,14 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "KINGDOM", ACTION_ADVENTURE_KINGDOM_SUMMARY, KeyEvent.KEYCODE_K );
                 addAction( "VIEW WORLD", ACTION_ADVENTURE_VIEW_WORLD, KeyEvent.KEYCODE_V );
                 addAction( "DIG", ACTION_ADVENTURE_DIG_ARTIFACT, KeyEvent.KEYCODE_D );
+                break;
+            case CONTEXT_ADVENTURE_HERO_LIST:
+                contextTitle = "SELECT HERO";
+                addSelectionActions();
+                break;
+            case CONTEXT_ADVENTURE_CASTLE_LIST:
+                contextTitle = "SELECT TOWN";
+                addSelectionActions();
                 break;
             case CONTEXT_HERO:
                 contextTitle = "HERO";
@@ -1194,6 +1300,25 @@ final class ThorSecondScreenPresentation extends Presentation
             addAction( "BACK", ACTION_MENU_BACK, KeyEvent.KEYCODE_ESCAPE );
         }
 
+        private void addSelectionActions()
+        {
+            if ( selectionContext == gameContext ) {
+                final int firstIndex = selectionPage * SELECTION_PAGE_SIZE;
+                final int lastIndex = Math.min( selectionEntries.size(), firstIndex + SELECTION_PAGE_SIZE );
+                for ( int index = firstIndex; index < lastIndex; ++index ) {
+                    final SelectionEntry entry = selectionEntries.get( index );
+                    buttons.add( new CommandButton( entry.name, entry.detail, entry.id, entry.selected ) );
+                }
+            }
+
+            final int pageCount = Math.max( 1, ( selectionEntries.size() + SELECTION_PAGE_SIZE - 1 ) / SELECTION_PAGE_SIZE );
+            if ( pageCount > 1 ) {
+                buttons.add( new CommandButton( "PREVIOUS PAGE", LOCAL_PREVIOUS_PAGE ) );
+                buttons.add( new CommandButton( "NEXT PAGE", LOCAL_NEXT_PAGE ) );
+            }
+            addAction( "BACK", ACTION_ADVENTURE_SELECTION_BACK, KeyEvent.KEYCODE_ESCAPE );
+        }
+
         private void addAction( final String label, final int keyCode )
         {
             addAction( label, ACTION_NONE, keyCode );
@@ -1213,7 +1338,8 @@ final class ThorSecondScreenPresentation extends Presentation
             final float margin = getMargin();
             final float gap = margin * 0.55f;
             final float top = height * 0.265f;
-            final int columns = buttons.size() <= 2 || buttons.size() == 4 ? 2 : ( buttons.size() <= 6 ? 3 : 4 );
+            final boolean selectionList = gameContext == CONTEXT_ADVENTURE_HERO_LIST || gameContext == CONTEXT_ADVENTURE_CASTLE_LIST;
+            final int columns = selectionList ? 2 : ( buttons.size() <= 2 || buttons.size() == 4 ? 2 : ( buttons.size() <= 6 ? 3 : 4 ) );
             final int rows = ( buttons.size() + columns - 1 ) / columns;
             final float columnWidth = ( width - 2 * margin - ( columns - 1 ) * gap ) / columns;
             final float rowHeight = ( height - top - margin - ( rows - 1 ) * gap ) / rows;
@@ -1244,6 +1370,15 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private boolean isEnabled( final CommandButton button )
         {
+            if ( button.localCommand == LOCAL_PREVIOUS_PAGE ) {
+                return selectionPage > 0;
+            }
+            if ( button.localCommand == LOCAL_NEXT_PAGE ) {
+                return ( selectionPage + 1 ) * SELECTION_PAGE_SIZE < selectionEntries.size();
+            }
+            if ( button.selectionId >= 0 ) {
+                return selectionContext == gameContext;
+            }
             return button.action == ACTION_NONE || ( enabledActions & actionMask( button.action ) ) != 0;
         }
 
@@ -1262,7 +1397,7 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             radarGestureActive = false;
             if ( pressedButton != null ) {
-                if ( !pressedButton.sentSemantically ) {
+                if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                     keySender.send( pressedButton.keyCode, false );
                 }
                 pressedButton.sentSemantically = false;
@@ -1275,16 +1410,56 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final class CommandButton
     {
         final String label;
+        final String detail;
         final int action;
         final int keyCode;
+        final int selectionId;
+        final int localCommand;
+        final boolean selected;
         final RectF bounds = new RectF();
         boolean sentSemantically;
 
         CommandButton( final String label, final int action, final int keyCode )
         {
+            this( label, "", action, keyCode, -1, 0, false );
+        }
+
+        CommandButton( final String label, final String detail, final int selectionId, final boolean selected )
+        {
+            this( label, detail, ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, selectionId, 0, selected );
+        }
+
+        CommandButton( final String label, final int localCommand )
+        {
+            this( label, "", ACTION_NONE, KeyEvent.KEYCODE_UNKNOWN, -1, localCommand, false );
+        }
+
+        private CommandButton( final String label, final String detail, final int action, final int keyCode, final int selectionId, final int localCommand,
+                               final boolean selected )
+        {
             this.label = label;
+            this.detail = detail;
             this.action = action;
             this.keyCode = keyCode;
+            this.selectionId = selectionId;
+            this.localCommand = localCommand;
+            this.selected = selected;
+        }
+    }
+
+    private static final class SelectionEntry
+    {
+        final int id;
+        final String name;
+        final String detail;
+        final boolean selected;
+
+        SelectionEntry( final int id, final String name, final String detail, final boolean selected )
+        {
+            this.id = id;
+            this.name = name;
+            this.detail = detail;
+            this.selected = selected;
         }
     }
 }

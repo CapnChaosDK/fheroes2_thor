@@ -58,7 +58,9 @@ namespace fheroes2::thor
         EDITOR_TOOL_MONSTERS,
         EDITOR_TOOL_STREAMS,
         EDITOR_TOOL_ROADS,
-        EDITOR_TOOL_ERASE
+        EDITOR_TOOL_ERASE,
+        ADVENTURE_HERO_LIST,
+        ADVENTURE_CASTLE_LIST
     };
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
@@ -275,7 +277,10 @@ namespace fheroes2::thor
         EDITOR_ERASE_MONSTERS,
         EDITOR_ERASE_HEROES,
         EDITOR_ERASE_ROADS,
-        EDITOR_ERASE_STREAMS
+        EDITOR_ERASE_STREAMS,
+        ADVENTURE_OPEN_HERO_LIST,
+        ADVENTURE_OPEN_CASTLE_LIST,
+        ADVENTURE_SELECTION_BACK
     };
 
     using ActionMask = uint64_t;
@@ -320,6 +325,32 @@ namespace fheroes2::thor
         bool valid{ false };
     };
 
+    struct SelectionEntry
+    {
+        int32_t id{ -1 };
+        std::string name;
+        std::string detail;
+        bool selected{ false };
+    };
+
+    struct SelectionSnapshot
+    {
+        static constexpr int32_t currentVersion = 1;
+
+        int32_t version{ currentVersion };
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        std::vector<SelectionEntry> entries;
+    };
+
+    struct SelectionRequest
+    {
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        int32_t id{ -1 };
+        bool valid{ false };
+    };
+
     constexpr int32_t actionMaskBit( const Action action )
     {
         const int32_t actionId = static_cast<int32_t>( action );
@@ -359,6 +390,10 @@ namespace fheroes2::thor
     ViewportRequest takeViewportRequest();
     bool isViewportControlEnabled();
     void setViewportControlEnabled( bool enabled );
+    bool getSelectionSnapshot( uint64_t knownRevision, SelectionSnapshot & snapshot );
+    void publishSelectionSnapshot( SelectionSnapshot snapshot );
+    bool enqueueSelectionRequest( UiContext context, uint64_t revision, int32_t id );
+    SelectionRequest takeSelectionRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

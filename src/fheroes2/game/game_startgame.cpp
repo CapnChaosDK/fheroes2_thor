@@ -1124,8 +1124,12 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
              } ) ) {
             actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_NEXT_HERO );
         }
+        if ( !heroes.empty() ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPEN_HERO_LIST );
+        }
         if ( !myKingdom.GetCastles().empty() ) {
             actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_NEXT_TOWN );
+            actions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPEN_CASTLE_LIST );
         }
 
         const Heroes * hero = GetFocusHeroes();
@@ -1179,6 +1183,39 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
     };
 
+    const auto publishThorSelection = [&myKingdom]( const fheroes2::thor::UiContext context ) {
+        fheroes2::thor::SelectionSnapshot snapshot;
+        snapshot.context = context;
+
+        if ( context == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST ) {
+            const Heroes * focusedHero = GetFocusHeroes();
+            for ( const Heroes * hero : myKingdom.GetHeroes() ) {
+                assert( hero != nullptr );
+                fheroes2::thor::SelectionEntry entry;
+                entry.id = hero->GetID();
+                entry.name = hero->GetName();
+                entry.detail = hero->Modes( Heroes::SLEEPER ) ? "SLEEPING" : "AWAKE";
+                entry.detail += "  |  MOVE " + std::to_string( hero->GetMovePoints() ) + " / " + std::to_string( hero->GetMaxMovePoints() );
+                entry.selected = hero == focusedHero;
+                snapshot.entries.emplace_back( std::move( entry ) );
+            }
+        }
+        else if ( context == fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST ) {
+            const Castle * focusedCastle = GetFocusCastle();
+            for ( const Castle * castle : myKingdom.GetCastles() ) {
+                assert( castle != nullptr );
+                fheroes2::thor::SelectionEntry entry;
+                entry.id = castle->GetIndex();
+                entry.name = castle->GetName();
+                entry.detail = castle->isCastle() ? "CASTLE" : "TOWN";
+                entry.selected = castle == focusedCastle;
+                snapshot.entries.emplace_back( std::move( entry ) );
+            }
+        }
+
+        fheroes2::thor::publishSelectionSnapshot( std::move( snapshot ) );
+    };
+
     publishThorInformation();
     fheroes2::thor::setViewportControlEnabled( true );
 
@@ -1190,6 +1227,50 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 break;
             }
 
+            continue;
+        }
+
+        const fheroes2::thor::UiContext thorContext = fheroes2::thor::getUiContext();
+        if ( thorContext == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST || thorContext == fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST ) {
+            publishThorSelection( thorContext );
+            fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::ADVENTURE_SELECTION_BACK ) );
+
+            bool closeSelection = false;
+            const fheroes2::thor::SelectionRequest selectionRequest = fheroes2::thor::takeSelectionRequest();
+            if ( selectionRequest.valid ) {
+                if ( thorContext == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST ) {
+                    const VecHeroes & heroes = myKingdom.GetHeroes();
+                    const auto hero = std::find_if( heroes.begin(), heroes.end(), [&selectionRequest]( const Heroes * value ) {
+                        return value != nullptr && value->GetID() == selectionRequest.id;
+                    } );
+                    if ( hero != heroes.end() ) {
+                        SetFocus( *hero, false );
+                        RedrawFocus();
+                        closeSelection = true;
+                    }
+                }
+                else {
+                    const VecCastles & castles = myKingdom.GetCastles();
+                    const auto castle = std::find_if( castles.begin(), castles.end(), [&selectionRequest]( const Castle * value ) {
+                        return value != nullptr && value->GetIndex() == selectionRequest.id;
+                    } );
+                    if ( castle != castles.end() ) {
+                        SetFocus( *castle );
+                        RedrawFocus();
+                        closeSelection = true;
+                    }
+                }
+            }
+
+            const ThorAction selectionAction = fheroes2::thor::takeAction();
+            if ( selectionAction == ThorAction::ADVENTURE_SELECTION_BACK || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+                closeSelection = true;
+            }
+
+            if ( closeSelection ) {
+                fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_MAP );
+                publishThorInformation();
+            }
             continue;
         }
 
@@ -1240,6 +1321,14 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 case ThorAction::ADVENTURE_NEXT_TOWN:
                     EventNextTown();
                     break;
+                case ThorAction::ADVENTURE_OPEN_HERO_LIST:
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
+                    publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST );
+                    break;
+                case ThorAction::ADVENTURE_OPEN_CASTLE_LIST:
+                    fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
+                    publishThorSelection( fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST );
+                    break;
                 case ThorAction::ADVENTURE_MOVE:
                     res = EventHeroMovement();
                     break;
@@ -1271,6 +1360,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     res = EventDigArtifact();
                     break;
                 case ThorAction::NONE:
+                case ThorAction::ADVENTURE_SELECTION_BACK:
                 default:
                     break;
                 }

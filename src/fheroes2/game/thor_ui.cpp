@@ -10,6 +10,7 @@
 
 #include "thor_ui.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <deque>
@@ -34,6 +35,9 @@ namespace
     std::mutex viewportRequestMutex;
     fheroes2::thor::ViewportRequest viewportRequest;
     std::atomic<bool> viewportControlEnabled{ false };
+    std::mutex selectionMutex;
+    fheroes2::thor::SelectionSnapshot selectionSnapshot;
+    fheroes2::thor::SelectionRequest selectionRequest;
 
     bool isBattleAction( const fheroes2::thor::Action action )
     {
@@ -72,6 +76,8 @@ namespace
         case Action::ADVENTURE_KINGDOM_SUMMARY:
         case Action::ADVENTURE_VIEW_WORLD:
         case Action::ADVENTURE_DIG_ARTIFACT:
+        case Action::ADVENTURE_OPEN_HERO_LIST:
+        case Action::ADVENTURE_OPEN_CASTLE_LIST:
             return true;
         case Action::NONE:
         default:
@@ -203,6 +209,11 @@ namespace
         default:
             return false;
         }
+    }
+
+    bool isAdventureSelectionAction( const fheroes2::thor::Action action )
+    {
+        return action == fheroes2::thor::Action::ADVENTURE_SELECTION_BACK;
     }
 
     bool isMainMenuAction( const fheroes2::thor::Action action )
@@ -468,7 +479,7 @@ namespace
         using UiContext = fheroes2::thor::UiContext;
 
         return context == UiContext::MAIN_MENU || context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO
-               || context == UiContext::CASTLE
+               || context == UiContext::CASTLE || context == UiContext::ADVENTURE_HERO_LIST || context == UiContext::ADVENTURE_CASTLE_LIST
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
@@ -491,6 +502,9 @@ namespace
             return isBattleAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_MAP:
             return isAdventureAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_HERO_LIST:
+        case fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST:
+            return isAdventureSelectionAction( action );
         case fheroes2::thor::UiContext::HERO:
             return isHeroAction( action );
         case fheroes2::thor::UiContext::CASTLE:
@@ -576,6 +590,15 @@ namespace fheroes2::thor
             {
                 std::lock_guard<std::mutex> viewportLock( viewportRequestMutex );
                 viewportRequest = {};
+            }
+
+            {
+                std::lock_guard<std::mutex> selectionLock( selectionMutex );
+                selectionRequest = {};
+                SelectionSnapshot emptySelection;
+                emptySelection.context = context;
+                emptySelection.revision = selectionSnapshot.revision + 1;
+                selectionSnapshot = std::move( emptySelection );
             }
 
             std::lock_guard<std::mutex> informationLock( informationMutex );
@@ -745,6 +768,70 @@ namespace fheroes2::thor
         }
     }
 
+    bool getSelectionSnapshot( const uint64_t knownRevision, SelectionSnapshot & snapshot )
+    {
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        if ( selectionSnapshot.revision == knownRevision ) {
+            return false;
+        }
+
+        snapshot = selectionSnapshot;
+        return true;
+    }
+
+    void publishSelectionSnapshot( SelectionSnapshot snapshot )
+    {
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        const bool unchanged = selectionSnapshot.version == snapshot.version && selectionSnapshot.context == snapshot.context
+                               && selectionSnapshot.entries.size() == snapshot.entries.size()
+                               && std::equal( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), snapshot.entries.begin(),
+                                              []( const SelectionEntry & left, const SelectionEntry & right ) {
+                                                  return left.id == right.id && left.name == right.name && left.detail == right.detail
+                                                         && left.selected == right.selected;
+                                              } );
+        if ( unchanged ) {
+            return;
+        }
+
+        snapshot.revision = selectionSnapshot.revision + 1;
+        selectionSnapshot = std::move( snapshot );
+        selectionRequest = {};
+    }
+
+    bool enqueueSelectionRequest( const UiContext context, const uint64_t revision, const int32_t id )
+    {
+        if ( context != UiContext::ADVENTURE_HERO_LIST && context != UiContext::ADVENTURE_CASTLE_LIST ) {
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        if ( getUiContext() != context || selectionSnapshot.context != context || selectionSnapshot.revision != revision ) {
+            return false;
+        }
+
+        const auto entry = std::find_if( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), [id]( const SelectionEntry & value ) {
+            return value.id == id;
+        } );
+        if ( entry == selectionSnapshot.entries.end() ) {
+            return false;
+        }
+
+        selectionRequest = { context, revision, id, true };
+        return true;
+    }
+
+    SelectionRequest takeSelectionRequest()
+    {
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        SelectionRequest request = selectionRequest;
+        selectionRequest = {};
+        if ( !request.valid || request.context != getUiContext() || request.context != selectionSnapshot.context
+             || request.revision != selectionSnapshot.revision ) {
+            return {};
+        }
+        return request;
+    }
+
     UiContextGuard::UiContextGuard( const UiContext context )
         : _previousContext( getUiContext() )
     {
@@ -782,6 +869,65 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
                                                                                                          const jfloat normalizedY )
 {
     return fheroes2::thor::enqueueViewportRequest( normalizedX, normalizedY ) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorSelectionRequest( JNIEnv *, jclass, const jint context,
+                                                                                                          const jlong revision, const jint id )
+{
+    return fheroes2::thor::enqueueSelectionRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ), id ) ? JNI_TRUE
+                                                                                                                                                : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorSelectionSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    fheroes2::thor::SelectionSnapshot snapshot;
+    if ( !fheroes2::thor::getSelectionSnapshot( static_cast<uint64_t>( knownRevision ), snapshot ) ) {
+        return nullptr;
+    }
+
+    constexpr size_t headerSize = 4;
+    constexpr size_t fieldsPerEntry = 4;
+    if ( snapshot.entries.size() > ( static_cast<size_t>( std::numeric_limits<jsize>::max() ) - headerSize ) / fieldsPerEntry ) {
+        return nullptr;
+    }
+
+    jclass stringClass = env->FindClass( "java/lang/String" );
+    if ( stringClass == nullptr ) {
+        return nullptr;
+    }
+
+    const jsize fieldCount = static_cast<jsize>( headerSize + snapshot.entries.size() * fieldsPerEntry );
+    jobjectArray fields = env->NewObjectArray( fieldCount, stringClass, nullptr );
+    if ( fields == nullptr ) {
+        env->DeleteLocalRef( stringClass );
+        return nullptr;
+    }
+
+    std::vector<std::string> values;
+    values.reserve( fieldCount );
+    values.emplace_back( std::to_string( snapshot.version ) );
+    values.emplace_back( std::to_string( static_cast<int32_t>( snapshot.context ) ) );
+    values.emplace_back( std::to_string( snapshot.revision ) );
+    values.emplace_back( std::to_string( snapshot.entries.size() ) );
+    for ( const fheroes2::thor::SelectionEntry & entry : snapshot.entries ) {
+        values.emplace_back( std::to_string( entry.id ) );
+        values.emplace_back( entry.name );
+        values.emplace_back( entry.detail );
+        values.emplace_back( entry.selected ? "1" : "0" );
+    }
+
+    for ( jsize index = 0; index < fieldCount; ++index ) {
+        jstring value = env->NewStringUTF( values[index].c_str() );
+        if ( value == nullptr ) {
+            env->DeleteLocalRef( stringClass );
+            return nullptr;
+        }
+        env->SetObjectArrayElement( fields, index, value );
+        env->DeleteLocalRef( value );
+    }
+
+    env->DeleteLocalRef( stringClass );
+    return fields;
 }
 
 extern "C" JNIEXPORT jintArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorRadarSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
