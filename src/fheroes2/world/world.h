@@ -308,6 +308,11 @@ public:
         return vec_castles.Size();
     }
 
+    const AllCastles & getAllCastles() const
+    {
+        return vec_castles;
+    }
+
     void removeCastle( const fheroes2::Point & tilePosition )
     {
         vec_castles.removeCastle( tilePosition );
@@ -335,6 +340,11 @@ public:
     Heroes * GetHeroes( const fheroes2::Point & center )
     {
         return vec_heroes.Get( center );
+    }
+
+    const AllHeroes & getAllHeroes() const
+    {
+        return vec_heroes;
     }
 
     Heroes * FromJailHeroes( const int32_t tileIndex )

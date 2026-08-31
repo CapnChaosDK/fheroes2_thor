@@ -800,7 +800,8 @@ namespace fheroes2::thor
                                && std::equal( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), snapshot.entries.begin(),
                                               []( const SelectionEntry & left, const SelectionEntry & right ) {
                                                   return left.id == right.id && left.name == right.name && left.detail == right.detail
-                                                         && left.selected == right.selected && left.kind == right.kind && left.x == right.x && left.y == right.y;
+                                                         && left.selected == right.selected && left.kind == right.kind && left.x == right.x && left.y == right.y
+                                                         && left.relationship == right.relationship && left.selectable == right.selectable;
                                               } );
         if ( unchanged ) {
             return;
@@ -825,7 +826,7 @@ namespace fheroes2::thor
         const auto entry = std::find_if( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), [kind, id]( const SelectionEntry & value ) {
             return value.kind == kind && value.id == id;
         } );
-        if ( entry == selectionSnapshot.entries.end() ) {
+        if ( entry == selectionSnapshot.entries.end() || !entry->selectable ) {
             return false;
         }
 
@@ -907,7 +908,7 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
     }
 
     constexpr size_t headerSize = 4;
-    constexpr size_t fieldsPerEntry = 7;
+    constexpr size_t fieldsPerEntry = 9;
     if ( snapshot.entries.size() > ( static_cast<size_t>( std::numeric_limits<jsize>::max() ) - headerSize ) / fieldsPerEntry ) {
         return nullptr;
     }
@@ -938,6 +939,8 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
         values.emplace_back( std::to_string( static_cast<int32_t>( entry.kind ) ) );
         values.emplace_back( std::to_string( entry.x ) );
         values.emplace_back( std::to_string( entry.y ) );
+        values.emplace_back( std::to_string( static_cast<int32_t>( entry.relationship ) ) );
+        values.emplace_back( entry.selectable ? "1" : "0" );
     }
 
     for ( jsize index = 0; index < fieldCount; ++index ) {

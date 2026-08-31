@@ -298,6 +298,10 @@ final class ThorSecondScreenPresentation extends Presentation
 
     private static final int SELECTION_KIND_HERO = 1;
     private static final int SELECTION_KIND_CASTLE = 2;
+    private static final int SELECTION_RELATIONSHIP_OWNED = 1;
+    private static final int SELECTION_RELATIONSHIP_ALLIED = 2;
+    private static final int SELECTION_RELATIONSHIP_ENEMY = 3;
+    private static final int SELECTION_RELATIONSHIP_NEUTRAL = 4;
 
     private static final int SELECTION_PAGE_SIZE = 8;
     private static final int LOCAL_PREVIOUS_PAGE = 1;
@@ -539,20 +543,21 @@ final class ThorSecondScreenPresentation extends Presentation
                 final int context = Integer.parseInt( snapshot[1] );
                 final long revision = Long.parseLong( snapshot[2] );
                 final int count = Integer.parseInt( snapshot[3] );
-                if ( version != 2 || revision == selectionRevision || count < 0 || snapshot.length != 4 + count * 7 ) {
+                if ( version != 3 || revision == selectionRevision || count < 0 || snapshot.length != 4 + count * 9 ) {
                     return false;
                 }
 
                 final List<SelectionEntry> entries = new ArrayList<>( count );
                 int selectedIndex = -1;
                 for ( int index = 0; index < count; ++index ) {
-                    final int offset = 4 + index * 7;
+                    final int offset = 4 + index * 9;
                     final int id = Integer.parseInt( snapshot[offset] );
                     final boolean selected = "1".equals( snapshot[offset + 3] );
                     entries.add( new SelectionEntry( id, snapshot[offset + 1] == null ? "" : snapshot[offset + 1],
                                                      snapshot[offset + 2] == null ? "" : snapshot[offset + 2], selected,
                                                      Integer.parseInt( snapshot[offset + 4] ), Integer.parseInt( snapshot[offset + 5] ),
-                                                     Integer.parseInt( snapshot[offset + 6] ) ) );
+                                                     Integer.parseInt( snapshot[offset + 6] ), Integer.parseInt( snapshot[offset + 7] ),
+                                                     "1".equals( snapshot[offset + 8] ) ) );
                     if ( selected ) {
                         selectedIndex = index;
                     }
@@ -1365,6 +1370,8 @@ final class ThorSecondScreenPresentation extends Presentation
             drawFittedText( canvas, focused == null ? "NO SELECTION" : focused.name, sidePanel.centerX(), sidePanel.top + 103f, sidePanel.width() - 28f, 25f );
             paint.setColor( MUTED_TEXT_COLOR );
             drawFittedText( canvas, "● HERO     ■ TOWN", sidePanel.centerX(), sidePanel.top + 143f, sidePanel.width() - 24f, 21f );
+            drawFittedText( canvas, "BLUE OWN     GREEN ALLY", sidePanel.centerX(), sidePanel.top + 174f, sidePanel.width() - 24f, 17f );
+            drawFittedText( canvas, "RED ENEMY     GRAY NEUTRAL", sidePanel.centerX(), sidePanel.top + 200f, sidePanel.width() - 24f, 17f );
         }
 
         private void drawRadar( final Canvas canvas )
@@ -1420,7 +1427,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 }
 
                 paint.setStyle( Paint.Style.FILL );
-                paint.setColor( entry.kind == SELECTION_KIND_HERO ? Color.rgb( 80, 190, 255 ) : Color.rgb( 255, 178, 70 ) );
+                paint.setColor( markerColor( entry.relationship ) );
                 if ( entry.kind == SELECTION_KIND_HERO ) {
                     canvas.drawCircle( x, y, 14f, paint );
                 }
@@ -1438,6 +1445,21 @@ final class ThorSecondScreenPresentation extends Presentation
                 }
             }
             paint.setStyle( Paint.Style.FILL );
+        }
+
+        private int markerColor( final int relationship )
+        {
+            switch ( relationship ) {
+            case SELECTION_RELATIONSHIP_OWNED:
+                return Color.rgb( 80, 190, 255 );
+            case SELECTION_RELATIONSHIP_ALLIED:
+                return Color.rgb( 70, 205, 105 );
+            case SELECTION_RELATIONSHIP_ENEMY:
+                return Color.rgb( 235, 75, 70 );
+            case SELECTION_RELATIONSHIP_NEUTRAL:
+            default:
+                return Color.rgb( 185, 185, 185 );
+            }
         }
 
         private float markerScreenX( final SelectionEntry entry )
@@ -1477,7 +1499,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     nearestDistanceSquared = distanceSquared;
                 }
             }
-            return nearest;
+            return nearest != null && nearest.selectable ? nearest : null;
         }
 
         private void addBrushActions()
@@ -1671,8 +1693,11 @@ final class ThorSecondScreenPresentation extends Presentation
         final int kind;
         final int x;
         final int y;
+        final int relationship;
+        final boolean selectable;
 
-        SelectionEntry( final int id, final String name, final String detail, final boolean selected, final int kind, final int x, final int y )
+        SelectionEntry( final int id, final String name, final String detail, final boolean selected, final int kind, final int x, final int y,
+                        final int relationship, final boolean selectable )
         {
             this.id = id;
             this.name = name;
@@ -1681,6 +1706,8 @@ final class ThorSecondScreenPresentation extends Presentation
             this.kind = kind;
             this.x = x;
             this.y = y;
+            this.relationship = relationship;
+            this.selectable = selectable;
         }
     }
 }

@@ -1188,6 +1188,18 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         fheroes2::thor::SelectionSnapshot snapshot;
         snapshot.context = context;
 
+        const auto markerRelationship = [&myKingdom]( const PlayerColor color ) {
+            if ( color == PlayerColor::NONE ) {
+                return fheroes2::thor::SelectionEntry::Relationship::NEUTRAL;
+            }
+            if ( color == myKingdom.GetColor() ) {
+                return fheroes2::thor::SelectionEntry::Relationship::OWNED;
+            }
+            return Players::isFriends( myKingdom.GetColor(), static_cast<PlayerColorsSet>( color ) )
+                       ? fheroes2::thor::SelectionEntry::Relationship::ALLIED
+                       : fheroes2::thor::SelectionEntry::Relationship::ENEMY;
+        };
+
         if ( context == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST || context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
             const Heroes * focusedHero = GetFocusHeroes();
             for ( const Heroes * hero : myKingdom.GetHeroes() ) {
@@ -1201,7 +1213,41 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 entry.kind = fheroes2::thor::SelectionEntry::Kind::HERO;
                 entry.x = hero->GetCenter().x;
                 entry.y = hero->GetCenter().y;
+                entry.relationship = fheroes2::thor::SelectionEntry::Relationship::OWNED;
+                entry.selectable = true;
                 snapshot.entries.emplace_back( std::move( entry ) );
+            }
+
+            if ( context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
+                for ( const Heroes * hero : world.getAllHeroes() ) {
+                    assert( hero != nullptr );
+                    if ( hero->GetColor() == myKingdom.GetColor() ) {
+                        continue;
+                    }
+
+                    const int32_t heroIndex = hero->GetIndex();
+                    if ( !Maps::isValidAbsIndex( heroIndex ) ) {
+                        continue;
+                    }
+
+                    const bool isNeutralMapHero
+                        = hero->GetColor() == PlayerColor::NONE && world.getTile( heroIndex ).getHero() == hero;
+                    if ( !hero->isActive() && !isNeutralMapHero ) {
+                        continue;
+                    }
+                    if ( world.getTile( heroIndex ).isFog( myKingdom.GetColor() ) ) {
+                        continue;
+                    }
+
+                    fheroes2::thor::SelectionEntry entry;
+                    entry.id = hero->GetID();
+                    entry.kind = fheroes2::thor::SelectionEntry::Kind::HERO;
+                    entry.x = hero->GetCenter().x;
+                    entry.y = hero->GetCenter().y;
+                    entry.relationship = markerRelationship( hero->GetColor() );
+                    entry.selectable = false;
+                    snapshot.entries.emplace_back( std::move( entry ) );
+                }
             }
         }
 
@@ -1217,7 +1263,32 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                 entry.kind = fheroes2::thor::SelectionEntry::Kind::CASTLE;
                 entry.x = castle->GetCenter().x;
                 entry.y = castle->GetCenter().y;
+                entry.relationship = fheroes2::thor::SelectionEntry::Relationship::OWNED;
+                entry.selectable = true;
                 snapshot.entries.emplace_back( std::move( entry ) );
+            }
+
+            if ( context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
+                for ( const Castle * castle : world.getAllCastles() ) {
+                    assert( castle != nullptr );
+                    if ( castle->GetColor() == myKingdom.GetColor() ) {
+                        continue;
+                    }
+
+                    const int32_t castleIndex = castle->GetIndex();
+                    if ( !Maps::isValidAbsIndex( castleIndex ) || world.getTile( castleIndex ).isFog( myKingdom.GetColor() ) ) {
+                        continue;
+                    }
+
+                    fheroes2::thor::SelectionEntry entry;
+                    entry.id = castleIndex;
+                    entry.kind = fheroes2::thor::SelectionEntry::Kind::CASTLE;
+                    entry.x = castle->GetCenter().x;
+                    entry.y = castle->GetCenter().y;
+                    entry.relationship = markerRelationship( castle->GetColor() );
+                    entry.selectable = false;
+                    snapshot.entries.emplace_back( std::move( entry ) );
+                }
             }
         }
 

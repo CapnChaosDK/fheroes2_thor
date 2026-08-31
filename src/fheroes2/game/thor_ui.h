@@ -338,6 +338,14 @@ namespace fheroes2::thor
             CASTLE = 2
         };
 
+        enum class Relationship : int32_t
+        {
+            OWNED = 1,
+            ALLIED = 2,
+            ENEMY = 3,
+            NEUTRAL = 4
+        };
+
         int32_t id{ -1 };
         std::string name;
         std::string detail;
@@ -345,11 +353,13 @@ namespace fheroes2::thor
         Kind kind{ Kind::HERO };
         int32_t x{ -1 };
         int32_t y{ -1 };
+        Relationship relationship{ Relationship::OWNED };
+        bool selectable{ true };
     };
 
     struct SelectionSnapshot
     {
-        static constexpr int32_t currentVersion = 2;
+        static constexpr int32_t currentVersion = 3;
 
         int32_t version{ currentVersion };
         UiContext context{ UiContext::FALLBACK };
