@@ -307,6 +307,11 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int SELECTION_PAGE_SIZE = 8;
     private static final int LOCAL_PREVIOUS_PAGE = 1;
     private static final int LOCAL_NEXT_PAGE = 2;
+    private static final int LOCAL_CYCLE_OVERVIEW_KIND_FILTER = 3;
+    private static final int LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER = 4;
+
+    private static final int OVERVIEW_KIND_FILTER_BOTH = 0;
+    private static final int OVERVIEW_RELATIONSHIP_FILTER_ALL = 0;
 
     interface KeySender
     {
@@ -441,6 +446,8 @@ final class ThorSecondScreenPresentation extends Presentation
         private long selectionRevision = -1;
         private final List<SelectionEntry> selectionEntries = new ArrayList<>();
         private int selectionPage;
+        private int overviewKindFilter = OVERVIEW_KIND_FILTER_BOTH;
+        private int overviewRelationshipFilter = OVERVIEW_RELATIONSHIP_FILTER_ALL;
         private final Runnable radarLongPress;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
@@ -853,7 +860,7 @@ final class ThorSecondScreenPresentation extends Presentation
                               && selectionSender.send( gameContext, selectionRevision, pressedButton.selectionKind, pressedButton.selectionId );
                     }
                     else if ( pressedButton.localCommand != 0 ) {
-                        changeSelectionPage( pressedButton.localCommand );
+                        handleLocalCommand( pressedButton.localCommand );
                         return true;
                     }
                     else {
@@ -932,8 +939,20 @@ final class ThorSecondScreenPresentation extends Presentation
             return viewportSender.send( normalizedX, normalizedY );
         }
 
-        private void changeSelectionPage( final int command )
+        private void handleLocalCommand( final int command )
         {
+            if ( command == LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) {
+                overviewKindFilter = overviewKindFilter == SELECTION_KIND_CASTLE ? OVERVIEW_KIND_FILTER_BOTH : overviewKindFilter + 1;
+                applyOverviewFilterChange();
+                return;
+            }
+            if ( command == LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER ) {
+                overviewRelationshipFilter
+                    = overviewRelationshipFilter == SELECTION_RELATIONSHIP_NEUTRAL ? OVERVIEW_RELATIONSHIP_FILTER_ALL : overviewRelationshipFilter + 1;
+                applyOverviewFilterChange();
+                return;
+            }
+
             final int pageCount = Math.max( 1, ( selectionEntries.size() + SELECTION_PAGE_SIZE - 1 ) / SELECTION_PAGE_SIZE );
             if ( command == LOCAL_PREVIOUS_PAGE && selectionPage > 0 ) {
                 --selectionPage;
@@ -945,6 +964,28 @@ final class ThorSecondScreenPresentation extends Presentation
             rebuildActions();
             layoutButtons( getWidth(), getHeight() );
             invalidate();
+        }
+
+        private void applyOverviewFilterChange()
+        {
+            releasePressedButton();
+            clearInformationDisplay();
+            if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && selectionContext == gameContext ) {
+                markerInfoSender.send( gameContext, selectionRevision, SELECTION_KIND_HERO, -1 );
+            }
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
+            invalidate();
+        }
+
+        private void clearInformationDisplay()
+        {
+            informationContext = -1;
+            informationTitle = "";
+            informationCategory = "";
+            informationDetail = "";
+            informationDate = "";
+            informationResources = "";
         }
 
         private void rebuildActions()
@@ -982,6 +1023,8 @@ final class ThorSecondScreenPresentation extends Presentation
                 break;
             case CONTEXT_ADVENTURE_MAP_OVERVIEW:
                 contextTitle = "KINGDOM MAP";
+                buttons.add( new CommandButton( overviewKindFilterLabel(), LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) );
+                buttons.add( new CommandButton( overviewRelationshipFilterLabel(), LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER ) );
                 addAction( "HEROES", ACTION_ADVENTURE_OVERVIEW_OPEN_HERO_LIST, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "TOWNS", ACTION_ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "BACK", ACTION_ADVENTURE_OVERVIEW_BACK, KeyEvent.KEYCODE_ESCAPE );
@@ -1399,7 +1442,7 @@ final class ThorSecondScreenPresentation extends Presentation
             else {
                 SelectionEntry focused = null;
                 for ( final SelectionEntry entry : selectionEntries ) {
-                    if ( entry.selected ) {
+                    if ( entry.selected && isOverviewMarkerVisible( entry ) ) {
                         focused = entry;
                         break;
                     }
@@ -1466,7 +1509,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 ) {
+                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) ) {
                     continue;
                 }
 
@@ -1522,7 +1565,7 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             float x = radarBounds.left + ( entry.x + 0.5f ) * radarBounds.width() / radarWorldWidth;
             for ( final SelectionEntry other : selectionEntries ) {
-                if ( other != entry && other.x == entry.x && other.y == entry.y && other.kind != entry.kind ) {
+                if ( other != entry && isOverviewMarkerVisible( other ) && other.x == entry.x && other.y == entry.y && other.kind != entry.kind ) {
                     x += entry.kind == SELECTION_KIND_HERO ? -18f : 18f;
                     break;
                 }
@@ -1544,7 +1587,7 @@ final class ThorSecondScreenPresentation extends Presentation
             SelectionEntry nearest = null;
             float nearestDistanceSquared = 44f * 44f;
             for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 ) {
+                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) ) {
                     continue;
                 }
                 final float deltaX = x - markerScreenX( entry );
@@ -1556,6 +1599,43 @@ final class ThorSecondScreenPresentation extends Presentation
                 }
             }
             return nearest;
+        }
+
+        private boolean isOverviewMarkerVisible( final SelectionEntry entry )
+        {
+            return ( overviewKindFilter == OVERVIEW_KIND_FILTER_BOTH || entry.kind == overviewKindFilter )
+                   && ( overviewRelationshipFilter == OVERVIEW_RELATIONSHIP_FILTER_ALL
+                        || entry.relationship == overviewRelationshipFilter );
+        }
+
+        private String overviewKindFilterLabel()
+        {
+            switch ( overviewKindFilter ) {
+            case SELECTION_KIND_HERO:
+                return "KIND: HEROES";
+            case SELECTION_KIND_CASTLE:
+                return "KIND: TOWNS";
+            case OVERVIEW_KIND_FILTER_BOTH:
+            default:
+                return "KIND: BOTH";
+            }
+        }
+
+        private String overviewRelationshipFilterLabel()
+        {
+            switch ( overviewRelationshipFilter ) {
+            case SELECTION_RELATIONSHIP_OWNED:
+                return "RELATION: OWNED";
+            case SELECTION_RELATIONSHIP_ALLIED:
+                return "RELATION: ALLIED";
+            case SELECTION_RELATIONSHIP_ENEMY:
+                return "RELATION: ENEMY";
+            case SELECTION_RELATIONSHIP_NEUTRAL:
+                return "RELATION: NEUTRAL";
+            case OVERVIEW_RELATIONSHIP_FILTER_ALL:
+            default:
+                return "RELATION: ALL";
+            }
         }
 
         private void addBrushActions()
@@ -1618,11 +1698,18 @@ final class ThorSecondScreenPresentation extends Presentation
                 final float left = margin + mapSize + gap;
                 final float right = width - margin;
                 final float buttonGap = 14f;
-                final float buttonHeight = Math.min( 120f, ( height - 2f * margin - 2f * buttonGap ) / 3f );
-                final float top = height - margin - 3f * buttonHeight - 2f * buttonGap;
+                final float navigationButtonHeight = Math.min( 120f, ( height - 2f * margin - 4f * buttonGap ) / 4.3f );
+                final float filterButtonHeight = navigationButtonHeight * 0.65f;
+                final float totalButtonHeight = 2f * filterButtonHeight + 3f * navigationButtonHeight + 4f * buttonGap;
+                final float top = height - margin - totalButtonHeight;
+                float buttonTop = top;
                 for ( int index = 0; index < buttons.size(); ++index ) {
-                    final float buttonTop = top + index * ( buttonHeight + buttonGap );
-                    buttons.get( index ).bounds.set( left, buttonTop, right, buttonTop + buttonHeight );
+                    final CommandButton button = buttons.get( index );
+                    final boolean filterButton = button.localCommand == LOCAL_CYCLE_OVERVIEW_KIND_FILTER
+                                                 || button.localCommand == LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER;
+                    final float buttonHeight = filterButton ? filterButtonHeight : navigationButtonHeight;
+                    button.bounds.set( left, buttonTop, right, buttonTop + buttonHeight );
+                    buttonTop += buttonHeight + buttonGap;
                 }
                 return;
             }

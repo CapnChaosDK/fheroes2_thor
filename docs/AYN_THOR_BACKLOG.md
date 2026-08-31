@@ -694,6 +694,27 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five focused checks passed on the Thor, including full and limited hero detail tiers, settlement information tiers, fog and state invalidation without stale details, gesture and overlap safety, preserved owned selection and non-owned viewport behavior, exact overview/list restoration, and compact-minimap, View World, dialog, physical-control, touchscreen, mouse, and hotkey regressions.
 
+### Expanded Adventure Map presentation filters
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-31.
+
+- The overview side column adds two compact local controls above Heroes, Towns, and Back. Kind cycles through Both, Heroes, and Towns; relationship cycles through All, Owned, Allied, Enemy, and Neutral.
+- Filters default to Both and All, remain in memory when the overview is closed and reopened during the current presentation lifetime, and are not persisted to disk.
+- Native code continues publishing the complete fog-safe visible snapshot. Android alone applies the filters to marker rendering, hit testing, and same-tile overlap offsets; hidden entries never intercept map gestures or marker-information requests.
+- Changing either filter cancels pending input and clears the current information card locally and through the revisioned native request. Empty-map viewport navigation, owned focus selection, safe non-owned navigation, deterministic visible overlap behavior, and all native privacy and invalidation rules remain unchanged.
+- The compact filter rows preserve the existing information-card region and large Heroes, Towns, and Back touch targets. Labels, clustering, zoom, sprites, and army-management interactions remain deferred.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed activity and companion presentation on display 4. Debug APK SHA-256: `71CC57A50CC87229FC0A86EEAA39AC2CB9EC06A8127EA3E86FCEFE4B04D36D38`.
+
+#### Focused presentation-filter validation
+
+1. Cycle both filters and confirm only the requested kinds and relationships appear; restore Both / All and confirm the complete visible set returns.
+2. Hide each marker category in turn, then tap and long-press its former position. Confirm hidden markers do not intercept viewport gestures or publish information.
+3. Inspect a marker and then filter it out. Confirm its card clears immediately and does not reappear when the filter is restored without a new long-press.
+4. Test overlapping hero and settlement markers under kind and relationship filters. Confirm visible offsets and nearest-marker selection remain stable and deterministic.
+5. Recheck owned focus, non-owned navigation, dragging, empty-map recentering, rapid and multitouch input, Heroes/Towns restoration, Back, compact minimap, View World, upper-screen controls, physical controls, mouse, and hotkeys.
+
+All five focused checks passed on the Thor, including kind and relationship filtering, complete-set restoration, hidden-marker input exclusion, immediate information-card clearing, deterministic visible overlap behavior, state retention across overview restoration, and owned/non-owned navigation plus all requested control regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -720,10 +741,11 @@ All five focused checks passed on the Thor, including full and limited hero deta
 
 ## Next recommended planning point
 
-- Add configurable presentation filters for Expanded Adventure Map markers as the next focused slice, primarily to improve readability on dense and maximum-size maps.
-- Plan exact controls for object kind (heroes, settlements, or both) and relationship (owned, allied, enemy, neutral, or all), plus whether filter state resets when the overview closes. Native code must continue publishing the complete fog-safe visible snapshot; Android may hide only already-authorized entries.
-- Apply filters consistently to marker rendering, tap hit testing, overlap handling, and long-press information requests. A hidden marker must not intercept an empty-map viewport gesture or leave its information card visible.
-- Preserve owned focus selection, safe non-owned viewport navigation, information-card privacy and invalidation, Heroes/Towns restoration, and Back behavior. Labels, clustering, zoom, sprites, and army-management interactions remain deferred. Propose focused behavior and manual acceptance tests, then wait for approval before implementation.
+- Add presentation-only zoom to the Expanded Adventure Map as the next focused slice. This is the most useful prerequisite for later labels or clustering because it makes dense and maximum-size maps inspectable without exposing new native data or changing gameplay state.
+- Plan bounded zoom levels, the zoom center, whether zoom persists when the overview closes, and exact two-finger gesture behavior. The default 1× view must remain identical, and multitouch must continue producing no selection, information, route, movement, or dialog side effects.
+- Apply the same zoom transform to the radar image, viewport outline, visible marker rendering, overlap offsets, tap hit testing, long-press inspection, empty-map navigation, and drag coordinates. Native fog-safe snapshots and information authorization remain unchanged.
+- Preserve the validated kind and relationship filters, immediate card clearing, owned focus selection, safe non-owned navigation, Heroes/Towns restoration, and Back behavior. Labels, clustering, sprites, army-management interactions, haptics, and configurable command-deck layouts remain deferred as separate slices.
+- Propose the exact zoom behavior and focused manual acceptance tests, then wait for user approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 
