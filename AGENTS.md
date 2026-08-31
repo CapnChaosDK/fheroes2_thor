@@ -17,22 +17,23 @@
 - Release source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
 - Release APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
 - v0.6.0 contains the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, and every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
-- Latest hardware-validated source commit: `3bdb1a02086d2e11a7cac86c5da23afc687e16e2`.
-- This development checkpoint adds the Expanded Adventure Map on the lower display with engine-owned radar rendering, current-kingdom hero and settlement markers, direct native focus selection, tap and drag viewport navigation, validated Heroes/Towns list restoration, and exact Back behavior. Its final debug APK SHA-256 is `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
+- Latest hardware-validated source commit: `5967dcb76241b66d3fca3e0e63b528ad4c7f3e98`.
+- This development checkpoint extends the Expanded Adventure Map with engine-filtered owned, allied, enemy, and neutral hero and settlement markers. Native code owns world-object discovery, current-player relations, fog visibility, positions, marker categories, and selectability; Android renders only the revisioned visible snapshot. Owned markers remain selectable, while visible non-owned markers are informational and their taps retain safe viewport navigation without focus, route, dialog, or movement side effects. Its final debug APK SHA-256 is `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- The Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Expanded-map validation covers radar rendering, current-kingdom hero and town markers, native focus and upper centering, empty-map tap and drag navigation, Heroes/Towns restoration, Back behavior, and compact-minimap/control regression. Earlier validation covers native list ordering, status, paging, rapid input, multitouch, and every previously validated Editor, menu, gameplay, dialog, physical-control, touchscreen, mouse, and hotkey workflow.
-- The latest hardware-validated source implementation is `3bdb1a020`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
+- The fog-aware Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Expanded-map validation now covers owned/allied/enemy/neutral relationship colors, hero/town shapes, fog-driven appearance and removal without stale state, owned native focus, informational non-owned taps without gameplay side effects, overlap handling, drag/rapid-input/multitouch safety, Heroes/Towns restoration, Back behavior, and compact-minimap, View World, physical-control, and upper-screen regressions. Earlier validation covers native list ordering, status, paging, and every previously validated Editor, menu, gameplay, dialog, touchscreen, mouse, and hotkey workflow.
+- The latest hardware-validated source implementation is `5967dcb76`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is fog-aware allied, enemy, and neutral hero and settlement markers on the Expanded Adventure Map.
-- Inspect the engine-owned radar visibility rules, kingdom relations, world-object collections, and current marker snapshot, then plan a read-only marker slice without duplicating positions, ownership, alliance, fog, or availability state in Android. Hidden objects must never be exposed through the lower-screen snapshot.
-- Propose the focused slice and manual acceptance tests, then wait for user approval before implementation.
+- The next focused feature planning point is a fog-safe, read-only information card for markers on the Expanded Adventure Map.
+- Inspect the existing engine quick-info visibility rules, especially enemy hero identity and army-detail restrictions, then propose the exact fields and touch gesture. Native code must decide every published field and immediately withdraw information when its marker is no longer visible; Android must not infer or retain hidden details.
+- Preserve owned-marker focus selection and safe non-owned viewport navigation. Labels, clustering, zoom, sprites, configurable filters, and army-management interactions remain deferred unless explicitly approved as separate slices.
+- Propose the focused behavior and manual acceptance tests, then wait for user approval before implementation.
 - Retain the validated quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
@@ -61,7 +62,7 @@
 
 - APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Package/activity: `org.fheroes2.thor/org.fheroes2.GameActivity`.
-- The last device endpoint was `192.168.68.81:46343`, but wireless ADB ports can change. Run `adb devices` before install or launch.
+- The last device endpoint was `192.168.68.58:45947`, but wireless ADB ports can change. Run `adb devices` before install or launch. If a daemon started inside the restricted sandbox returns Windows socket error 10013, restart the local ADB server with approved network access before reconnecting.
 - Launch the explicit game activity after installation; do not use `monkey`, which can open the asset Toolset instead.
 - The lower Android display was display ID 4. Its last SurfaceFlinger physical ID was `4630946482288158084`; re-check after panel toggles or reboot.
 

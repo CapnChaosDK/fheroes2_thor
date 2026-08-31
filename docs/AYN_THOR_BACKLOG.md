@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `3bdb1a02086d2e11a7cac86c5da23afc687e16e2` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
-- This checkpoint adds the Expanded Adventure Map on the lower display. It reuses engine-owned radar pixels and viewport state, adds revisioned current-kingdom hero and settlement markers, selects through native focus paths, and preserves the validated Heroes/Towns lists and normal Adventure restoration.
-- Debug APK SHA-256: `EDE99644D8D34DD58F10C7B78D17269D6F96C505D6A9A5EDDE1B22E9517EFBAF`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed focused radar rendering, hero/town selection and centering, empty-map tap and drag navigation, list restoration, Back, compact-minimap, and normal-control checks.
+- Commit `5967dcb76241b66d3fca3e0e63b528ad4c7f3e98` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- This checkpoint extends the Expanded Adventure Map with native-owned fog-aware relationship markers. Owned, allied, enemy, and neutral heroes and settlements are filtered and categorized by the engine; Android renders only the visible snapshot, owned markers remain selectable, and non-owned taps retain safe viewport navigation.
+- Debug APK SHA-256: `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed relationship color and shape, fog appearance and removal, owned selection, informational navigation, overlap/input safety, list/Back restoration, compact-minimap, View World, physical-control, and upper-screen checks.
 
 ## Agreed product decisions
 
@@ -634,7 +634,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - A revisioned native selection snapshot adds current-player hero and settlement identity, kind, world position, and focus state. Android presents circular hero and square settlement markers, a focused halo, and a visual offset when a hero and settlement share a tile; native code revalidates every selection against the live kingdom collections.
 - A marker tap focuses and centers the matching entity while keeping the overview open. An empty tap recenters the viewport, and movement beyond the touch slop becomes viewport dragging without selecting a marker. Multitouch, cancellation, stale revisions, movement, and context changes reject pending input.
 - Heroes and Towns open the validated lower-screen selection lists and return to the overview. Back or physical Cancel restores the ordinary Adventure deck without changing focus. The compact Adventure and Editor minimaps remain unchanged.
-- Enemy, allied, neutral, fog-dependent, label, clustering, zoom, sprite, and configurable marker support remains deferred.
+- Label, clustering, zoom, sprite, configurable marker, and marker-detail support remains deferred.
 - Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `7CED56F9A281262DD9A6195DA561336222416CD9A3965B82609348C2346BC08F`. The APK installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed game activity and the companion presentation window on display 4.
 - The initial device run exposed a solid-color expanded map because the lower-only context transition could arrive without a freshly tagged radar snapshot. The corrective candidate explicitly republishes the current engine radar when the overview opens or is restored and retains the last valid Adventure radar during that transition. Build and lint pass; corrected APK SHA-256: `FB4AFA4EB98F0206351AEB010023588847CD1D1839AABDACE3490AC244FA7BC8`. It installed successfully and was explicitly relaunched on the Thor.
 - The first correction did not resolve the solid sand-color overview. The user confirmed the compact minimap is correct before opening the overview, becomes blank after closing it, and recovers as soon as upper-map movement triggers a normal radar redraw. The next correction therefore removes the direct snapshot publication and schedules a full engine `REDRAW_RADAR` on overview entry and list restoration, ensuring map pixels are rebuilt through the same path that recovers the compact minimap. Build and lint pass; candidate APK SHA-256: `1782F784A5C8CCA89E7D59183036285AACEE95D2FE2BE4BA446B38A36B031218`. The candidate installed successfully and was explicitly relaunched on the Thor.
@@ -650,6 +650,27 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 5. Exercise hero movement, dialogs, Hero and Castle screens, turn changes, physical controls, upper touchscreen, mouse, hotkeys, compact minimap, lists, and View World without regression.
 
 The focused Thor validation passed: the expanded radar renders correctly; hero and town marker selection focuses and centers the matching upper-map object; empty taps and drags move the viewport without moving a hero; Heroes and Towns return to the overview; and Back restores the normal deck with its compact minimap and controls working.
+
+### Fog-aware relationship markers
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-31.
+
+- The Expanded Adventure Map now shows owned markers in blue, allied markers in green, enemy markers in red, and neutral markers in gray. Circles remain heroes and squares remain settlements.
+- Native code enumerates the world-owned hero and castle collections, classifies each marker against the current player, checks the engine fog state at the object anchor, and publishes only the revisioned visible snapshot. Android does not infer ownership, alliances, availability, or fog and receives no name or detail fields for non-owned markers.
+- Owned markers remain selectable through the validated live-kingdom focus paths. Non-owned markers are explicitly non-selectable at both the snapshot and native request-queue boundaries; tapping one retains viewport navigation without changing focus, creating a route, opening a dialog, or moving a hero.
+- Non-owned markers are withdrawn as soon as their anchor returns to fog or their live object state changes. The snapshot comparison includes relationship and selectability so ownership or alliance changes also produce a new revision without Android retaining hidden state.
+- Heroes/Towns lists remain owned-only. Existing overlap offsets, focused halo, map tap/drag navigation, stale-revision rejection, multitouch cancellation, list restoration, Back behavior, and the compact minimaps remain intact.
+- Android build and lint passed through the required short `R:` mapping. The candidate installed successfully over wireless ADB and was explicitly cold-launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed activity and companion window on display 4. Validated source commit: `5967dcb76241b66d3fca3e0e63b528ad4c7f3e98`. Debug APK SHA-256: `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
+
+#### Focused fog-aware marker validation
+
+1. Confirm owned, allied, enemy, and neutral relationship colors plus hero-circle and settlement-square shapes on the Expanded Adventure Map.
+2. Reveal enemy objects and return them to fog; confirm their markers appear only while visible and disappear without stale information.
+3. Tap every relationship category; confirm owned focus selection and safe non-owned viewport navigation without focus, route, dialog, or movement side effects.
+4. Exercise overlapping and nearby objects, dragging across markers, rapid taps, and multitouch; confirm stable offsets and deterministic safe behavior.
+5. Recheck Heroes/Towns restoration, Back, compact minimap, View World, physical controls, and upper-screen controls.
+
+All five focused checks passed on the Thor, including relationship colors and shapes, fog-driven appearance and removal, owned selection, informational non-owned navigation, overlap and input safety, list and Back restoration, and compact-minimap, View World, physical-control, and upper-screen regressions.
 
 ### Later menu slices
 
@@ -677,10 +698,10 @@ The focused Thor validation passed: the expanded radar renders correctly; hero a
 
 ## Next recommended planning point
 
-- Add fog-aware allied, enemy, and neutral hero and settlement markers to the Expanded Adventure Map as a focused read-only slice.
-- Native code must own object discovery, current-player relations, fog visibility, marker position, and marker category. Android should render only the revisioned visible-marker snapshot and must never infer or retain hidden-object state.
-- Keep current-kingdom markers selectable through the validated focus path. Treat non-owned markers as informational unless a later proposal explicitly establishes a safe native interaction.
-- Before implementation, propose the exact visibility/color behavior and focused manual acceptance tests, then wait for user approval.
+- Add a fog-safe, read-only marker information card to the Expanded Adventure Map as the next focused slice.
+- Inspect and reuse the engine's existing quick-info visibility rules, especially enemy hero identity, army-detail restrictions, allied information, neutral settlements, and Identify Hero or Crystal Ball effects. Native code must decide every field that may be published and immediately withdraw it when the selected marker leaves visibility.
+- Preserve owned-marker focus selection and the validated non-owned viewport-navigation behavior. Choose an explicit, conflict-free gesture during planning; Android must not infer or retain hidden details.
+- Keep labels, clustering, zoom, sprites, configurable filters, and army-management interactions deferred. Before implementation, propose exact fields, gesture behavior, invalidation rules, and focused manual acceptance tests, then wait for user approval.
 
 ## Milestone 4: interactive second-screen tools
 
