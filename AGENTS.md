@@ -8,6 +8,7 @@
 - Build and lint an approved candidate, install and explicitly launch it on the Thor, then give the user a short set of focused hardware tests and wait for their results. The user prefers to perform device interaction manually.
 - Keep automatic device testing to brief connection, installation, launch, log, and state checks. Do not run extended ADB-driven navigation, repeated screenshots, or exhaustive automated hardware interaction unless the user explicitly requests it or it is needed to diagnose a reported failure; these runs consume too many tokens.
 - Record the user's passed validation before committing and pushing unless the user explicitly requests a different workflow.
+- Continue the structured round workflow the user explicitly endorsed: propose behavior and focused tests, implement with concise progress updates, build/lint, install and launch, hand over a short manual checklist, then record validation and commit.
 - Preserve unrelated or pre-existing working-tree changes. Never reset or overwrite them.
 
 ## Current validated checkpoint
@@ -17,22 +18,22 @@
 - Release source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
 - Release APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
 - v0.6.0 contains the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, and every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
-- Latest hardware-validated source commit: `5967dcb76241b66d3fca3e0e63b528ad4c7f3e98`.
-- This development checkpoint extends the Expanded Adventure Map with engine-filtered owned, allied, enemy, and neutral hero and settlement markers. Native code owns world-object discovery, current-player relations, fog visibility, positions, marker categories, and selectability; Android renders only the revisioned visible snapshot. Owned markers remain selectable, while visible non-owned markers are informational and their taps retain safe viewport navigation without focus, route, dialog, or movement side effects. Its final debug APK SHA-256 is `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
+- Latest hardware-validated source commit: `f3f759edfe4d566b6410f3469fe16b281e7fa35f`.
+- This development checkpoint adds a fog-safe, read-only information card for visible Expanded Adventure Map markers. A stationary long-press uses a revisioned native request; the SDL thread re-resolves the object and applies the existing friendship, Identify Hero, Crystal Ball, Thieves' Guild, army-estimation, fog, ownership, and alliance rules before publishing any text. Android renders only the permitted card and clears it on native invalidation. Ordinary owned selection, non-owned viewport navigation, dragging, lists, Back, and upper-screen controls remain unchanged. Its final debug APK SHA-256 is `CAABD274EADA78CBA13C3A47223F39E6B53F945F8736C86CCDA5A5EBA08021E7`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
-- The fog-aware Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
-- Expanded-map validation now covers owned/allied/enemy/neutral relationship colors, hero/town shapes, fog-driven appearance and removal without stale state, owned native focus, informational non-owned taps without gameplay side effects, overlap handling, drag/rapid-input/multitouch safety, Heroes/Towns restoration, Back behavior, and compact-minimap, View World, physical-control, and upper-screen regressions. Earlier validation covers native list ordering, status, paging, and every previously validated Editor, menu, gameplay, dialog, touchscreen, mouse, and hotkey workflow.
-- The latest hardware-validated source implementation is `5967dcb76`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
+- The fog-safe marker information card, relationship-aware Expanded Adventure Map, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
+- Expanded-map validation now covers full and limited hero detail, settlement information tiers, fog/ownership/alliance invalidation without stale details, relationship colors and shapes, owned native focus, informational non-owned taps, long-press/tap/drag separation, overlap and rapid/multitouch safety, exact Heroes/Towns and Back restoration, compact minimap, View World, dialogs, physical controls, upper touchscreen, mouse, and hotkeys.
+- The latest hardware-validated source implementation is `f3f759edf`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, all focused hardware checks passed, and the validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `CAABD274EADA78CBA13C3A47223F39E6B53F945F8736C86CCDA5A5EBA08021E7`.
 
 ## Next recommended planning point
 
-- The next focused feature planning point is a fog-safe, read-only information card for markers on the Expanded Adventure Map.
-- Inspect the existing engine quick-info visibility rules, especially enemy hero identity and army-detail restrictions, then propose the exact fields and touch gesture. Native code must decide every published field and immediately withdraw information when its marker is no longer visible; Android must not infer or retain hidden details.
-- Preserve owned-marker focus selection and safe non-owned viewport navigation. Labels, clustering, zoom, sprites, configurable filters, and army-management interactions remain deferred unless explicitly approved as separate slices.
+- The next focused feature planning point is configurable presentation filters for the Expanded Adventure Map markers, aimed at keeping dense and maximum-size maps readable without changing native visibility or gameplay state.
+- Plan exact controls for filtering by object kind (heroes, settlements, or both) and relationship (owned, allied, enemy, neutral, or all), including whether filters reset when the overview closes. Native code must continue publishing the complete fog-safe visible snapshot; Android may hide only already-authorized entries and must apply the same filter to rendering, hit testing, and long-press inspection.
+- Preserve owned-marker focus selection, safe non-owned viewport navigation, the validated information-card privacy rules, and deterministic overlap behavior. Labels, clustering, zoom, sprites, and army-management interactions remain deferred as separate slices.
 - Propose the focused behavior and manual acceptance tests, then wait for user approval before implementation.
 - Retain the validated quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 

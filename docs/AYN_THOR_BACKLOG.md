@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `5967dcb76241b66d3fca3e0e63b528ad4c7f3e98` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
-- This checkpoint extends the Expanded Adventure Map with native-owned fog-aware relationship markers. Owned, allied, enemy, and neutral heroes and settlements are filtered and categorized by the engine; Android renders only the visible snapshot, owned markers remain selectable, and non-owned taps retain safe viewport navigation.
-- Debug APK SHA-256: `368BC26928C542AE43C622ED4D4982F22680E9D719CE750E20A7E81A707FE0F1`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed relationship color and shape, fog appearance and removal, owned selection, informational navigation, overlap/input safety, list/Back restoration, compact-minimap, View World, physical-control, and upper-screen checks.
+- Commit `f3f759edfe4d566b6410f3469fe16b281e7fa35f` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- This checkpoint adds a fog-safe, native-authorized information card for visible Expanded Adventure Map markers. Long-press inspection follows the existing hero, settlement, Identify Hero, Crystal Ball, Thieves' Guild, army-estimation, fog, ownership, and alliance rules while preserving all validated marker selection and viewport behavior.
+- Debug APK SHA-256: `CAABD274EADA78CBA13C3A47223F39E6B53F945F8736C86CCDA5A5EBA08021E7`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed full/limited hero and settlement tiers, stale-information withdrawal, gesture/overlap/input safety, owned selection, non-owned navigation, overview/list restoration, and compact-minimap, View World, dialog, physical-control, touchscreen, mouse, and hotkey checks.
 
 ## Agreed product decisions
 
@@ -720,10 +720,10 @@ All five focused checks passed on the Thor, including full and limited hero deta
 
 ## Next recommended planning point
 
-- Add a fog-safe, read-only marker information card to the Expanded Adventure Map as the next focused slice.
-- Inspect and reuse the engine's existing quick-info visibility rules, especially enemy hero identity, army-detail restrictions, allied information, neutral settlements, and Identify Hero or Crystal Ball effects. Native code must decide every field that may be published and immediately withdraw it when the selected marker leaves visibility.
-- Preserve owned-marker focus selection and the validated non-owned viewport-navigation behavior. Choose an explicit, conflict-free gesture during planning; Android must not infer or retain hidden details.
-- Keep labels, clustering, zoom, sprites, configurable filters, and army-management interactions deferred. Before implementation, propose exact fields, gesture behavior, invalidation rules, and focused manual acceptance tests, then wait for user approval.
+- Add configurable presentation filters for Expanded Adventure Map markers as the next focused slice, primarily to improve readability on dense and maximum-size maps.
+- Plan exact controls for object kind (heroes, settlements, or both) and relationship (owned, allied, enemy, neutral, or all), plus whether filter state resets when the overview closes. Native code must continue publishing the complete fog-safe visible snapshot; Android may hide only already-authorized entries.
+- Apply filters consistently to marker rendering, tap hit testing, overlap handling, and long-press information requests. A hidden marker must not intercept an empty-map viewport gesture or leave its information card visible.
+- Preserve owned focus selection, safe non-owned viewport navigation, information-card privacy and invalidation, Heroes/Towns restoration, and Back behavior. Labels, clustering, zoom, sprites, and army-management interactions remain deferred. Propose focused behavior and manual acceptance tests, then wait for approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 
