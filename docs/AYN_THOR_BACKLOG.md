@@ -6,16 +6,16 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.6.0` was published on 2026-08-30 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.6.0
-- Source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
-- APK: `fheroes2-thor-v0.6.0-debug.apk`.
-- APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
-- The release adds the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, and live Editor map information on top of every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- `thor-v0.7.0` was published on 2026-08-31 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.7.0
+- Source commit: `4e396a814874312438f45d85246a746e30df95fb`.
+- APK: `fheroes2-thor-v0.7.0-debug.apk`.
+- APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
+- The release adds the complete hardware-validated Expanded Adventure Map with fog-safe relationship markers, privacy-aware information cards, kind and relationship filters, and bounded presentation zoom on top of every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
 
 ## Latest validated development checkpoint
 
-- Commit `4e396a814874312438f45d85246a746e30df95fb` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- Commit `4e396a814874312438f45d85246a746e30df95fb` is the latest hardware-validated source checkpoint and the source of published prerelease `thor-v0.7.0`.
 - This checkpoint adds bounded 1x, 2x, and 4x presentation-only zoom to the Expanded Adventure Map. Android applies one shared transform to radar rendering, viewport outlines, visible filtered markers, hit testing, long-press inspection, and viewport requests while native fog-safe snapshots and gameplay state remain unchanged. Anchored pinch, clamped two-finger panning, cancellation safety, in-memory restoration, and map-size reset are hardware-validated alongside every prior filter, privacy, information, focus, navigation, and control guarantee.
 - Debug APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
 - Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all seven focused zoom checks plus the requested compact-minimap, View World, dialog, movement, physical-control, touchscreen, mouse, and hotkey regressions.

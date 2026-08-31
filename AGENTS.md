@@ -14,10 +14,10 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.6.0`.
-- Release source commit: `92621eaeb1942c2d40432b09079bfdd1d9c31dfb`.
-- Release APK SHA-256: `FF4FB232AF0BEE4968E3D334A52FA45D08C77E649182C3FA1CE8553DEFDB4AA5`.
-- v0.6.0 contains the hardware-validated hero and castle quick-selection lists, touch minimap viewport control, live Editor map information, and every previously validated menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- Latest published release: `thor-v0.7.0`.
+- Release source commit: `4e396a814874312438f45d85246a746e30df95fb`.
+- Release APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
+- v0.7.0 contains the complete hardware-validated Expanded Adventure Map with fog-safe relationship markers, privacy-aware information cards, kind and relationship filters, and bounded presentation zoom, plus every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
 - Latest hardware-validated source commit: `4e396a814874312438f45d85246a746e30df95fb`.
 - This development checkpoint adds bounded 1x, 2x, and 4x presentation-only zoom to the Expanded Adventure Map. Android applies one shared transform to radar rendering, viewport outlines, visible filtered markers, hit testing, long-press inspection, and viewport requests while native fog-safe snapshots and gameplay state remain unchanged. Anchored pinch, clamped two-finger panning, safe cancellation, in-memory overview and list restoration, and map-size reset passed on hardware with all prior filter, privacy, information, focus, navigation, and control behavior unchanged. Its final debug APK SHA-256 is `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
