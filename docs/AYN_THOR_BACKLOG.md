@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `f3f759edfe4d566b6410f3469fe16b281e7fa35f` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
-- This checkpoint adds a fog-safe, native-authorized information card for visible Expanded Adventure Map markers. Long-press inspection follows the existing hero, settlement, Identify Hero, Crystal Ball, Thieves' Guild, army-estimation, fog, ownership, and alliance rules while preserving all validated marker selection and viewport behavior.
-- Debug APK SHA-256: `CAABD274EADA78CBA13C3A47223F39E6B53F945F8736C86CCDA5A5EBA08021E7`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed full/limited hero and settlement tiers, stale-information withdrawal, gesture/overlap/input safety, owned selection, non-owned navigation, overview/list restoration, and compact-minimap, View World, dialog, physical-control, touchscreen, mouse, and hotkey checks.
+- Commit `05a7ca930d931092fe03398568b1a95937e8b4a0` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- This checkpoint adds presentation-only kind and relationship filters for the Expanded Adventure Map markers while native code continues publishing the complete fog-safe authorized snapshot. Android applies one shared visibility rule to rendering, hit testing, and overlap offsets; hidden markers cannot intercept gestures or information requests, and filter changes clear inspected information safely.
+- Debug APK SHA-256: `71CC57A50CC87229FC0A86EEAA39AC2CB9EC06A8127EA3E86FCEFE4B04D36D38`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed filter cycling and restoration, hidden-marker exclusion, immediate information clearing, deterministic overlap behavior, owned and non-owned navigation, overview/list restoration, and all requested physical, touchscreen, mouse, hotkey, minimap, and View World regression checks.
 
 ## Agreed product decisions
 
