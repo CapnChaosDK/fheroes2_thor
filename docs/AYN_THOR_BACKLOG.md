@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `05a7ca930d931092fe03398568b1a95937e8b4a0` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
-- This checkpoint adds presentation-only kind and relationship filters for the Expanded Adventure Map markers while native code continues publishing the complete fog-safe authorized snapshot. Android applies one shared visibility rule to rendering, hit testing, and overlap offsets; hidden markers cannot intercept gestures or information requests, and filter changes clear inspected information safely.
-- Debug APK SHA-256: `71CC57A50CC87229FC0A86EEAA39AC2CB9EC06A8127EA3E86FCEFE4B04D36D38`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed filter cycling and restoration, hidden-marker exclusion, immediate information clearing, deterministic overlap behavior, owned and non-owned navigation, overview/list restoration, and all requested physical, touchscreen, mouse, hotkey, minimap, and View World regression checks.
+- Commit `4e396a814874312438f45d85246a746e30df95fb` is the latest hardware-validated source checkpoint. The latest published prerelease remains `thor-v0.6.0` at `92621eaeb`.
+- This checkpoint adds bounded 1x, 2x, and 4x presentation-only zoom to the Expanded Adventure Map. Android applies one shared transform to radar rendering, viewport outlines, visible filtered markers, hit testing, long-press inspection, and viewport requests while native fog-safe snapshots and gameplay state remain unchanged. Anchored pinch, clamped two-finger panning, cancellation safety, in-memory restoration, and map-size reset are hardware-validated alongside every prior filter, privacy, information, focus, navigation, and control guarantee.
+- Debug APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all seven focused zoom checks plus the requested compact-minimap, View World, dialog, movement, physical-control, touchscreen, mouse, and hotkey regressions.
 
 ## Agreed product decisions
 
@@ -766,11 +766,11 @@ All seven focused checks passed on the Thor, including bounded zoom levels and b
 
 ## Next recommended planning point
 
-- Add presentation-only zoom to the Expanded Adventure Map as the next focused slice. This is the most useful prerequisite for later labels or clustering because it makes dense and maximum-size maps inspectable without exposing new native data or changing gameplay state.
-- Plan bounded zoom levels, the zoom center, whether zoom persists when the overview closes, and exact two-finger gesture behavior. The default 1× view must remain identical, and multitouch must continue producing no selection, information, route, movement, or dialog side effects.
-- Apply the same zoom transform to the radar image, viewport outline, visible marker rendering, overlap offsets, tap hit testing, long-press inspection, empty-map navigation, and drag coordinates. Native fog-safe snapshots and information authorization remain unchanged.
-- Preserve the validated kind and relationship filters, immediate card clearing, owned focus selection, safe non-owned navigation, Heroes/Towns restoration, and Back behavior. Labels, clustering, sprites, army-management interactions, haptics, and configurable command-deck layouts remain deferred as separate slices.
-- Propose the exact zoom behavior and focused manual acceptance tests, then wait for user approval before implementation.
+- Add zoom-aware, presentation-only marker clustering to the Expanded Adventure Map as the next focused planning slice. Clustering is the safest next density improvement because it can use only the already-authorized filtered snapshot and the validated zoom transform without exposing names, adding native fields, or changing gameplay state.
+- Plan deterministic cluster membership and thresholds at 1x and 2x, whether exact same-tile hero/town pairs remain individually offset, cluster count and relationship/kind presentation, and the transition at 4x. Define cluster tap behavior as local drill-down without native selection or viewport side effects, and keep long-press information limited to an individually resolved marker.
+- Apply filters before clustering and use the same final presentation geometry for rendering and hit testing. Hidden or off-crop markers must never affect cluster counts, intercept input, or authorize information; fog, ownership, alliance, turn, and context invalidation remain native-owned.
+- Preserve zoom anchoring and restoration, one-finger viewport navigation, owned-marker focus, safe non-owned behavior, information-card authorization, deterministic overlap handling, Heroes/Towns restoration, Back, and every established control path. Labels, sprites, army-management interactions, haptics, and configurable layouts remain deferred separately.
+- Propose exact clustering behavior and focused manual acceptance tests, then wait for user approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 
