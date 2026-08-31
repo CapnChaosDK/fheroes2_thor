@@ -26,6 +26,7 @@ import android.view.Display;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -327,20 +328,27 @@ final class ThorSecondScreenPresentation extends Presentation
         boolean send( int context, long revision, int kind, int id );
     }
 
+    interface MarkerInfoSender
+    {
+        boolean send( int context, long revision, int kind, int id );
+    }
+
     private final KeySender keySender;
     private final ActionSender actionSender;
     private final ViewportSender viewportSender;
     private final SelectionSender selectionSender;
+    private final MarkerInfoSender markerInfoSender;
     private CommandDeckView commandDeckView;
 
     ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender,
-                                  final ViewportSender viewportSender, final SelectionSender selectionSender )
+                                  final ViewportSender viewportSender, final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender )
     {
         super( context, display );
         this.keySender = keySender;
         this.actionSender = actionSender;
         this.viewportSender = viewportSender;
         this.selectionSender = selectionSender;
+        this.markerInfoSender = markerInfoSender;
     }
 
     @Override
@@ -357,7 +365,7 @@ final class ThorSecondScreenPresentation extends Presentation
             window.getDecorView().setSystemUiVisibility( View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY );
         }
 
-        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender );
+        commandDeckView = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender, markerInfoSender );
         setContentView( commandDeckView );
     }
 
@@ -397,6 +405,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final ActionSender actionSender;
         private final ViewportSender viewportSender;
         private final SelectionSender selectionSender;
+        private final MarkerInfoSender markerInfoSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -427,19 +436,29 @@ final class ThorSecondScreenPresentation extends Presentation
         private float radarDownX;
         private float radarDownY;
         private SelectionEntry radarTapMarker;
+        private boolean radarLongPressTriggered;
         private int selectionContext = -1;
         private long selectionRevision = -1;
         private final List<SelectionEntry> selectionEntries = new ArrayList<>();
         private int selectionPage;
+        private final Runnable radarLongPress;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
-                         final SelectionSender selectionSender )
+                         final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender )
         {
             super( context );
             this.keySender = keySender;
             this.actionSender = actionSender;
             this.viewportSender = viewportSender;
             this.selectionSender = selectionSender;
+            this.markerInfoSender = markerInfoSender;
+            radarLongPress = () -> {
+                if ( radarGestureActive && !radarGestureMoved && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && radarTapMarker != null
+                     && selectionContext == gameContext ) {
+                    radarLongPressTriggered = true;
+                    this.markerInfoSender.send( gameContext, selectionRevision, radarTapMarker.kind, radarTapMarker.id );
+                }
+            };
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
             setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null );
@@ -459,7 +478,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             final boolean contextChanged = gameContext != context;
-            if ( contextChanged || enabledActions != requestedEnabledActions || ( viewportControlEnabled && !requestedViewportControlEnabled ) ) {
+            if ( contextChanged || selectionChanged || enabledActions != requestedEnabledActions || ( viewportControlEnabled && !requestedViewportControlEnabled ) ) {
                 releasePressedButton();
             }
             gameContext = context;
@@ -804,7 +823,6 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             final int action = event.getActionMasked();
             if ( action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_POINTER_UP ) {
-                radarGestureActive = false;
                 releasePressedButton();
                 return true;
             }
@@ -814,9 +832,13 @@ final class ThorSecondScreenPresentation extends Presentation
                      && radarBounds.contains( event.getX(), event.getY() ) ) {
                     radarGestureActive = true;
                     radarGestureMoved = false;
+                    radarLongPressTriggered = false;
                     radarDownX = event.getX();
                     radarDownY = event.getY();
                     radarTapMarker = gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? markerAt( radarDownX, radarDownY ) : null;
+                    if ( radarTapMarker != null ) {
+                        postDelayed( radarLongPress, ViewConfiguration.getLongPressTimeout() );
+                    }
                     if ( gameContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
                         radarGestureActive = sendViewportRequest( event.getX(), event.getY() );
                     }
@@ -853,6 +875,7 @@ final class ThorSecondScreenPresentation extends Presentation
                             final float deltaY = event.getY() - radarDownY;
                             if ( !radarGestureMoved && deltaX * deltaX + deltaY * deltaY > 18f * 18f ) {
                                 radarGestureMoved = true;
+                                removeCallbacks( radarLongPress );
                                 radarTapMarker = null;
                             }
                             if ( !radarGestureMoved ) {
@@ -874,23 +897,23 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( action == MotionEvent.ACTION_UP ) {
-                if ( radarGestureActive && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && !radarGestureMoved ) {
-                    if ( radarTapMarker != null && selectionContext == gameContext ) {
+                removeCallbacks( radarLongPress );
+                if ( radarGestureActive && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && !radarGestureMoved && !radarLongPressTriggered ) {
+                    if ( radarTapMarker != null && radarTapMarker.selectable && selectionContext == gameContext ) {
                         selectionSender.send( gameContext, selectionRevision, radarTapMarker.kind, radarTapMarker.id );
                     }
                     else {
+                        if ( radarTapMarker == null && selectionContext == gameContext ) {
+                            markerInfoSender.send( gameContext, selectionRevision, SELECTION_KIND_HERO, -1 );
+                        }
                         sendViewportRequest( event.getX(), event.getY() );
                     }
                 }
-                radarGestureActive = false;
-                radarTapMarker = null;
                 releasePressedButton();
                 return true;
             }
 
             if ( action == MotionEvent.ACTION_CANCEL ) {
-                radarGestureActive = false;
-                radarTapMarker = null;
                 releasePressedButton();
                 return true;
             }
@@ -1358,20 +1381,53 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setTextSize( 32f );
             canvas.drawText( "KINGDOM MAP", sidePanel.centerX(), sidePanel.top + 54f, paint );
 
-            SelectionEntry focused = null;
-            for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.selected ) {
-                    focused = entry;
-                    break;
-                }
+            final float textWidth = sidePanel.width() - 28f;
+            if ( informationContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && informationRevision >= 0 && !informationTitle.isEmpty() ) {
+                paint.setColor( GOLD_LIGHT_COLOR );
+                drawFittedText( canvas, informationTitle, sidePanel.centerX(), sidePanel.top + 96f, textWidth, 27f );
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+                paint.setColor( MUTED_TEXT_COLOR );
+                drawFittedText( canvas, informationCategory, sidePanel.centerX(), sidePanel.top + 128f, textWidth, 17f );
+                paint.setColor( TEXT_COLOR );
+                drawFittedText( canvas, informationDate, sidePanel.centerX(), sidePanel.top + 157f, textWidth, 19f );
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+                paint.setColor( GOLD_LIGHT_COLOR );
+                drawOverviewLines( canvas, informationDetail, sidePanel, sidePanel.top + 190f, 23f, 3 );
+                paint.setColor( TEXT_COLOR );
+                drawOverviewLines( canvas, informationResources, sidePanel, sidePanel.top + 286f, 25f, 6 );
             }
-            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
-            paint.setColor( GOLD_LIGHT_COLOR );
-            drawFittedText( canvas, focused == null ? "NO SELECTION" : focused.name, sidePanel.centerX(), sidePanel.top + 103f, sidePanel.width() - 28f, 25f );
-            paint.setColor( MUTED_TEXT_COLOR );
-            drawFittedText( canvas, "● HERO     ■ TOWN", sidePanel.centerX(), sidePanel.top + 143f, sidePanel.width() - 24f, 21f );
-            drawFittedText( canvas, "BLUE OWN     GREEN ALLY", sidePanel.centerX(), sidePanel.top + 174f, sidePanel.width() - 24f, 17f );
-            drawFittedText( canvas, "RED ENEMY     GRAY NEUTRAL", sidePanel.centerX(), sidePanel.top + 200f, sidePanel.width() - 24f, 17f );
+            else {
+                SelectionEntry focused = null;
+                for ( final SelectionEntry entry : selectionEntries ) {
+                    if ( entry.selected ) {
+                        focused = entry;
+                        break;
+                    }
+                }
+                paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.NORMAL ) );
+                paint.setColor( GOLD_LIGHT_COLOR );
+                drawFittedText( canvas, focused == null ? "NO SELECTION" : focused.name, sidePanel.centerX(), sidePanel.top + 103f, textWidth, 25f );
+                paint.setColor( MUTED_TEXT_COLOR );
+                drawFittedText( canvas, "LONG-PRESS A MARKER", sidePanel.centerX(), sidePanel.top + 143f, textWidth, 20f );
+                drawFittedText( canvas, "FOR QUICK INFO", sidePanel.centerX(), sidePanel.top + 170f, textWidth, 20f );
+                drawFittedText( canvas, "● HERO     ■ TOWN", sidePanel.centerX(), sidePanel.top + 215f, textWidth, 19f );
+                drawFittedText( canvas, "BLUE OWN     GREEN ALLY", sidePanel.centerX(), sidePanel.top + 244f, textWidth, 16f );
+                drawFittedText( canvas, "RED ENEMY     GRAY NEUTRAL", sidePanel.centerX(), sidePanel.top + 270f, textWidth, 16f );
+            }
+        }
+
+        private void drawOverviewLines( final Canvas canvas, final String value, final RectF panel, final float firstBaseline, final float lineHeight,
+                                        final int maximumLines )
+        {
+            if ( value.isEmpty() ) {
+                return;
+            }
+
+            final String[] lines = value.split( "\\n", maximumLines + 1 );
+            final int lineCount = Math.min( lines.length, maximumLines );
+            for ( int index = 0; index < lineCount; ++index ) {
+                drawFittedText( canvas, lines[index], panel.centerX(), firstBaseline + index * lineHeight, panel.width() - 28f, 19f );
+            }
         }
 
         private void drawRadar( final Canvas canvas )
@@ -1499,7 +1555,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     nearestDistanceSquared = distanceSquared;
                 }
             }
-            return nearest != null && nearest.selectable ? nearest : null;
+            return nearest;
         }
 
         private void addBrushActions()
@@ -1561,9 +1617,9 @@ final class ThorSecondScreenPresentation extends Presentation
                 final float mapSize = Math.min( height - 2f * margin, width - 3f * margin - sideWidth );
                 final float left = margin + mapSize + gap;
                 final float right = width - margin;
-                final float top = margin + 178f;
-                final float buttonGap = 18f;
-                final float buttonHeight = Math.min( 190f, ( height - top - margin - 2f * buttonGap ) / 3f );
+                final float buttonGap = 14f;
+                final float buttonHeight = Math.min( 120f, ( height - 2f * margin - 2f * buttonGap ) / 3f );
+                final float top = height - margin - 3f * buttonHeight - 2f * buttonGap;
                 for ( int index = 0; index < buttons.size(); ++index ) {
                     final float buttonTop = top + index * ( buttonHeight + buttonGap );
                     buttons.get( index ).bounds.set( left, buttonTop, right, buttonTop + buttonHeight );
@@ -1628,8 +1684,10 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void releasePressedButton()
         {
+            removeCallbacks( radarLongPress );
             radarGestureActive = false;
             radarGestureMoved = false;
+            radarLongPressTriggered = false;
             radarTapMarker = null;
             if ( pressedButton != null ) {
                 if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {

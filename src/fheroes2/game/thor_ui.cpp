@@ -38,6 +38,7 @@ namespace
     std::mutex selectionMutex;
     fheroes2::thor::SelectionSnapshot selectionSnapshot;
     fheroes2::thor::SelectionRequest selectionRequest;
+    fheroes2::thor::MarkerInfoRequest markerInfoRequest;
 
     bool isBattleAction( const fheroes2::thor::Action action )
     {
@@ -607,6 +608,7 @@ namespace fheroes2::thor
             {
                 std::lock_guard<std::mutex> selectionLock( selectionMutex );
                 selectionRequest = {};
+                markerInfoRequest = {};
                 SelectionSnapshot emptySelection;
                 emptySelection.context = context;
                 emptySelection.revision = selectionSnapshot.revision + 1;
@@ -810,6 +812,7 @@ namespace fheroes2::thor
         snapshot.revision = selectionSnapshot.revision + 1;
         selectionSnapshot = std::move( snapshot );
         selectionRequest = {};
+        markerInfoRequest = {};
     }
 
     bool enqueueSelectionRequest( const UiContext context, const uint64_t revision, const SelectionEntry::Kind kind, const int32_t id )
@@ -839,6 +842,45 @@ namespace fheroes2::thor
         std::lock_guard<std::mutex> lock( selectionMutex );
         SelectionRequest request = selectionRequest;
         selectionRequest = {};
+        if ( !request.valid || request.context != getUiContext() || request.context != selectionSnapshot.context
+             || request.revision != selectionSnapshot.revision ) {
+            return {};
+        }
+        return request;
+    }
+
+    bool enqueueMarkerInfoRequest( const UiContext context, const uint64_t revision, const SelectionEntry::Kind kind, const int32_t id )
+    {
+        if ( context != UiContext::ADVENTURE_MAP_OVERVIEW ) {
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        if ( getUiContext() != context || selectionSnapshot.context != context || selectionSnapshot.revision != revision ) {
+            return false;
+        }
+
+        if ( id < 0 ) {
+            markerInfoRequest = { context, revision, id, kind, SelectionEntry::Relationship::OWNED, -1, true, true };
+            return true;
+        }
+
+        const auto entry = std::find_if( selectionSnapshot.entries.begin(), selectionSnapshot.entries.end(), [kind, id]( const SelectionEntry & value ) {
+            return value.kind == kind && value.id == id;
+        } );
+        if ( entry == selectionSnapshot.entries.end() ) {
+            return false;
+        }
+
+        markerInfoRequest = { context, revision, id, kind, entry->relationship, -1, false, true };
+        return true;
+    }
+
+    MarkerInfoRequest takeMarkerInfoRequest()
+    {
+        std::lock_guard<std::mutex> lock( selectionMutex );
+        MarkerInfoRequest request = markerInfoRequest;
+        markerInfoRequest = {};
         if ( !request.valid || request.context != getUiContext() || request.context != selectionSnapshot.context
              || request.revision != selectionSnapshot.revision ) {
             return {};
@@ -896,6 +938,16 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
 {
     return fheroes2::thor::enqueueSelectionRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ),
                                                     static_cast<fheroes2::thor::SelectionEntry::Kind>( kind ), id )
+               ? JNI_TRUE
+               : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorMarkerInfoRequest( JNIEnv *, jclass, const jint context,
+                                                                                                           const jlong revision, const jint kind,
+                                                                                                           const jint id )
+{
+    return fheroes2::thor::enqueueMarkerInfoRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ),
+                                                     static_cast<fheroes2::thor::SelectionEntry::Kind>( kind ), id )
                ? JNI_TRUE
                : JNI_FALSE;
 }

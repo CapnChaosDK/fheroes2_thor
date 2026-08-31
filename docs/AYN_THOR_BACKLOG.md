@@ -672,6 +672,28 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five focused checks passed on the Thor, including relationship colors and shapes, fog-driven appearance and removal, owned selection, informational non-owned navigation, overlap and input safety, list and Back restoration, and compact-minimap, View World, physical-control, and upper-screen regressions.
 
+### Fog-safe marker information card
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-31.
+
+- A stationary long-press on any visible Expanded Adventure Map hero or settlement marker requests a read-only information card. The gesture is cancelled by drag, multitouch, cancellation, stale revisions, or context changes; it does not focus, center, route, move, or open an upper-screen dialog.
+- Ordinary input remains unchanged: owned marker taps focus and center, non-owned marker taps retain safe viewport navigation, drags pan the viewport, and an empty tap recenters while clearing the card.
+- Native code re-resolves the requested object on the SDL thread and owns every published field. Hero detail follows the existing quick-info rules: owned, allied, and neutral heroes plus Identify Hero or Crystal Ball access receive full level, class, primary-stat, movement, mana, morale, luck, and exact-army information; ordinary visible enemies expose identity and engine-formatted army estimates only.
+- Settlement detail includes name, Town or Castle type, faction, relationship, and player color. Friendly or Crystal Ball views receive exact defenders; hostile views follow the existing Thieves' Guild tiers of Unknown, identified creature types with hidden counts, and engine-formatted quantity estimates.
+- The inspected relationship is bound to the accepted marker revision. Fog return, removal, ownership or alliance changes, turn/player/context changes, or loss of the relevant visibility privilege withdraw or replace the complete revisioned card; Android does not infer, merge, or retain hidden fields.
+- The overview side panel keeps Heroes, Towns, and Back as compact stacked commands beneath the text-only card. Labels, clustering, zoom, sprites, configurable filters, and army-management interactions remain deferred.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed activity and companion presentation on display 4. Debug APK SHA-256: `CAABD274EADA78CBA13C3A47223F39E6B53F945F8736C86CCDA5A5EBA08021E7`.
+
+#### Focused fog-safe marker information validation
+
+1. Long-press owned, allied, enemy, and neutral heroes. Verify the correct full or limited detail tier and confirm no focus, route, movement, viewport, or dialog side effects.
+2. Compare settlements with zero, one, and two-or-more Thieves' Guilds, plus allied and Crystal Ball cases. Confirm Unknown, hidden counts, estimates, and exact counts match native quick info.
+3. Reveal and inspect an enemy marker, then return it to fog. Confirm both marker and card disappear promptly without stale text after turn, ownership, alliance, or hot-seat player changes.
+4. Exercise short taps, long-presses, dragging across markers, overlaps, rapid input, cancellation, and multitouch. Confirm owned selection and non-owned viewport behavior remain unchanged.
+5. Recheck Heroes/Towns restoration, Back, compact minimap, View World, dialogs, physical controls, upper touchscreen, mouse, and hotkeys.
+
+All five focused checks passed on the Thor, including full and limited hero detail tiers, settlement information tiers, fog and state invalidation without stale details, gesture and overlap safety, preserved owned selection and non-owned viewport behavior, exact overview/list restoration, and compact-minimap, View World, dialog, physical-control, touchscreen, mouse, and hotkey regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.

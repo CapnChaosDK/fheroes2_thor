@@ -376,6 +376,18 @@ namespace fheroes2::thor
         bool valid{ false };
     };
 
+    struct MarkerInfoRequest
+    {
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        int32_t id{ -1 };
+        SelectionEntry::Kind kind{ SelectionEntry::Kind::HERO };
+        SelectionEntry::Relationship relationship{ SelectionEntry::Relationship::OWNED };
+        int32_t ownerColor{ -1 };
+        bool clear{ false };
+        bool valid{ false };
+    };
+
     constexpr int32_t actionMaskBit( const Action action )
     {
         const int32_t actionId = static_cast<int32_t>( action );
@@ -419,6 +431,8 @@ namespace fheroes2::thor
     void publishSelectionSnapshot( SelectionSnapshot snapshot );
     bool enqueueSelectionRequest( UiContext context, uint64_t revision, SelectionEntry::Kind kind, int32_t id );
     SelectionRequest takeSelectionRequest();
+    bool enqueueMarkerInfoRequest( UiContext context, uint64_t revision, SelectionEntry::Kind kind, int32_t id );
+    MarkerInfoRequest takeMarkerInfoRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

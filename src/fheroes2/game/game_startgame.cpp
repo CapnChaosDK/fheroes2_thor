@@ -1184,21 +1184,21 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
     };
 
-    const auto publishThorSelection = [&myKingdom]( const fheroes2::thor::UiContext context ) {
+    const auto thorMarkerRelationship = [&myKingdom]( const PlayerColor color ) {
+        if ( color == PlayerColor::NONE ) {
+            return fheroes2::thor::SelectionEntry::Relationship::NEUTRAL;
+        }
+        if ( color == myKingdom.GetColor() ) {
+            return fheroes2::thor::SelectionEntry::Relationship::OWNED;
+        }
+        return Players::isFriends( myKingdom.GetColor(), static_cast<PlayerColorsSet>( color ) )
+                   ? fheroes2::thor::SelectionEntry::Relationship::ALLIED
+                   : fheroes2::thor::SelectionEntry::Relationship::ENEMY;
+    };
+
+    const auto publishThorSelection = [&myKingdom, &thorMarkerRelationship]( const fheroes2::thor::UiContext context ) {
         fheroes2::thor::SelectionSnapshot snapshot;
         snapshot.context = context;
-
-        const auto markerRelationship = [&myKingdom]( const PlayerColor color ) {
-            if ( color == PlayerColor::NONE ) {
-                return fheroes2::thor::SelectionEntry::Relationship::NEUTRAL;
-            }
-            if ( color == myKingdom.GetColor() ) {
-                return fheroes2::thor::SelectionEntry::Relationship::OWNED;
-            }
-            return Players::isFriends( myKingdom.GetColor(), static_cast<PlayerColorsSet>( color ) )
-                       ? fheroes2::thor::SelectionEntry::Relationship::ALLIED
-                       : fheroes2::thor::SelectionEntry::Relationship::ENEMY;
-        };
 
         if ( context == fheroes2::thor::UiContext::ADVENTURE_HERO_LIST || context == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW ) {
             const Heroes * focusedHero = GetFocusHeroes();
@@ -1244,7 +1244,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.kind = fheroes2::thor::SelectionEntry::Kind::HERO;
                     entry.x = hero->GetCenter().x;
                     entry.y = hero->GetCenter().y;
-                    entry.relationship = markerRelationship( hero->GetColor() );
+                    entry.relationship = thorMarkerRelationship( hero->GetColor() );
                     entry.selectable = false;
                     snapshot.entries.emplace_back( std::move( entry ) );
                 }
@@ -1285,7 +1285,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.kind = fheroes2::thor::SelectionEntry::Kind::CASTLE;
                     entry.x = castle->GetCenter().x;
                     entry.y = castle->GetCenter().y;
-                    entry.relationship = markerRelationship( castle->GetColor() );
+                    entry.relationship = thorMarkerRelationship( castle->GetColor() );
                     entry.selectable = false;
                     snapshot.entries.emplace_back( std::move( entry ) );
                 }
@@ -1295,9 +1295,178 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         fheroes2::thor::publishSelectionSnapshot( std::move( snapshot ) );
     };
 
+    const auto publishThorMarkerInformation = [&myKingdom, &thorMarkerRelationship]( const fheroes2::thor::MarkerInfoRequest & inspectedMarker ) {
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW;
+
+        if ( !inspectedMarker.valid || inspectedMarker.clear ) {
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+            return false;
+        }
+
+        const auto relationshipName = []( const fheroes2::thor::SelectionEntry::Relationship relationship ) {
+            switch ( relationship ) {
+            case fheroes2::thor::SelectionEntry::Relationship::OWNED:
+                return std::string( "OWNED" );
+            case fheroes2::thor::SelectionEntry::Relationship::ALLIED:
+                return std::string( "ALLY" );
+            case fheroes2::thor::SelectionEntry::Relationship::ENEMY:
+                return std::string( "ENEMY" );
+            case fheroes2::thor::SelectionEntry::Relationship::NEUTRAL:
+                return std::string( "NEUTRAL" );
+            default:
+                return std::string();
+            }
+        };
+
+        const auto colorName = []( const PlayerColor color ) {
+            return color == PlayerColor::NONE ? std::string() : StringUpper( Color::String( color ) );
+        };
+
+        const auto signedValue = []( const int value ) {
+            return value > 0 ? "+" + std::to_string( value ) : std::to_string( value );
+        };
+
+        const auto armyText = []( const Troops & troops, const bool exactCounts, const bool hideCounts ) {
+            std::string text = "ARMY";
+            bool hasTroops = false;
+            for ( size_t slot = 0; slot < troops.Size(); ++slot ) {
+                const Troop * troop = troops.GetTroop( slot );
+                if ( troop == nullptr || !troop->isValid() ) {
+                    continue;
+                }
+
+                hasTroops = true;
+                text += '\n';
+                if ( hideCounts ) {
+                    text += "???";
+                }
+                else if ( exactCounts ) {
+                    text += std::to_string( troop->GetCount() );
+                }
+                else {
+                    text += Army::SizeString( troop->GetCount() );
+                }
+                text += "  ";
+                text += troop->GetPluralName( troop->GetCount() );
+            }
+            if ( !hasTroops ) {
+                text += "\nNONE";
+            }
+            return text;
+        };
+
+        if ( inspectedMarker.kind == fheroes2::thor::SelectionEntry::Kind::HERO ) {
+            const Heroes * hero = nullptr;
+            for ( const Heroes * value : world.getAllHeroes() ) {
+                if ( value != nullptr && value->GetID() == inspectedMarker.id ) {
+                    hero = value;
+                    break;
+                }
+            }
+
+            if ( hero == nullptr || !Maps::isValidAbsIndex( hero->GetIndex() ) ) {
+                fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+                return false;
+            }
+
+            const bool isNeutralMapHero
+                = hero->GetColor() == PlayerColor::NONE && world.getTile( hero->GetIndex() ).getHero() == hero;
+            const auto relationship = thorMarkerRelationship( hero->GetColor() );
+            if ( ( !hero->isActive() && !isNeutralMapHero ) || static_cast<int32_t>( hero->GetColor() ) != inspectedMarker.ownerColor
+                 || relationship != inspectedMarker.relationship
+                 || ( relationship != fheroes2::thor::SelectionEntry::Relationship::OWNED
+                      && world.getTile( hero->GetIndex() ).isFog( myKingdom.GetColor() ) ) ) {
+                fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+                return false;
+            }
+
+            const bool isFullInfo = hero->GetColor() == PlayerColor::NONE || ColorBase( hero->GetColor() ).isFriends( myKingdom.GetColor() )
+                                    || myKingdom.Modes( Kingdom::IDENTIFYHERO ) || myKingdom.IsTileVisibleFromCrystalBall( hero->GetIndex() );
+            snapshot.title = hero->GetName();
+            snapshot.category = relationshipName( relationship );
+            const std::string ownerColor = colorName( hero->GetColor() );
+            if ( !ownerColor.empty() ) {
+                snapshot.category += "  " + ownerColor;
+            }
+            snapshot.category += "  HERO";
+
+            if ( isFullInfo ) {
+                snapshot.date = "LEVEL " + std::to_string( hero->GetLevel() ) + "  " + StringUpper( Race::String( hero->GetRace() ) );
+                snapshot.detail = "ATT " + std::to_string( hero->GetAttack() ) + "  DEF " + std::to_string( hero->GetDefense() ) + "  POWER "
+                                  + std::to_string( hero->GetPower() ) + "  KNOW " + std::to_string( hero->GetKnowledge() ) + "\nMOVE "
+                                  + std::to_string( hero->GetMovePoints() ) + "/" + std::to_string( hero->GetMaxMovePoints() ) + "  MANA "
+                                  + std::to_string( hero->GetSpellPoints() ) + "/" + std::to_string( hero->GetMaxSpellPoints() ) + "\nMORALE "
+                                  + signedValue( hero->GetMorale() ) + "  LUCK " + signedValue( hero->GetLuck() );
+                snapshot.resources = armyText( hero->GetArmy(), true, false );
+            }
+            else {
+                snapshot.date = "LIMITED QUICK INFO";
+                snapshot.detail = "PRIMARY STATS AND EXACT COUNTS HIDDEN";
+                snapshot.resources = armyText( hero->GetArmy(), false, false );
+            }
+
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+            return true;
+        }
+
+        const Castle * castle = nullptr;
+        for ( const Castle * value : world.getAllCastles() ) {
+            if ( value != nullptr && value->GetIndex() == inspectedMarker.id ) {
+                castle = value;
+                break;
+            }
+        }
+
+        if ( castle == nullptr || !Maps::isValidAbsIndex( castle->GetIndex() ) ) {
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+            return false;
+        }
+
+        const auto relationship = thorMarkerRelationship( castle->GetColor() );
+        if ( static_cast<int32_t>( castle->GetColor() ) != inspectedMarker.ownerColor || relationship != inspectedMarker.relationship
+             || ( relationship != fheroes2::thor::SelectionEntry::Relationship::OWNED
+                  && world.getTile( castle->GetIndex() ).isFog( myKingdom.GetColor() ) ) ) {
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+            return false;
+        }
+
+        snapshot.title = castle->GetName();
+        snapshot.category = relationshipName( relationship );
+        const std::string ownerColor = colorName( castle->GetColor() );
+        if ( !ownerColor.empty() ) {
+            snapshot.category += "  " + ownerColor;
+        }
+        snapshot.category += castle->isCastle() ? "  CASTLE" : "  TOWN";
+        snapshot.date = StringUpper( Race::String( castle->GetRace() ) );
+
+        const bool isDetailedView = castle->isFriends( myKingdom.GetColor() ) || myKingdom.IsTileVisibleFromCrystalBall( castle->GetIndex() );
+        const uint32_t thievesGuildsCount = myKingdom.GetCountThievesGuild();
+        if ( isDetailedView ) {
+            snapshot.detail = "DEFENDERS  EXACT";
+            snapshot.resources = armyText( castle->GetArmy(), true, false );
+        }
+        else if ( thievesGuildsCount == 0 ) {
+            snapshot.detail = "DEFENDERS  UNKNOWN";
+            snapshot.resources = "ARMY\nUNKNOWN";
+        }
+        else if ( thievesGuildsCount == 1 ) {
+            snapshot.detail = "DEFENDERS  IDENTIFIED";
+            snapshot.resources = armyText( castle->GetArmy(), false, true );
+        }
+        else {
+            snapshot.detail = "DEFENDERS  ESTIMATED";
+            snapshot.resources = armyText( castle->GetArmy(), false, false );
+        }
+
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+        return true;
+    };
+
     publishThorInformation();
     fheroes2::thor::setViewportControlEnabled( true );
     fheroes2::thor::UiContext selectionReturnContext = fheroes2::thor::UiContext::ADVENTURE_MAP;
+    fheroes2::thor::MarkerInfoRequest inspectedMarker;
 
     while ( res == fheroes2::GameMode::CANCEL ) {
         if ( !le.HandleEvents( Game::isDelayNeeded( delayTypes ), true ) ) {
@@ -1364,6 +1533,29 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         const bool isThorOverview = thorContext == fheroes2::thor::UiContext::ADVENTURE_MAP_OVERVIEW;
         if ( isThorOverview ) {
             publishThorSelection( thorContext );
+            const fheroes2::thor::MarkerInfoRequest markerInfoRequest = fheroes2::thor::takeMarkerInfoRequest();
+            if ( markerInfoRequest.valid ) {
+                inspectedMarker = markerInfoRequest.clear ? fheroes2::thor::MarkerInfoRequest{} : markerInfoRequest;
+                if ( inspectedMarker.valid && inspectedMarker.kind == fheroes2::thor::SelectionEntry::Kind::HERO ) {
+                    for ( const Heroes * hero : world.getAllHeroes() ) {
+                        if ( hero != nullptr && hero->GetID() == inspectedMarker.id ) {
+                            inspectedMarker.ownerColor = static_cast<int32_t>( hero->GetColor() );
+                            break;
+                        }
+                    }
+                }
+                else if ( inspectedMarker.valid ) {
+                    for ( const Castle * castle : world.getAllCastles() ) {
+                        if ( castle != nullptr && castle->GetIndex() == inspectedMarker.id ) {
+                            inspectedMarker.ownerColor = static_cast<int32_t>( castle->GetColor() );
+                            break;
+                        }
+                    }
+                }
+            }
+            if ( !publishThorMarkerInformation( inspectedMarker ) ) {
+                inspectedMarker = {};
+            }
             const fheroes2::thor::SelectionRequest selectionRequest = fheroes2::thor::takeSelectionRequest();
             if ( selectionRequest.valid ) {
                 if ( selectionRequest.kind == fheroes2::thor::SelectionEntry::Kind::HERO ) {
@@ -1391,6 +1583,7 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
         }
 
         if ( !isThorOverview ) {
+            inspectedMarker = {};
             publishThorInformation();
         }
         fheroes2::thor::setViewportControlEnabled( !isHeroMoving );
