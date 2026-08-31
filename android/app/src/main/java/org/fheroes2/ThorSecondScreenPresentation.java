@@ -313,6 +313,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int OVERVIEW_KIND_FILTER_BOTH = 0;
     private static final int OVERVIEW_RELATIONSHIP_FILTER_ALL = 0;
 
+    private static final int OVERVIEW_ZOOM_LEVEL_COUNT = 3;
+    private static final float OVERVIEW_ZOOM_IN_THRESHOLD = 1.25f;
+    private static final float OVERVIEW_ZOOM_OUT_THRESHOLD = 0.8f;
+
     interface KeySender
     {
         void send( int keyCode, boolean pressed );
@@ -448,6 +452,15 @@ final class ThorSecondScreenPresentation extends Presentation
         private int selectionPage;
         private int overviewKindFilter = OVERVIEW_KIND_FILTER_BOTH;
         private int overviewRelationshipFilter = OVERVIEW_RELATIONSHIP_FILTER_ALL;
+        private int overviewZoomLevel;
+        private float overviewZoomCenterX = 0.5f;
+        private float overviewZoomCenterY = 0.5f;
+        private int overviewZoomWorldWidth;
+        private int overviewZoomWorldHeight;
+        private boolean radarZoomGestureActive;
+        private float radarZoomPreviousMidpointX;
+        private float radarZoomPreviousMidpointY;
+        private float radarZoomReferenceDistance;
         private final Runnable radarLongPress;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
@@ -520,8 +533,14 @@ final class ThorSecondScreenPresentation extends Presentation
                 return true;
             }
 
-            radarWorldWidth = snapshot[5];
-            radarWorldHeight = snapshot[6];
+            final int worldWidth = snapshot[5];
+            final int worldHeight = snapshot[6];
+            if ( worldWidth != overviewZoomWorldWidth || worldHeight != overviewZoomWorldHeight ) {
+                releasePressedButton();
+                resetOverviewZoom( worldWidth, worldHeight );
+            }
+            radarWorldWidth = worldWidth;
+            radarWorldHeight = worldHeight;
             radarViewportX = snapshot[7];
             radarViewportY = snapshot[8];
             radarViewportWidth = snapshot[9];
@@ -829,7 +848,16 @@ final class ThorSecondScreenPresentation extends Presentation
         public boolean onTouchEvent( final MotionEvent event )
         {
             final int action = event.getActionMasked();
-            if ( action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_POINTER_UP ) {
+            if ( action == MotionEvent.ACTION_POINTER_DOWN ) {
+                releasePressedButton();
+                if ( event.getPointerCount() == 2 && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && viewportControlEnabled && hasRadarSnapshot()
+                     && radarBounds.contains( event.getX( 0 ), event.getY( 0 ) ) && radarBounds.contains( event.getX( 1 ), event.getY( 1 ) ) ) {
+                    beginOverviewZoomGesture( event );
+                }
+                return true;
+            }
+
+            if ( action == MotionEvent.ACTION_POINTER_UP ) {
                 releasePressedButton();
                 return true;
             }
@@ -875,6 +903,16 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( action == MotionEvent.ACTION_MOVE ) {
+                if ( radarZoomGestureActive ) {
+                    if ( event.getPointerCount() == 2 ) {
+                        updateOverviewZoomGesture( event );
+                    }
+                    else {
+                        releasePressedButton();
+                    }
+                    return true;
+                }
+
                 if ( radarGestureActive ) {
                     if ( event.getPointerCount() == 1 ) {
                         if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
@@ -934,9 +972,67 @@ final class ThorSecondScreenPresentation extends Presentation
                 return false;
             }
 
-            final float normalizedX = Math.max( 0f, Math.min( 1f, ( x - radarBounds.left ) / radarBounds.width() ) );
-            final float normalizedY = Math.max( 0f, Math.min( 1f, ( y - radarBounds.top ) / radarBounds.height() ) );
+            final float normalizedX = screenToWorldX( x );
+            final float normalizedY = screenToWorldY( y );
             return viewportSender.send( normalizedX, normalizedY );
+        }
+
+        private void beginOverviewZoomGesture( final MotionEvent event )
+        {
+            radarZoomGestureActive = true;
+            radarZoomPreviousMidpointX = ( event.getX( 0 ) + event.getX( 1 ) ) * 0.5f;
+            radarZoomPreviousMidpointY = ( event.getY( 0 ) + event.getY( 1 ) ) * 0.5f;
+            radarZoomReferenceDistance = pointerDistance( event );
+        }
+
+        private void updateOverviewZoomGesture( final MotionEvent event )
+        {
+            final float midpointX = ( event.getX( 0 ) + event.getX( 1 ) ) * 0.5f;
+            final float midpointY = ( event.getY( 0 ) + event.getY( 1 ) ) * 0.5f;
+            final float anchoredWorldX = screenToWorldX( radarZoomPreviousMidpointX );
+            final float anchoredWorldY = screenToWorldY( radarZoomPreviousMidpointY );
+            centerOverviewZoomAt( anchoredWorldX, anchoredWorldY, midpointX, midpointY );
+
+            final float distance = pointerDistance( event );
+            if ( radarZoomReferenceDistance > 0f && distance >= radarZoomReferenceDistance * OVERVIEW_ZOOM_IN_THRESHOLD ) {
+                if ( overviewZoomLevel + 1 < OVERVIEW_ZOOM_LEVEL_COUNT ) {
+                    changeOverviewZoomLevel( overviewZoomLevel + 1, midpointX, midpointY );
+                }
+                radarZoomReferenceDistance = distance;
+            }
+            else if ( radarZoomReferenceDistance > 0f && distance <= radarZoomReferenceDistance * OVERVIEW_ZOOM_OUT_THRESHOLD ) {
+                if ( overviewZoomLevel > 0 ) {
+                    changeOverviewZoomLevel( overviewZoomLevel - 1, midpointX, midpointY );
+                }
+                radarZoomReferenceDistance = distance;
+            }
+
+            radarZoomPreviousMidpointX = midpointX;
+            radarZoomPreviousMidpointY = midpointY;
+            invalidate();
+        }
+
+        private float pointerDistance( final MotionEvent event )
+        {
+            return (float)Math.hypot( event.getX( 1 ) - event.getX( 0 ), event.getY( 1 ) - event.getY( 0 ) );
+        }
+
+        private void changeOverviewZoomLevel( final int zoomLevel, final float anchorScreenX, final float anchorScreenY )
+        {
+            final float anchorWorldX = screenToWorldX( anchorScreenX );
+            final float anchorWorldY = screenToWorldY( anchorScreenY );
+            overviewZoomLevel = Math.max( 0, Math.min( OVERVIEW_ZOOM_LEVEL_COUNT - 1, zoomLevel ) );
+            centerOverviewZoomAt( anchorWorldX, anchorWorldY, anchorScreenX, anchorScreenY );
+        }
+
+        private void centerOverviewZoomAt( final float worldX, final float worldY, final float screenX, final float screenY )
+        {
+            final float span = overviewZoomSpan();
+            final float relativeX = Math.max( 0f, Math.min( 1f, ( screenX - radarBounds.left ) / radarBounds.width() ) );
+            final float relativeY = Math.max( 0f, Math.min( 1f, ( screenY - radarBounds.top ) / radarBounds.height() ) );
+            overviewZoomCenterX = worldX - ( relativeX - 0.5f ) * span;
+            overviewZoomCenterY = worldY - ( relativeY - 0.5f ) * span;
+            clampOverviewZoomCenter();
         }
 
         private void handleLocalCommand( final int command )
@@ -1478,15 +1574,18 @@ final class ThorSecondScreenPresentation extends Presentation
             paint.setStyle( Paint.Style.FILL );
             paint.setColor( Color.BLACK );
             canvas.drawRect( radarBounds, paint );
+            final int saveCount = canvas.save();
+            canvas.clipRect( radarBounds );
             paint.setFilterBitmap( false );
-            canvas.drawBitmap( radarBitmap, null, radarBounds, paint );
+            final RectF radarImageBounds = new RectF( worldToScreenX( 0f ), worldToScreenY( 0f ), worldToScreenX( 1f ), worldToScreenY( 1f ) );
+            canvas.drawBitmap( radarBitmap, null, radarImageBounds, paint );
 
             final float viewportLeft = Math.max( 0, radarViewportX ) / (float)radarWorldWidth;
             final float viewportTop = Math.max( 0, radarViewportY ) / (float)radarWorldHeight;
             final float viewportRight = Math.min( radarWorldWidth, radarViewportX + radarViewportWidth ) / (float)radarWorldWidth;
             final float viewportBottom = Math.min( radarWorldHeight, radarViewportY + radarViewportHeight ) / (float)radarWorldHeight;
-            final RectF viewport = new RectF( radarBounds.left + viewportLeft * radarBounds.width(), radarBounds.top + viewportTop * radarBounds.height(),
-                                              radarBounds.left + viewportRight * radarBounds.width(), radarBounds.top + viewportBottom * radarBounds.height() );
+            final RectF viewport
+                = new RectF( worldToScreenX( viewportLeft ), worldToScreenY( viewportTop ), worldToScreenX( viewportRight ), worldToScreenY( viewportBottom ) );
 
             paint.setStyle( Paint.Style.STROKE );
             paint.setStrokeWidth( 4f );
@@ -1494,6 +1593,10 @@ final class ThorSecondScreenPresentation extends Presentation
             canvas.drawRect( viewport, paint );
             if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
                 drawOverviewMarkers( canvas );
+            }
+            canvas.restoreToCount( saveCount );
+            if ( gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
+                drawOverviewZoomBadge( canvas );
             }
             paint.setStyle( Paint.Style.STROKE );
             paint.setStrokeWidth( 3f );
@@ -1509,7 +1612,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) ) {
+                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) || !isOverviewMarkerInView( entry ) ) {
                     continue;
                 }
 
@@ -1563,7 +1666,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private float markerScreenX( final SelectionEntry entry )
         {
-            float x = radarBounds.left + ( entry.x + 0.5f ) * radarBounds.width() / radarWorldWidth;
+            float x = worldToScreenX( ( entry.x + 0.5f ) / radarWorldWidth );
             for ( final SelectionEntry other : selectionEntries ) {
                 if ( other != entry && isOverviewMarkerVisible( other ) && other.x == entry.x && other.y == entry.y && other.kind != entry.kind ) {
                     x += entry.kind == SELECTION_KIND_HERO ? -18f : 18f;
@@ -1575,7 +1678,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private float markerScreenY( final SelectionEntry entry )
         {
-            return radarBounds.top + ( entry.y + 0.5f ) * radarBounds.height() / radarWorldHeight;
+            return worldToScreenY( ( entry.y + 0.5f ) / radarWorldHeight );
         }
 
         private SelectionEntry markerAt( final float x, final float y )
@@ -1587,7 +1690,7 @@ final class ThorSecondScreenPresentation extends Presentation
             SelectionEntry nearest = null;
             float nearestDistanceSquared = 44f * 44f;
             for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) ) {
+                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) || !isOverviewMarkerInView( entry ) ) {
                     continue;
                 }
                 final float deltaX = x - markerScreenX( entry );
@@ -1599,6 +1702,96 @@ final class ThorSecondScreenPresentation extends Presentation
                 }
             }
             return nearest;
+        }
+
+        private boolean isOverviewMarkerInView( final SelectionEntry entry )
+        {
+            final float worldX = ( entry.x + 0.5f ) / radarWorldWidth;
+            final float worldY = ( entry.y + 0.5f ) / radarWorldHeight;
+            return worldX >= overviewVisibleLeft() && worldX <= overviewVisibleRight() && worldY >= overviewVisibleTop()
+                   && worldY <= overviewVisibleBottom();
+        }
+
+        private float overviewZoomSpan()
+        {
+            return gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? 1f / ( 1 << overviewZoomLevel ) : 1f;
+        }
+
+        private float overviewVisibleLeft()
+        {
+            return gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? overviewZoomCenterX - overviewZoomSpan() * 0.5f : 0f;
+        }
+
+        private float overviewVisibleTop()
+        {
+            return gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? overviewZoomCenterY - overviewZoomSpan() * 0.5f : 0f;
+        }
+
+        private float overviewVisibleRight()
+        {
+            return overviewVisibleLeft() + overviewZoomSpan();
+        }
+
+        private float overviewVisibleBottom()
+        {
+            return overviewVisibleTop() + overviewZoomSpan();
+        }
+
+        private float worldToScreenX( final float worldX )
+        {
+            return radarBounds.left + ( worldX - overviewVisibleLeft() ) * radarBounds.width() / overviewZoomSpan();
+        }
+
+        private float worldToScreenY( final float worldY )
+        {
+            return radarBounds.top + ( worldY - overviewVisibleTop() ) * radarBounds.height() / overviewZoomSpan();
+        }
+
+        private float screenToWorldX( final float screenX )
+        {
+            final float relativeX = Math.max( 0f, Math.min( 1f, ( screenX - radarBounds.left ) / radarBounds.width() ) );
+            return overviewVisibleLeft() + relativeX * overviewZoomSpan();
+        }
+
+        private float screenToWorldY( final float screenY )
+        {
+            final float relativeY = Math.max( 0f, Math.min( 1f, ( screenY - radarBounds.top ) / radarBounds.height() ) );
+            return overviewVisibleTop() + relativeY * overviewZoomSpan();
+        }
+
+        private void resetOverviewZoom( final int worldWidth, final int worldHeight )
+        {
+            overviewZoomLevel = 0;
+            overviewZoomCenterX = 0.5f;
+            overviewZoomCenterY = 0.5f;
+            overviewZoomWorldWidth = worldWidth;
+            overviewZoomWorldHeight = worldHeight;
+        }
+
+        private void clampOverviewZoomCenter()
+        {
+            final float halfSpan = overviewZoomSpan() * 0.5f;
+            overviewZoomCenterX = Math.max( halfSpan, Math.min( 1f - halfSpan, overviewZoomCenterX ) );
+            overviewZoomCenterY = Math.max( halfSpan, Math.min( 1f - halfSpan, overviewZoomCenterY ) );
+        }
+
+        private void drawOverviewZoomBadge( final Canvas canvas )
+        {
+            final String label = ( 1 << overviewZoomLevel ) + "\u00d7";
+            final RectF badge = new RectF( radarBounds.left + 14f, radarBounds.top + 14f, radarBounds.left + 78f, radarBounds.top + 58f );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( Color.argb( 210, 20, 18, 14 ) );
+            canvas.drawRoundRect( badge, 10f, 10f, paint );
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 2f );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            canvas.drawRoundRect( badge, 10f, 10f, paint );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTextSize( 24f );
+            paint.setColor( TEXT_COLOR );
+            canvas.drawText( label, badge.centerX(), badge.centerY() + 8f, paint );
         }
 
         private boolean isOverviewMarkerVisible( final SelectionEntry entry )
@@ -1776,6 +1969,8 @@ final class ThorSecondScreenPresentation extends Presentation
             radarGestureMoved = false;
             radarLongPressTriggered = false;
             radarTapMarker = null;
+            radarZoomGestureActive = false;
+            radarZoomReferenceDistance = 0f;
             if ( pressedButton != null ) {
                 if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                     keySender.send( pressedButton.keyCode, false );

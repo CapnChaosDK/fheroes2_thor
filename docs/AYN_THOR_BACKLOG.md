@@ -715,6 +715,31 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All five focused checks passed on the Thor, including kind and relationship filtering, complete-set restoration, hidden-marker input exclusion, immediate information-card clearing, deterministic visible overlap behavior, state retention across overview restoration, and owned/non-owned navigation plus all requested control regressions.
 
+### Expanded Adventure Map presentation zoom
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-08-31.
+
+- The overview provides bounded 1x, 2x, and 4x presentation-only zoom. A small map-corner badge reports the current level; the native radar and fog-safe marker and information snapshots remain unchanged.
+- A two-finger pinch crosses deliberate thresholds between levels while anchoring the world point beneath the gesture midpoint. Two-finger translation pans the zoom window, clamped to the map boundaries.
+- Starting a two-finger gesture cancels pending button, tap, drag, and long-press input. Lifting either finger ends the complete gesture; third-finger input, cancellation, stale context, and context changes cannot fall through into selection, information, viewport, route, movement, or dialog actions.
+- Existing one-finger behavior is retained through the zoom transform: owned marker taps focus, non-owned and empty taps navigate safely, drags move the upper viewport, and stationary long-presses request authorized information.
+- One shared transform covers radar pixels, the viewport outline, visible marker rendering, filtered overlap positions, hit testing, long-press targeting, empty-map navigation, and drag coordinates. Marker size remains readable and constant on screen.
+- Zoom level and center remain in memory through overview closure and Heroes/Towns restoration during the presentation lifetime. A radar snapshot with different world dimensions resets zoom safely to the complete 1x map. Zoom changes do not clear an already authorized information card.
+- Validated kind and relationship filters, hidden-marker input exclusion, native privacy and invalidation, compact minimaps, View World, and all established controls remain unchanged. Labels, clustering, sprites, army management, haptics, and configurable layouts remain deferred.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`. The APK installed successfully over wireless ADB and was explicitly cold-launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the resumed activity and the presentation window on lower display 4.
+
+#### Focused presentation-zoom validation
+
+1. Exercise 1x, 2x, and 4x on small, medium, and maximum maps; confirm correct terrain crops, zoom badge, midpoint anchoring, boundary clamping, and stable threshold changes.
+2. At every level, tap and drag empty terrain; confirm exact transformed upper-viewport navigation without routes, hero movement, or dialogs.
+3. Tap owned markers and long-press every relationship at every level, including overlaps; confirm transformed targeting, focus, information tiers, viewport outline, and deterministic offsets.
+4. Exercise kind and relationship filters while zoomed; confirm hidden markers do not render, affect overlap, intercept gestures, or publish information.
+5. Exercise rapid pinches, early finger lift, a third finger, cancellation, context changes, and gestures starting over markers; confirm no fallthrough or stuck input.
+6. Restore from Heroes/Towns and reopen the overview to confirm in-memory zoom restoration; change map dimensions to confirm a safe 1x reset.
+7. Recheck Back, compact minimap, View World, dialogs, movement gating, physical controls, upper touchscreen, mouse, and hotkeys.
+
+All seven focused checks passed on the Thor, including bounded zoom levels and badges, anchored pinch and clamped two-finger panning, transformed viewport navigation, marker focus and authorized information at every level, filtered and overlapping marker behavior, safe rapid and multi-finger cancellation, exact overview and list restoration, map-size reset, and all requested compact-minimap, View World, dialog, movement, physical-control, touchscreen, mouse, and hotkey regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
