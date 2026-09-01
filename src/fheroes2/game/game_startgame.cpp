@@ -1245,6 +1245,9 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.x = hero->GetCenter().x;
                     entry.y = hero->GetCenter().y;
                     entry.relationship = thorMarkerRelationship( hero->GetColor() );
+                    if ( entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ALLIED ) {
+                        entry.name = hero->GetName();
+                    }
                     entry.selectable = false;
                     snapshot.entries.emplace_back( std::move( entry ) );
                 }
@@ -1286,6 +1289,9 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.x = castle->GetCenter().x;
                     entry.y = castle->GetCenter().y;
                     entry.relationship = thorMarkerRelationship( castle->GetColor() );
+                    if ( entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ALLIED ) {
+                        entry.name = castle->GetName();
+                    }
                     entry.selectable = false;
                     snapshot.entries.emplace_back( std::move( entry ) );
                 }
