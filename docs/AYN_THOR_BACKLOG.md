@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `4e396a814874312438f45d85246a746e30df95fb` is the latest hardware-validated source checkpoint and the source of published prerelease `thor-v0.7.0`.
-- This checkpoint adds bounded 1x, 2x, and 4x presentation-only zoom to the Expanded Adventure Map. Android applies one shared transform to radar rendering, viewport outlines, visible filtered markers, hit testing, long-press inspection, and viewport requests while native fog-safe snapshots and gameplay state remain unchanged. Anchored pinch, clamped two-finger panning, cancellation safety, in-memory restoration, and map-size reset are hardware-validated alongside every prior filter, privacy, information, focus, navigation, and control guarantee.
-- Debug APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all seven focused zoom checks plus the requested compact-minimap, View World, dialog, movement, physical-control, touchscreen, mouse, and hotkey regressions.
+- Commit `a5ae1e58faf69b9d845f8ed6ba17fa8477e111c8` is the latest hardware-validated source checkpoint; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- This checkpoint adds deterministic, presentation-only clustering of the authorized filtered marker snapshot at 1x and 2x, with relationship/kind count badges, focused membership, protected same-tile pairs, individual 4x markers, lower-only cluster drill-down, shared rendering and hit-test geometry, and cluster information suppression. Native snapshots and gameplay state remain unchanged.
+- Debug APK SHA-256: `64F3707B04B2439A2AC9E873811BDD311B7B89514428EEA688E65EFFB1331242`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused clustering checks plus the requested zoom, filter, information, navigation, restoration, minimap, View World, upper-screen, and physical-control regressions.
 
 ## Agreed product decisions
 
