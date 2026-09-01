@@ -740,6 +740,30 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All seven focused checks passed on the Thor, including bounded zoom levels and badges, anchored pinch and clamped two-finger panning, transformed viewport navigation, marker focus and authorized information at every level, filtered and overlapping marker behavior, safe rapid and multi-finger cancellation, exact overview and list restoration, map-size reset, and all requested compact-minimap, View World, dialog, movement, physical-control, touchscreen, mouse, and hotkey regressions.
 
+### Expanded Adventure Map presentation clustering
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-01.
+
+- Android groups only the already-authorized, filtered, on-crop marker snapshot. Deterministic screen-distance components use 64-pixel membership at 1x and 48-pixel membership at 2x; 4x retains individual markers.
+- Visible hero and town markers sharing one tile remain individually offset and are excluded from clustering. Hidden, filtered, fogged, and off-crop markers do not affect membership or counts.
+- A cluster badge shows its visible count, fixed-order proportional Owned / Allied / Enemy / Neutral relationship ring, hero-circle and town-square presence, and a white halo when it contains the focused marker.
+- Rendering and hit testing use the same final layout. A short cluster tap advances the lower overview by one zoom level and centers it on the cluster centroid with normal clamping; it does not submit a native selection, viewport, information, route, movement, or dialog request.
+- A stationary cluster long-press is consumed without publishing information. Individually resolved markers retain the validated owned focus, safe non-owned navigation, and native-authorized long-press information behavior.
+- Marker-snapshot, filter, zoom-gesture, context, cancellation, and multitouch changes cancel pending cluster input. Existing zoom and filter restoration, information-card validity, Heroes/Towns restoration, Back, compact minimaps, View World, and established controls remain unchanged.
+- Labels, sprites, army-management interactions, haptics, and configurable layouts remain deferred separately.
+- Android build and lint pass through the required short `R:` mapping. Final debug APK SHA-256: `64F3707B04B2439A2AC9E873811BDD311B7B89514428EEA688E65EFFB1331242`. The APK installed successfully over wireless ADB and was explicitly cold-launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks confirmed the activity and the companion package window on lower display 4 with no matching fatal log entry.
+
+#### Focused presentation-clustering validation
+
+1. On dense small, medium, and maximum maps, verify stable clusters and counts at 1x and 2x, individual markers at 4x, and preserved same-tile hero/town offsets.
+2. Verify uniform and mixed relationship rings, hero/town indicators, focused-cluster halo, deterministic membership, and exact overview restoration.
+3. Cycle every kind and relationship filter; verify immediate count and composition changes with no contribution or input interception from hidden or off-crop markers.
+4. Tap clusters at 1x and 2x; verify clamped lower-only drill-down without upper viewport, focus, route, movement, dialog, or information-card side effects.
+5. Long-press clusters and individual markers; verify clusters reveal nothing while individual markers retain the validated privacy tiers and live invalidation.
+6. Recheck pinch/pan, marker selection, empty-map navigation, dragging, rapid taps, multitouch cancellation, Heroes/Towns restoration, Back, compact minimap, View World, and established upper and physical controls.
+
+All six focused checks passed on the Thor, including deterministic density reduction and counts at 1x and 2x, the individual 4x transition, preserved same-tile offsets, relationship and kind presentation, focused-cluster highlighting, filter-first membership, lower-only drill-down, cluster long-press suppression, individual privacy-aware information, exact restoration, and all requested navigation, gesture, list, minimap, View World, upper-screen, and physical-control regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -766,11 +790,10 @@ All seven focused checks passed on the Thor, including bounded zoom levels and b
 
 ## Next recommended planning point
 
-- Add zoom-aware, presentation-only marker clustering to the Expanded Adventure Map as the next focused planning slice. Clustering is the safest next density improvement because it can use only the already-authorized filtered snapshot and the validated zoom transform without exposing names, adding native fields, or changing gameplay state.
-- Plan deterministic cluster membership and thresholds at 1x and 2x, whether exact same-tile hero/town pairs remain individually offset, cluster count and relationship/kind presentation, and the transition at 4x. Define cluster tap behavior as local drill-down without native selection or viewport side effects, and keep long-press information limited to an individually resolved marker.
-- Apply filters before clustering and use the same final presentation geometry for rendering and hit testing. Hidden or off-crop markers must never affect cluster counts, intercept input, or authorize information; fog, ownership, alliance, turn, and context invalidation remain native-owned.
-- Preserve zoom anchoring and restoration, one-finger viewport navigation, owned-marker focus, safe non-owned behavior, information-card authorization, deterministic overlap handling, Heroes/Towns restoration, Back, and every established control path. Labels, sprites, army-management interactions, haptics, and configurable layouts remain deferred separately.
-- Propose exact clustering behavior and focused manual acceptance tests, then wait for user approval before implementation.
+- Plan zoom-aware, collision-avoiding labels for individually resolved owned markers on the Expanded Adventure Map. Owned hero and settlement names already exist in the authorized selection snapshot, so the initial label slice can remain Android-only without exposing new native data.
+- Limit labels to individually rendered owned markers at 2x and 4x; clusters, 1x markers, allied, enemy, and neutral markers remain unlabeled. Plan deterministic placement, truncation, collision priority, focused-marker priority, viewport-edge handling, filter and zoom transitions, and rendering/hit-test separation so labels never intercept input.
+- Preserve clustering membership and drill-down, same-tile offsets, zoom anchoring and restoration, filters, information-card authorization, native privacy and invalidation, owned focus, safe non-owned navigation, lists, Back, and every established control path. Broader authorized non-owned labels, sprites, army-management interactions, haptics, and configurable layouts remain deferred separately.
+- Propose the exact owned-label behavior and focused manual acceptance tests, then wait for user approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 

@@ -316,6 +316,9 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int OVERVIEW_ZOOM_LEVEL_COUNT = 3;
     private static final float OVERVIEW_ZOOM_IN_THRESHOLD = 1.25f;
     private static final float OVERVIEW_ZOOM_OUT_THRESHOLD = 0.8f;
+    private static final float OVERVIEW_CLUSTER_DISTANCE_1X = 64f;
+    private static final float OVERVIEW_CLUSTER_DISTANCE_2X = 48f;
+    private static final float OVERVIEW_MARKER_HIT_RADIUS = 44f;
 
     interface KeySender
     {
@@ -444,7 +447,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private boolean radarGestureMoved;
         private float radarDownX;
         private float radarDownY;
-        private SelectionEntry radarTapMarker;
+        private OverviewMapItem radarTapItem;
         private boolean radarLongPressTriggered;
         private int selectionContext = -1;
         private long selectionRevision = -1;
@@ -473,10 +476,12 @@ final class ThorSecondScreenPresentation extends Presentation
             this.selectionSender = selectionSender;
             this.markerInfoSender = markerInfoSender;
             radarLongPress = () -> {
-                if ( radarGestureActive && !radarGestureMoved && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && radarTapMarker != null
+                if ( radarGestureActive && !radarGestureMoved && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && radarTapItem != null
                      && selectionContext == gameContext ) {
                     radarLongPressTriggered = true;
-                    this.markerInfoSender.send( gameContext, selectionRevision, radarTapMarker.kind, radarTapMarker.id );
+                    if ( !radarTapItem.isCluster() ) {
+                        this.markerInfoSender.send( gameContext, selectionRevision, radarTapItem.entry.kind, radarTapItem.entry.id );
+                    }
                 }
             };
             setBackgroundColor( BACKGROUND_COLOR );
@@ -870,8 +875,8 @@ final class ThorSecondScreenPresentation extends Presentation
                     radarLongPressTriggered = false;
                     radarDownX = event.getX();
                     radarDownY = event.getY();
-                    radarTapMarker = gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? markerAt( radarDownX, radarDownY ) : null;
-                    if ( radarTapMarker != null ) {
+                    radarTapItem = gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW ? overviewItemAt( radarDownX, radarDownY ) : null;
+                    if ( radarTapItem != null ) {
                         postDelayed( radarLongPress, ViewConfiguration.getLongPressTimeout() );
                     }
                     if ( gameContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
@@ -921,7 +926,7 @@ final class ThorSecondScreenPresentation extends Presentation
                             if ( !radarGestureMoved && deltaX * deltaX + deltaY * deltaY > 18f * 18f ) {
                                 radarGestureMoved = true;
                                 removeCallbacks( radarLongPress );
-                                radarTapMarker = null;
+                                radarTapItem = null;
                             }
                             if ( !radarGestureMoved ) {
                                 return true;
@@ -944,11 +949,14 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( action == MotionEvent.ACTION_UP ) {
                 removeCallbacks( radarLongPress );
                 if ( radarGestureActive && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && !radarGestureMoved && !radarLongPressTriggered ) {
-                    if ( radarTapMarker != null && radarTapMarker.selectable && selectionContext == gameContext ) {
-                        selectionSender.send( gameContext, selectionRevision, radarTapMarker.kind, radarTapMarker.id );
+                    if ( radarTapItem != null && radarTapItem.isCluster() ) {
+                        drillDownOverviewCluster( radarTapItem );
+                    }
+                    else if ( radarTapItem != null && radarTapItem.entry.selectable && selectionContext == gameContext ) {
+                        selectionSender.send( gameContext, selectionRevision, radarTapItem.entry.kind, radarTapItem.entry.id );
                     }
                     else {
-                        if ( radarTapMarker == null && selectionContext == gameContext ) {
+                        if ( radarTapItem == null && selectionContext == gameContext ) {
                             markerInfoSender.send( gameContext, selectionRevision, SELECTION_KIND_HERO, -1 );
                         }
                         sendViewportRequest( event.getX(), event.getY() );
@@ -1033,6 +1041,19 @@ final class ThorSecondScreenPresentation extends Presentation
             overviewZoomCenterX = worldX - ( relativeX - 0.5f ) * span;
             overviewZoomCenterY = worldY - ( relativeY - 0.5f ) * span;
             clampOverviewZoomCenter();
+        }
+
+        private void drillDownOverviewCluster( final OverviewMapItem cluster )
+        {
+            if ( !cluster.isCluster() || overviewZoomLevel + 1 >= OVERVIEW_ZOOM_LEVEL_COUNT ) {
+                return;
+            }
+
+            ++overviewZoomLevel;
+            overviewZoomCenterX = cluster.worldX;
+            overviewZoomCenterY = cluster.worldY;
+            clampOverviewZoomCenter();
+            invalidate();
         }
 
         private void handleLocalCommand( final int command )
@@ -1552,6 +1573,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 drawFittedText( canvas, "● HERO     ■ TOWN", sidePanel.centerX(), sidePanel.top + 215f, textWidth, 19f );
                 drawFittedText( canvas, "BLUE OWN     GREEN ALLY", sidePanel.centerX(), sidePanel.top + 244f, textWidth, 16f );
                 drawFittedText( canvas, "RED ENEMY     GRAY NEUTRAL", sidePanel.centerX(), sidePanel.top + 270f, textWidth, 16f );
+                drawFittedText( canvas, "COUNT: TAP TO ZOOM", sidePanel.centerX(), sidePanel.top + 302f, textWidth, 16f );
             }
         }
 
@@ -1607,17 +1629,15 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void drawOverviewMarkers( final Canvas canvas )
         {
-            if ( selectionContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
-                return;
-            }
-
-            for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) || !isOverviewMarkerInView( entry ) ) {
+            for ( final OverviewMapItem item : buildOverviewLayout() ) {
+                if ( item.isCluster() ) {
+                    drawOverviewCluster( canvas, item );
                     continue;
                 }
 
-                final float x = markerScreenX( entry );
-                final float y = markerScreenY( entry );
+                final SelectionEntry entry = item.entry;
+                final float x = item.screenX;
+                final float y = item.screenY;
                 if ( entry.selected ) {
                     paint.setStyle( Paint.Style.STROKE );
                     paint.setStrokeWidth( 6f );
@@ -1647,6 +1667,56 @@ final class ThorSecondScreenPresentation extends Presentation
                 }
             }
             paint.setStyle( Paint.Style.FILL );
+        }
+
+        private void drawOverviewCluster( final Canvas canvas, final OverviewMapItem cluster )
+        {
+            final float x = cluster.screenX;
+            final float y = cluster.screenY;
+            if ( cluster.containsSelected ) {
+                paint.setStyle( Paint.Style.STROKE );
+                paint.setStrokeWidth( 5f );
+                paint.setColor( Color.WHITE );
+                canvas.drawCircle( x, y, 34f, paint );
+            }
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( Color.argb( 235, 20, 18, 14 ) );
+            canvas.drawCircle( x, y, 27f, paint );
+
+            final RectF ring = new RectF( x - 25f, y - 25f, x + 25f, y + 25f );
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 6f );
+            float startAngle = -90f;
+            for ( int relationship = SELECTION_RELATIONSHIP_OWNED; relationship <= SELECTION_RELATIONSHIP_NEUTRAL; ++relationship ) {
+                final int relationshipCount = cluster.relationshipCounts[relationship];
+                if ( relationshipCount == 0 ) {
+                    continue;
+                }
+                final float sweepAngle = 360f * relationshipCount / cluster.members.size();
+                paint.setColor( markerColor( relationship ) );
+                canvas.drawArc( ring, startAngle, sweepAngle, false, paint );
+                startAngle += sweepAngle;
+            }
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTextSize( 24f );
+            paint.setColor( TEXT_COLOR );
+            canvas.drawText( Integer.toString( cluster.members.size() ), x, y + 5f, paint );
+
+            final float kindY = y + 16f;
+            if ( cluster.hasHeroes ) {
+                final float heroX = x + ( cluster.hasTowns ? -8f : 0f );
+                paint.setColor( GOLD_LIGHT_COLOR );
+                canvas.drawCircle( heroX, kindY, 4f, paint );
+            }
+            if ( cluster.hasTowns ) {
+                final float townX = x + ( cluster.hasHeroes ? 8f : 0f );
+                paint.setColor( GOLD_LIGHT_COLOR );
+                canvas.drawRect( townX - 4f, kindY - 4f, townX + 4f, kindY + 4f, paint );
+            }
         }
 
         private int markerColor( final int relationship )
@@ -1681,23 +1751,89 @@ final class ThorSecondScreenPresentation extends Presentation
             return worldToScreenY( ( entry.y + 0.5f ) / radarWorldHeight );
         }
 
-        private SelectionEntry markerAt( final float x, final float y )
+        private List<OverviewMapItem> buildOverviewLayout()
         {
+            final List<OverviewMapItem> layout = new ArrayList<>();
             if ( selectionContext != CONTEXT_ADVENTURE_MAP_OVERVIEW ) {
-                return null;
+                return layout;
             }
 
-            SelectionEntry nearest = null;
-            float nearestDistanceSquared = 44f * 44f;
+            final List<SelectionEntry> candidates = new ArrayList<>();
             for ( final SelectionEntry entry : selectionEntries ) {
-                if ( entry.x < 0 || entry.y < 0 || !isOverviewMarkerVisible( entry ) || !isOverviewMarkerInView( entry ) ) {
+                if ( entry.x >= 0 && entry.y >= 0 && isOverviewMarkerVisible( entry ) && isOverviewMarkerInView( entry ) ) {
+                    candidates.add( entry );
+                }
+            }
+
+            final boolean[] protectedSameTilePair = new boolean[candidates.size()];
+            for ( int first = 0; first < candidates.size(); ++first ) {
+                final SelectionEntry firstEntry = candidates.get( first );
+                for ( int second = first + 1; second < candidates.size(); ++second ) {
+                    final SelectionEntry secondEntry = candidates.get( second );
+                    if ( firstEntry.x == secondEntry.x && firstEntry.y == secondEntry.y && firstEntry.kind != secondEntry.kind ) {
+                        protectedSameTilePair[first] = true;
+                        protectedSameTilePair[second] = true;
+                    }
+                }
+            }
+
+            final float clusterDistance = overviewZoomLevel == 0 ? OVERVIEW_CLUSTER_DISTANCE_1X
+                                                                 : ( overviewZoomLevel == 1 ? OVERVIEW_CLUSTER_DISTANCE_2X : 0f );
+            final boolean[] visited = new boolean[candidates.size()];
+            for ( int index = 0; index < candidates.size(); ++index ) {
+                if ( visited[index] ) {
                     continue;
                 }
-                final float deltaX = x - markerScreenX( entry );
-                final float deltaY = y - markerScreenY( entry );
+
+                final List<SelectionEntry> members = new ArrayList<>();
+                final List<Integer> pending = new ArrayList<>();
+                visited[index] = true;
+                pending.add( index );
+                for ( int pendingIndex = 0; pendingIndex < pending.size(); ++pendingIndex ) {
+                    final int memberIndex = pending.get( pendingIndex );
+                    final SelectionEntry member = candidates.get( memberIndex );
+                    members.add( member );
+                    if ( clusterDistance <= 0f || protectedSameTilePair[memberIndex] ) {
+                        continue;
+                    }
+
+                    final float memberX = markerScreenX( member );
+                    final float memberY = markerScreenY( member );
+                    for ( int otherIndex = 0; otherIndex < candidates.size(); ++otherIndex ) {
+                        if ( visited[otherIndex] || protectedSameTilePair[otherIndex] ) {
+                            continue;
+                        }
+                        final SelectionEntry other = candidates.get( otherIndex );
+                        final float deltaX = memberX - markerScreenX( other );
+                        final float deltaY = memberY - markerScreenY( other );
+                        if ( deltaX * deltaX + deltaY * deltaY <= clusterDistance * clusterDistance ) {
+                            visited[otherIndex] = true;
+                            pending.add( otherIndex );
+                        }
+                    }
+                }
+
+                if ( members.size() == 1 ) {
+                    final SelectionEntry entry = members.get( 0 );
+                    layout.add( OverviewMapItem.forMarker( entry, markerScreenX( entry ), markerScreenY( entry ) ) );
+                }
+                else {
+                    layout.add( OverviewMapItem.forCluster( members, radarWorldWidth, radarWorldHeight, this ) );
+                }
+            }
+            return layout;
+        }
+
+        private OverviewMapItem overviewItemAt( final float x, final float y )
+        {
+            OverviewMapItem nearest = null;
+            float nearestDistanceSquared = OVERVIEW_MARKER_HIT_RADIUS * OVERVIEW_MARKER_HIT_RADIUS;
+            for ( final OverviewMapItem item : buildOverviewLayout() ) {
+                final float deltaX = x - item.screenX;
+                final float deltaY = y - item.screenY;
                 final float distanceSquared = deltaX * deltaX + deltaY * deltaY;
                 if ( distanceSquared < nearestDistanceSquared ) {
-                    nearest = entry;
+                    nearest = item;
                     nearestDistanceSquared = distanceSquared;
                 }
             }
@@ -1968,7 +2104,7 @@ final class ThorSecondScreenPresentation extends Presentation
             radarGestureActive = false;
             radarGestureMoved = false;
             radarLongPressTriggered = false;
-            radarTapMarker = null;
+            radarTapItem = null;
             radarZoomGestureActive = false;
             radarZoomReferenceDistance = 0f;
             if ( pressedButton != null ) {
@@ -1979,6 +2115,76 @@ final class ThorSecondScreenPresentation extends Presentation
                 pressedButton = null;
                 invalidate();
             }
+        }
+    }
+
+    private static final class OverviewMapItem
+    {
+        final SelectionEntry entry;
+        final List<SelectionEntry> members;
+        final float screenX;
+        final float screenY;
+        final float worldX;
+        final float worldY;
+        final int[] relationshipCounts;
+        final boolean hasHeroes;
+        final boolean hasTowns;
+        final boolean containsSelected;
+
+        private OverviewMapItem( final SelectionEntry entry, final List<SelectionEntry> members, final float screenX, final float screenY,
+                                 final float worldX, final float worldY, final int[] relationshipCounts, final boolean hasHeroes,
+                                 final boolean hasTowns, final boolean containsSelected )
+        {
+            this.entry = entry;
+            this.members = members;
+            this.screenX = screenX;
+            this.screenY = screenY;
+            this.worldX = worldX;
+            this.worldY = worldY;
+            this.relationshipCounts = relationshipCounts;
+            this.hasHeroes = hasHeroes;
+            this.hasTowns = hasTowns;
+            this.containsSelected = containsSelected;
+        }
+
+        static OverviewMapItem forMarker( final SelectionEntry entry, final float screenX, final float screenY )
+        {
+            return new OverviewMapItem( entry, null, screenX, screenY, 0f, 0f, null, entry.kind == SELECTION_KIND_HERO,
+                                        entry.kind == SELECTION_KIND_CASTLE, entry.selected );
+        }
+
+        static OverviewMapItem forCluster( final List<SelectionEntry> members, final int worldWidth, final int worldHeight,
+                                           final CommandDeckView view )
+        {
+            float screenX = 0f;
+            float screenY = 0f;
+            float worldX = 0f;
+            float worldY = 0f;
+            final int[] relationshipCounts = new int[SELECTION_RELATIONSHIP_NEUTRAL + 1];
+            boolean hasHeroes = false;
+            boolean hasTowns = false;
+            boolean containsSelected = false;
+            for ( final SelectionEntry member : members ) {
+                screenX += view.markerScreenX( member );
+                screenY += view.markerScreenY( member );
+                worldX += ( member.x + 0.5f ) / worldWidth;
+                worldY += ( member.y + 0.5f ) / worldHeight;
+                if ( member.relationship >= SELECTION_RELATIONSHIP_OWNED && member.relationship <= SELECTION_RELATIONSHIP_NEUTRAL ) {
+                    ++relationshipCounts[member.relationship];
+                }
+                hasHeroes |= member.kind == SELECTION_KIND_HERO;
+                hasTowns |= member.kind == SELECTION_KIND_CASTLE;
+                containsSelected |= member.selected;
+            }
+
+            final float memberCount = members.size();
+            return new OverviewMapItem( null, members, screenX / memberCount, screenY / memberCount, worldX / memberCount, worldY / memberCount,
+                                        relationshipCounts, hasHeroes, hasTowns, containsSelected );
+        }
+
+        boolean isCluster()
+        {
+            return entry == null;
         }
     }
 
