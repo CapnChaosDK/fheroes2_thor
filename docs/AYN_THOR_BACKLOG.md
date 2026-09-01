@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `a5ae1e58faf69b9d845f8ed6ba17fa8477e111c8` is the latest hardware-validated source checkpoint; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
-- This checkpoint adds deterministic, presentation-only clustering of the authorized filtered marker snapshot at 1x and 2x, with relationship/kind count badges, focused membership, protected same-tile pairs, individual 4x markers, lower-only cluster drill-down, shared rendering and hit-test geometry, and cluster information suppression. Native snapshots and gameplay state remain unchanged.
-- Debug APK SHA-256: `64F3707B04B2439A2AC9E873811BDD311B7B89514428EEA688E65EFFB1331242`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused clustering checks plus the requested zoom, filter, information, navigation, restoration, minimap, View World, upper-screen, and physical-control regressions.
+- Commit `bda23788bf1f9b06719b9396b835854be348d7b5` is the latest hardware-validated source checkpoint; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- This checkpoint adds zoom-aware, collision-avoiding labels for individually resolved owned markers at 2x and 4x, with bounded ellipsis, deterministic focused-first placement, edge and collision rejection, and complete separation from marker hit testing. Native snapshots and gameplay state remain unchanged.
+- Debug APK SHA-256: `E102F2886207192CCAB7892D93C8B4C56A41FB5FDA943838C151DEF8B3AFF390`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused owned-label checks plus the requested clustering, zoom, filter, information, navigation, restoration, minimap, View World, upper-screen, mouse, hotkey, and physical-control regressions.
 
 ## Agreed product decisions
 
