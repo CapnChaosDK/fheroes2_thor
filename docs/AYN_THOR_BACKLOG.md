@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Commit `bda23788bf1f9b06719b9396b835854be348d7b5` is the latest hardware-validated source checkpoint; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
-- This checkpoint adds zoom-aware, collision-avoiding labels for individually resolved owned markers at 2x and 4x, with bounded ellipsis, deterministic focused-first placement, edge and collision rejection, and complete separation from marker hit testing. Native snapshots and gameplay state remain unchanged.
-- Debug APK SHA-256: `E102F2886207192CCAB7892D93C8B4C56A41FB5FDA943838C151DEF8B3AFF390`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused owned-label checks plus the requested clustering, zoom, filter, information, navigation, restoration, minimap, View World, upper-screen, mouse, hotkey, and physical-control regressions.
+- The context-aware haptics checkpoint is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- This checkpoint adds one system-respecting Android `CLOCK_TICK` for accepted lower-touch owned-marker focus, cluster drill-down, completed zoom-level transitions, and filter changes. Navigation, panning, bounded and rejected gestures, long-press information, and non-lower-touch controls remain silent, and the previously validated owned labels remain input-transparent and unchanged.
+- Debug APK SHA-256: `C42BCD784DC45F7626ECC9EBD49D636D249DFBE77D401156794244205C9322FF`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused haptic checks plus the requested label, clustering, information, navigation, restoration, minimap, View World, upper-screen, mouse, hotkey, and physical-control regressions.
 
 ## Agreed product decisions
 
@@ -786,6 +786,28 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor, including 1x suppression, owned-only individual labels at 2x and 4x, clean truncation and edge handling, stable collision avoidance and focused-label priority, same-tile behavior, immediate zoom/filter/pan/cluster transitions, input transparency, information privacy, exact restoration, and all requested View World, touchscreen, mouse, hotkey, and physical-control regressions.
 
+### Expanded Adventure Map context-aware haptics
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-01.
+
+- Accepted lower-touch interactions use one subtle Android `CLOCK_TICK`: an owned-marker selection request accepted against the current native revision, a cluster drill-down that advances one level, each completed 1x/2x/4x pinch transition, and each kind or relationship filter change.
+- Panning, two-finger translation within one zoom level, empty-map and non-owned navigation, long-press information, maximum-zoom clusters, bounded zoom attempts, rejected or cancelled gestures, stale revisions, multitouch rejection, physical controls, upper touchscreen, mouse, and hotkeys remain silent.
+- Cluster drill-down owns its single confirmation rather than also emitting a zoom confirmation. Zoom bounds are checked before feedback, and every filter command emits exactly one confirmation despite rebuilding multiple presentation elements.
+- Feedback uses the lower presentation view's standard `performHapticFeedback` path without flags that override Android settings, so the system touch-feedback preference remains authoritative. No vibrator permission, JNI change, native state, or persistent option is introduced.
+- Owned-label placement and input transparency, clustering, zoom anchoring and restoration, filters, information-card privacy and invalidation, owned focus, safe non-owned navigation, lists, Back, compact minimaps, View World, and established controls remain unchanged.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `C42BCD784DC45F7626ECC9EBD49D636D249DFBE77D401156794244205C9322FF`. The APK installed successfully over wireless ADB and cold-launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks found the resumed and focused main activity, the companion package window on lower display 4, and no matching fatal startup log entry.
+
+#### Focused context-aware haptic validation
+
+1. Tap owned heroes and towns; verify one subtle tick and correct upper focus. Tap non-owned markers and empty map; verify safe navigation without haptics.
+2. Tap clusters at 1x and 2x; verify exactly one tick for each successful drill-down, and no tick for cluster long-press or a non-actionable maximum-zoom case.
+3. Pinch across the 1x, 2x, and 4x thresholds; verify one tick per completed level transition and silence while translating within a level or pushing past a bound.
+4. Cycle both filter rows; verify one tick per displayed change with correct card clearing, clustering, filtering, and labels.
+5. Exercise drag cancellation, rapid snapshot/context changes, extra-finger cancellation, long-press information, Heroes/Towns restoration, and Back; verify rejected and non-target interactions remain silent.
+6. Disable Android touch feedback and verify all target actions become silent; re-enable it and verify feedback returns. Briefly recheck labels, compact minimap, View World, upper touch, mouse, hotkeys, and physical controls.
+
+All six focused checks passed on the Thor, including one confirmation for accepted owned-marker focus, cluster drill-down, completed zoom-level transitions, and filter changes; silence for navigation, panning, bounded and rejected gestures, long-press information, and non-lower-touch controls; system-setting compliance; duplicate suppression; and the requested label, clustering, information, list, minimap, View World, upper-input, mouse, hotkey, and physical-control regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -812,10 +834,8 @@ All six focused checks passed on the Thor, including 1x suppression, owned-only 
 
 ## Next recommended planning point
 
-- Plan context-aware haptic feedback for accepted lower-touch Expanded Adventure Map interactions. Keep the initial slice Android-only and limited to one subtle confirmation for owned-marker focus, cluster drill-down, completed zoom-level changes, and filter changes.
-- Do not vibrate for ordinary panning, empty-map viewport navigation, non-owned safe navigation, long-press information, rejected or cancelled gestures, stale revisions, multitouch rejection, physical controls, upper touchscreen, mouse, or hotkeys. Respect the Android system haptic-feedback setting and avoid duplicate feedback when one gesture changes more than one presentation state.
-- Preserve label placement and input transparency, clustering, zoom anchoring and restoration, filters, privacy and invalidation, owned focus, safe non-owned navigation, lists, Back, and all established controls. Configurable haptic choices, broader authorized non-owned labels, sprites, army-management interactions, and configurable layouts remain deferred separately.
-- Propose the exact haptic types, trigger boundaries, and focused manual acceptance tests, then wait for user approval before implementation.
+- Select the next focused planning slice from the remaining deferred Expanded Adventure Map work. Configurable haptic choices, broader authorized non-owned labels, sprites, army-management interactions, and configurable layouts remain separate candidates.
+- Propose the exact behavior and focused manual acceptance tests, then wait for user approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 

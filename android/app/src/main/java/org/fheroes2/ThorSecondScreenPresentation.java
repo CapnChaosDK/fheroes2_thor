@@ -23,6 +23,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Display;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -960,7 +961,9 @@ final class ThorSecondScreenPresentation extends Presentation
                         drillDownOverviewCluster( radarTapItem );
                     }
                     else if ( radarTapItem != null && radarTapItem.entry.selectable && selectionContext == gameContext ) {
-                        selectionSender.send( gameContext, selectionRevision, radarTapItem.entry.kind, radarTapItem.entry.id );
+                        if ( selectionSender.send( gameContext, selectionRevision, radarTapItem.entry.kind, radarTapItem.entry.id ) ) {
+                            performOverviewHapticFeedback();
+                        }
                     }
                     else {
                         if ( radarTapItem == null && selectionContext == gameContext ) {
@@ -1036,8 +1039,14 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             final float anchorWorldX = screenToWorldX( anchorScreenX );
             final float anchorWorldY = screenToWorldY( anchorScreenY );
-            overviewZoomLevel = Math.max( 0, Math.min( OVERVIEW_ZOOM_LEVEL_COUNT - 1, zoomLevel ) );
+            final int clampedZoomLevel = Math.max( 0, Math.min( OVERVIEW_ZOOM_LEVEL_COUNT - 1, zoomLevel ) );
+            if ( clampedZoomLevel == overviewZoomLevel ) {
+                return;
+            }
+
+            overviewZoomLevel = clampedZoomLevel;
             centerOverviewZoomAt( anchorWorldX, anchorWorldY, anchorScreenX, anchorScreenY );
+            performOverviewHapticFeedback();
         }
 
         private void centerOverviewZoomAt( final float worldX, final float worldY, final float screenX, final float screenY )
@@ -1060,6 +1069,7 @@ final class ThorSecondScreenPresentation extends Presentation
             overviewZoomCenterX = cluster.worldX;
             overviewZoomCenterY = cluster.worldY;
             clampOverviewZoomCenter();
+            performOverviewHapticFeedback();
             invalidate();
         }
 
@@ -1068,12 +1078,14 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( command == LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) {
                 overviewKindFilter = overviewKindFilter == SELECTION_KIND_CASTLE ? OVERVIEW_KIND_FILTER_BOTH : overviewKindFilter + 1;
                 applyOverviewFilterChange();
+                performOverviewHapticFeedback();
                 return;
             }
             if ( command == LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER ) {
                 overviewRelationshipFilter
                     = overviewRelationshipFilter == SELECTION_RELATIONSHIP_NEUTRAL ? OVERVIEW_RELATIONSHIP_FILTER_ALL : overviewRelationshipFilter + 1;
                 applyOverviewFilterChange();
+                performOverviewHapticFeedback();
                 return;
             }
 
@@ -1100,6 +1112,11 @@ final class ThorSecondScreenPresentation extends Presentation
             rebuildActions();
             layoutButtons( getWidth(), getHeight() );
             invalidate();
+        }
+
+        private void performOverviewHapticFeedback()
+        {
+            performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
         }
 
         private void clearInformationDisplay()
