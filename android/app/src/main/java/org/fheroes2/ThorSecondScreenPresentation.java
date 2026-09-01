@@ -1733,13 +1733,15 @@ final class ThorSecondScreenPresentation extends Presentation
 
             paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
             paint.setTextSize( OVERVIEW_LABEL_TEXT_SIZE );
-            for ( int priority = 0; priority < 3; ++priority ) {
+            for ( int priority = 0; priority < 4; ++priority ) {
                 for ( final OverviewMapItem item : layout ) {
                     final boolean eligibleForPriority = priority == 0
                                                             ? item.entry.relationship == SELECTION_RELATIONSHIP_OWNED && item.entry.selected
                                                             : priority == 1
                                                                 ? item.entry.relationship == SELECTION_RELATIONSHIP_OWNED && !item.entry.selected
-                                                                : item.entry.relationship == SELECTION_RELATIONSHIP_ALLIED;
+                                                                : priority == 2
+                                                                    ? item.entry.relationship == SELECTION_RELATIONSHIP_ALLIED
+                                                                    : item.entry.relationship == SELECTION_RELATIONSHIP_ENEMY;
                     if ( item.isCluster() || !eligibleForPriority || item.entry.name.trim().isEmpty() ) {
                         continue;
                     }

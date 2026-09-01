@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The privacy-safe allied-marker label checkpoint is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
-- This checkpoint adds native-authorized allied hero and town labels at 2x and 4x while preserving 1x and cluster suppression, deterministic owned-first placement, live privacy withdrawal, input transparency, and all validated haptic and interaction behavior.
-- Debug APK SHA-256: `553505CC70FBF2935786E46A472F078A61DE03AD826193B34058F11FEC7FB863`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused allied-label checks covering authorization, privacy withdrawal, collision priority, transitions, input transparency, information, haptics, restoration, and established controls.
+- The privacy-safe enemy-marker label checkpoint is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- This checkpoint adds native-authorized enemy hero and town labels at 2x and 4x while preserving 1x and cluster suppression, deterministic focused-owned / owned / allied / enemy placement priority, live fog and relationship withdrawal, input transparency, and all validated haptic and interaction behavior. Neutral markers remain unlabeled.
+- Debug APK SHA-256: `007414B348B7DC59D59F167D308BAF1B998C48FBE27650DD68E93CEE5B857B94`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused enemy-label checks covering authorization, fog and relationship withdrawal, collision priority, transitions, input transparency, information, haptics, restoration, and established controls.
 
 ## Agreed product decisions
 
@@ -830,6 +830,28 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor, including allied-only authorization at 2x and 4x, 1x and cluster suppression, live fog and relationship withdrawal, deterministic owned-first collision handling, truncation and edge behavior, zoom/pan/cluster/filter transitions, label input transparency, native-authorized information, unchanged haptics and safe navigation, exact restoration, and the requested minimap, View World, upper-input, mouse, hotkey, and physical-control regressions.
 
+### Expanded Adventure Map enemy-marker labels
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-01.
+
+- Individually resolved enemy heroes and towns receive their native-authorized snapshot names and show them at 2x and 4x. Clusters, 1x markers, neutral markers, and empty-name markers remain unlabeled.
+- Native code remains the sole authorization source. It publishes an enemy name only while the object is currently visible to the active player. Fog return, removal, capture, ownership or alliance changes, turn/player/context changes, and snapshot replacement withdraw the name through the existing revisioned snapshot path without Android deriving or separately retaining it.
+- Enemy labels reuse the validated dark capsule, typography, bounded screen-space sizing, ellipsis, fixed placement order, edge and collision rejection, and input transparency. The red marker remains the relationship cue.
+- Label placement remains deterministic: the focused owned marker lays out first, remaining owned labels follow in stable snapshot order, allied labels follow, and enemy labels lay out last. Contested enemy labels yield to owned and allied labels.
+- Labels remain outside hit testing and do not change clustering, filters, information tiers, focus, safe non-owned navigation, accepted-action haptics, restoration, or established controls. Neutral labels remain deferred separately.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `007414B348B7DC59D59F167D308BAF1B998C48FBE27650DD68E93CEE5B857B94`. The APK installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks found the resumed main activity, the companion presentation window on lower display 4, the live SDL process, and no matching fatal launch log entry.
+
+#### Focused enemy-label validation
+
+1. At 1x, verify there are no labels. At 2x and 4x, verify only individual owned, allied, and enemy heroes and towns receive names; clusters and neutral markers remain unlabeled.
+2. Reveal enemy objects and return them to fog. Verify enemy names appear and disappear immediately without stale text.
+3. Exercise capture, ownership, alliance, turn, and hot-seat player changes. Verify labels and relationship presentation update immediately through native authorization.
+4. Use dense areas, long names, edge markers, and same-tile objects. Verify clean truncation and collision avoidance, with focused-owned, remaining-owned, allied, then enemy placement priority.
+5. Tap and long-press through and beside enemy labels. Verify unchanged safe navigation and native-authorized information, no label touch targets, and no unintended haptics.
+6. Verify filters, zoom, clustering, Heroes/Towns restoration, Back, compact minimap, View World, upper touchscreen, mouse, hotkeys, and physical controls.
+
+All six focused checks passed on the Thor, including enemy-only authorization at 2x and 4x, 1x, cluster, and neutral suppression, live fog and relationship withdrawal, deterministic focused-owned / owned / allied / enemy collision priority, truncation and edge behavior, zoom/pan/cluster/filter transitions, label input transparency, native-authorized information, unchanged haptics and safe navigation, exact restoration, and the requested minimap, View World, upper-input, mouse, hotkey, and physical-control regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -856,7 +878,7 @@ All six focused checks passed on the Thor, including allied-only authorization a
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. The remaining candidates include the safe unknown-menu fallback, enemy or neutral labels, player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include the safe unknown-menu fallback, neutral labels, player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
 
 ## Milestone 4: interactive second-screen tools
 
