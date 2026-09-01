@@ -834,8 +834,11 @@ All six focused checks passed on the Thor, including one confirmation for accept
 
 ## Next recommended planning point
 
-- Select the next focused planning slice from the remaining deferred Expanded Adventure Map work. Configurable haptic choices, broader authorized non-owned labels, sprites, army-management interactions, and configurable layouts remain separate candidates.
-- Propose the exact behavior and focused manual acceptance tests, then wait for user approval before implementation.
+- Propose privacy-safe allied-marker labels for the Expanded Adventure Map. Limit the first slice to individually resolved allied heroes and settlements at 2x and 4x; clusters, 1x markers, enemies, and neutral markers remain unlabeled.
+- Native code remains the sole authorization source. It may publish allied label text only while the object is visible and currently allied; fog return, removal, ownership/alliance changes, turn/player/context changes, and snapshot replacement withdraw the label without Android retaining hidden text.
+- Reuse the validated bounded screen-space sizing, ellipsis, edge and collision rejection, and input transparency. Place the focused owned marker first, remaining owned labels next, and allied labels last in stable snapshot order. Labels remain outside hit testing and do not change clustering, filters, information tiers, focus, safe navigation, or accepted-action haptics.
+- Focused manual acceptance should cover: allied-only labels and 1x/cluster suppression; live fog/alliance/ownership withdrawal; deterministic owned-first collision priority and truncation; zoom, pan, clustering, and filter transitions; label input transparency and unchanged information authorization; and Heroes/Towns, Back, compact minimap, View World, upper touchscreen, mouse, hotkey, and physical-control regressions.
+- Present this exact behavior and checklist for user approval before implementation. Enemy and neutral labels, sprites, army-management interactions, configurable haptic choices, and configurable layouts remain deferred separately.
 
 ## Milestone 4: interactive second-screen tools
 
