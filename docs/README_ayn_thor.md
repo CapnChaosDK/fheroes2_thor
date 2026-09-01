@@ -130,4 +130,6 @@ The latest hardware-validated source checkpoint is `4260100d6`. It provides the 
 
 The safe fallback checkpoint is hardware-validated. Invalid, unavailable, loading, and transition states expose no guessed lower-screen actions; explicitly classified unsupported menu states retain generic navigation, and new upstream dispatcher states no longer appear as Dialog. Select and approve the next focused slice before further implementation.
 
+The current unvalidated candidate completes Expanded Adventure Map relationship labels by adding visible neutral hero and town names at 2x and 4x. Native state remains authoritative, neutral labels yield last during collision layout, and all label input, privacy, filtering, clustering, haptic, and restoration behavior remains unchanged. Build and lint passed, and the installed candidate launched successfully on the Thor. Its debug APK SHA-256 is `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`. Hardware validation is required before this becomes the next checkpoint.
+
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).

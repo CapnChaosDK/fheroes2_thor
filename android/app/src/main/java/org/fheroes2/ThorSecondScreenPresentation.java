@@ -1742,7 +1742,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
             paint.setTextSize( OVERVIEW_LABEL_TEXT_SIZE );
-            for ( int priority = 0; priority < 4; ++priority ) {
+            for ( int priority = 0; priority < 5; ++priority ) {
                 for ( final OverviewMapItem item : layout ) {
                     final boolean eligibleForPriority = priority == 0
                                                             ? item.entry.relationship == SELECTION_RELATIONSHIP_OWNED && item.entry.selected
@@ -1750,7 +1750,9 @@ final class ThorSecondScreenPresentation extends Presentation
                                                                 ? item.entry.relationship == SELECTION_RELATIONSHIP_OWNED && !item.entry.selected
                                                                 : priority == 2
                                                                     ? item.entry.relationship == SELECTION_RELATIONSHIP_ALLIED
-                                                                    : item.entry.relationship == SELECTION_RELATIONSHIP_ENEMY;
+                                                                    : priority == 3
+                                                                        ? item.entry.relationship == SELECTION_RELATIONSHIP_ENEMY
+                                                                        : item.entry.relationship == SELECTION_RELATIONSHIP_NEUTRAL;
                     if ( item.isCluster() || !eligibleForPriority || item.entry.name.trim().isEmpty() ) {
                         continue;
                     }

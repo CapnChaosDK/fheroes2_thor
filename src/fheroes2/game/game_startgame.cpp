@@ -1246,7 +1246,8 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.y = hero->GetCenter().y;
                     entry.relationship = thorMarkerRelationship( hero->GetColor() );
                     if ( entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ALLIED
-                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ENEMY ) {
+                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ENEMY
+                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::NEUTRAL ) {
                         entry.name = hero->GetName();
                     }
                     entry.selectable = false;
@@ -1291,7 +1292,8 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     entry.y = castle->GetCenter().y;
                     entry.relationship = thorMarkerRelationship( castle->GetColor() );
                     if ( entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ALLIED
-                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ENEMY ) {
+                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::ENEMY
+                         || entry.relationship == fheroes2::thor::SelectionEntry::Relationship::NEUTRAL ) {
                         entry.name = castle->GetName();
                     }
                     entry.selectable = false;

@@ -853,6 +853,26 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor, including enemy-only authorization at 2x and 4x, 1x, cluster, and neutral suppression, live fog and relationship withdrawal, deterministic focused-owned / owned / allied / enemy collision priority, truncation and edge behavior, zoom/pan/cluster/filter transitions, label input transparency, native-authorized information, unchanged haptics and safe navigation, exact restoration, and the requested minimap, View World, upper-input, mouse, hotkey, and physical-control regressions.
 
+### Expanded Adventure Map neutral-marker labels
+
+Status: `in progress`; behavior and focused acceptance tests were approved on 2026-09-01. The candidate is implemented and awaiting hardware validation.
+
+- Individually resolved neutral heroes and towns receive their native-authorized snapshot names and show them at 2x and 4x. Clusters, 1x markers, and empty-name markers remain unlabeled.
+- Native code remains the sole authorization source. It publishes a neutral name only while the object is valid, currently visible to the active player, and still neutral. Fog return, removal, recruitment or capture, ownership changes, turn/player/context changes, and snapshot replacement withdraw or reclassify the name through the existing revisioned snapshot path without Android deriving or separately retaining it.
+- Neutral labels reuse the validated dark capsule, typography, bounded screen-space sizing, ellipsis, fixed placement order, edge and collision rejection, and input transparency. The gray marker remains the relationship cue.
+- Label placement remains deterministic: the focused owned marker lays out first, remaining owned labels follow in stable snapshot order, allied labels follow, enemy labels follow, and neutral labels lay out last. Contested neutral labels yield to every player relationship.
+- Labels remain outside hit testing and do not change clustering, filters, information tiers, focus, safe non-owned navigation, accepted-action haptics, restoration, or established controls. Sprites, army-management interactions, configurable haptics, and configurable layouts remain deferred separately.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`. The APK installed successfully over wireless ADB and cold-launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks found the resumed and focused main activity, the companion presentation window on display 4, the live game process, and no matching fatal launch log entry.
+
+#### Focused neutral-label validation
+
+1. At 1x, verify there are no labels. At 2x and 4x, verify visible individual owned, allied, enemy, and neutral heroes and towns receive names; clusters remain unlabeled.
+2. Reveal neutral objects, return them to fog, recruit a neutral hero, and capture a neutral town. Verify names disappear or reclassify immediately without stale text.
+3. Use dense areas, long names, edge markers, and same-tile objects. Verify clean truncation and collision avoidance, with focused-owned, remaining-owned, allied, enemy, then neutral placement priority.
+4. Pan, pinch, drill into clusters, and cycle both filters. Verify labels appear, disappear, and reposition deterministically without stale names.
+5. Tap and long-press through and beside neutral labels. Verify unchanged safe navigation and native-authorized information, no label touch targets, and no unintended haptics.
+6. Verify Heroes/Towns restoration, Back, compact minimap, View World, upper touchscreen, mouse, hotkeys, and physical controls.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -902,7 +922,7 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include neutral labels, player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+- Complete hardware validation of the approved neutral-label candidate before selecting another slice. Remaining candidates include player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
 
 ## Milestone 4: interactive second-screen tools
 
