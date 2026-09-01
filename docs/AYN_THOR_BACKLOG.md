@@ -15,7 +15,7 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The privacy-safe enemy-marker label checkpoint is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- The privacy-safe enemy-marker label checkpoint at `490282958f641b685df5df322be6d631b7e1c34c` is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
 - This checkpoint adds native-authorized enemy hero and town labels at 2x and 4x while preserving 1x and cluster suppression, deterministic focused-owned / owned / allied / enemy placement priority, live fog and relationship withdrawal, input transparency, and all validated haptic and interaction behavior. Neutral markers remain unlabeled.
 - Debug APK SHA-256: `007414B348B7DC59D59F167D308BAF1B998C48FBE27650DD68E93CEE5B857B94`.
 - Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused enemy-label checks covering authorization, fog and relationship withdrawal, collision priority, transitions, input transparency, information, haptics, restoration, and established controls.
@@ -839,6 +839,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - Enemy labels reuse the validated dark capsule, typography, bounded screen-space sizing, ellipsis, fixed placement order, edge and collision rejection, and input transparency. The red marker remains the relationship cue.
 - Label placement remains deterministic: the focused owned marker lays out first, remaining owned labels follow in stable snapshot order, allied labels follow, and enemy labels lay out last. Contested enemy labels yield to owned and allied labels.
 - Labels remain outside hit testing and do not change clustering, filters, information tiers, focus, safe non-owned navigation, accepted-action haptics, restoration, or established controls. Neutral labels remain deferred separately.
+- Validated source commit: `490282958f641b685df5df322be6d631b7e1c34c`.
 - Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `007414B348B7DC59D59F167D308BAF1B998C48FBE27650DD68E93CEE5B857B94`. The APK installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks found the resumed main activity, the companion presentation window on lower display 4, the live SDL process, and no matching fatal launch log entry.
 
 #### Focused enemy-label validation
