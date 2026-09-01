@@ -319,6 +319,13 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final float OVERVIEW_CLUSTER_DISTANCE_1X = 64f;
     private static final float OVERVIEW_CLUSTER_DISTANCE_2X = 48f;
     private static final float OVERVIEW_MARKER_HIT_RADIUS = 44f;
+    private static final float OVERVIEW_LABEL_MAX_WIDTH_2X = 160f;
+    private static final float OVERVIEW_LABEL_MAX_WIDTH_4X = 220f;
+    private static final float OVERVIEW_LABEL_HEIGHT = 36f;
+    private static final float OVERVIEW_LABEL_TEXT_SIZE = 20f;
+    private static final float OVERVIEW_LABEL_HORIZONTAL_PADDING = 10f;
+    private static final float OVERVIEW_LABEL_MARKER_GAP = 8f;
+    private static final float OVERVIEW_LABEL_COLLISION_GAP = 4f;
 
     interface KeySender
     {
@@ -1629,7 +1636,8 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void drawOverviewMarkers( final Canvas canvas )
         {
-            for ( final OverviewMapItem item : buildOverviewLayout() ) {
+            final List<OverviewMapItem> layout = buildOverviewLayout();
+            for ( final OverviewMapItem item : layout ) {
                 if ( item.isCluster() ) {
                     drawOverviewCluster( canvas, item );
                     continue;
@@ -1666,7 +1674,114 @@ final class ThorSecondScreenPresentation extends Presentation
                     canvas.drawRect( x - 14f, y - 14f, x + 14f, y + 14f, paint );
                 }
             }
+            drawOverviewLabels( canvas, layout );
             paint.setStyle( Paint.Style.FILL );
+        }
+
+        private void drawOverviewLabels( final Canvas canvas, final List<OverviewMapItem> layout )
+        {
+            final List<OverviewMarkerLabel> labels = buildOverviewLabelLayout( layout );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTextSize( OVERVIEW_LABEL_TEXT_SIZE );
+            final Paint.FontMetrics metrics = paint.getFontMetrics();
+            final float baselineOffset = -( metrics.ascent + metrics.descent ) * 0.5f;
+            for ( final OverviewMarkerLabel label : labels ) {
+                paint.setStyle( Paint.Style.FILL );
+                paint.setColor( Color.argb( 225, 20, 18, 14 ) );
+                canvas.drawRoundRect( label.bounds, 9f, 9f, paint );
+                paint.setStyle( Paint.Style.STROKE );
+                paint.setStrokeWidth( label.entry.selected ? 3f : 2f );
+                paint.setColor( label.entry.selected ? Color.WHITE : GOLD_LIGHT_COLOR );
+                canvas.drawRoundRect( label.bounds, 9f, 9f, paint );
+                paint.setStyle( Paint.Style.FILL );
+                paint.setColor( TEXT_COLOR );
+                canvas.drawText( label.text, label.bounds.centerX(), label.bounds.centerY() + baselineOffset, paint );
+            }
+        }
+
+        private List<OverviewMarkerLabel> buildOverviewLabelLayout( final List<OverviewMapItem> layout )
+        {
+            final List<OverviewMarkerLabel> labels = new ArrayList<>();
+            if ( overviewZoomLevel == 0 ) {
+                return labels;
+            }
+
+            final List<RectF> blockers = new ArrayList<>();
+            for ( final OverviewMapItem item : layout ) {
+                final float radius = item.isCluster() ? 36f : ( item.entry.selected ? 27f : 18f );
+                blockers.add( new RectF( item.screenX - radius, item.screenY - radius, item.screenX + radius, item.screenY + radius ) );
+            }
+            blockers.add( new RectF( radarBounds.left + 14f, radarBounds.top + 14f, radarBounds.left + 78f, radarBounds.top + 58f ) );
+
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextSize( OVERVIEW_LABEL_TEXT_SIZE );
+            for ( int priority = 0; priority < 2; ++priority ) {
+                for ( final OverviewMapItem item : layout ) {
+                    if ( item.isCluster() || item.entry.relationship != SELECTION_RELATIONSHIP_OWNED || item.entry.name.trim().isEmpty()
+                         || item.entry.selected != ( priority == 0 ) ) {
+                        continue;
+                    }
+
+                    final float maximumWidth = overviewZoomLevel == 1 ? OVERVIEW_LABEL_MAX_WIDTH_2X : OVERVIEW_LABEL_MAX_WIDTH_4X;
+                    final float maximumTextWidth = maximumWidth - 2f * OVERVIEW_LABEL_HORIZONTAL_PADDING;
+                    final String text = ellipsizeOverviewLabel( item.entry.name.trim(), maximumTextWidth );
+                    final float width = Math.min( maximumWidth, paint.measureText( text ) + 2f * OVERVIEW_LABEL_HORIZONTAL_PADDING );
+                    final float markerRadius = item.entry.selected ? 27f : 18f;
+                    final float offset = markerRadius + OVERVIEW_LABEL_MARKER_GAP;
+                    final RectF[] candidates = {
+                        new RectF( item.screenX - width * 0.5f, item.screenY - offset - OVERVIEW_LABEL_HEIGHT,
+                                   item.screenX + width * 0.5f, item.screenY - offset ),
+                        new RectF( item.screenX - width * 0.5f, item.screenY + offset, item.screenX + width * 0.5f,
+                                   item.screenY + offset + OVERVIEW_LABEL_HEIGHT ),
+                        new RectF( item.screenX + offset, item.screenY - OVERVIEW_LABEL_HEIGHT * 0.5f, item.screenX + offset + width,
+                                   item.screenY + OVERVIEW_LABEL_HEIGHT * 0.5f ),
+                        new RectF( item.screenX - offset - width, item.screenY - OVERVIEW_LABEL_HEIGHT * 0.5f, item.screenX - offset,
+                                   item.screenY + OVERVIEW_LABEL_HEIGHT * 0.5f )
+                    };
+
+                    for ( final RectF candidate : candidates ) {
+                        if ( isOverviewLabelPlacementAvailable( candidate, blockers ) ) {
+                            final RectF acceptedBounds = new RectF( candidate );
+                            labels.add( new OverviewMarkerLabel( item.entry, text, acceptedBounds ) );
+                            final RectF collisionBounds = new RectF( acceptedBounds );
+                            collisionBounds.inset( -OVERVIEW_LABEL_COLLISION_GAP, -OVERVIEW_LABEL_COLLISION_GAP );
+                            blockers.add( collisionBounds );
+                            break;
+                        }
+                    }
+                }
+            }
+            return labels;
+        }
+
+        private String ellipsizeOverviewLabel( final String value, final float maximumWidth )
+        {
+            if ( paint.measureText( value ) <= maximumWidth ) {
+                return value;
+            }
+
+            final String ellipsis = "\u2026";
+            final float availableWidth = Math.max( 0f, maximumWidth - paint.measureText( ellipsis ) );
+            int characterCount = paint.breakText( value, true, availableWidth, null );
+            if ( characterCount > 0 && Character.isHighSurrogate( value.charAt( characterCount - 1 ) ) ) {
+                --characterCount;
+            }
+            return value.substring( 0, characterCount ).trim() + ellipsis;
+        }
+
+        private boolean isOverviewLabelPlacementAvailable( final RectF candidate, final List<RectF> blockers )
+        {
+            if ( candidate.left < radarBounds.left || candidate.top < radarBounds.top || candidate.right > radarBounds.right
+                 || candidate.bottom > radarBounds.bottom ) {
+                return false;
+            }
+            for ( final RectF blocker : blockers ) {
+                if ( RectF.intersects( candidate, blocker ) ) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void drawOverviewCluster( final Canvas canvas, final OverviewMapItem cluster )
@@ -2227,6 +2342,20 @@ final class ThorSecondScreenPresentation extends Presentation
             this.selectionKind = selectionKind;
             this.localCommand = localCommand;
             this.selected = selected;
+        }
+    }
+
+    private static final class OverviewMarkerLabel
+    {
+        final SelectionEntry entry;
+        final String text;
+        final RectF bounds;
+
+        OverviewMarkerLabel( final SelectionEntry entry, final String text, final RectF bounds )
+        {
+            this.entry = entry;
+            this.text = text;
+            this.bounds = bounds;
         }
     }
 

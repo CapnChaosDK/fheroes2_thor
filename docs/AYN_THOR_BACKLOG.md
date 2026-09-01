@@ -764,6 +764,28 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor, including deterministic density reduction and counts at 1x and 2x, the individual 4x transition, preserved same-tile offsets, relationship and kind presentation, focused-cluster highlighting, filter-first membership, lower-only drill-down, cluster long-press suppression, individual privacy-aware information, exact restoration, and all requested navigation, gesture, list, minimap, View World, upper-screen, and physical-control regressions.
 
+### Expanded Adventure Map owned-marker labels
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-01.
+
+- Individually resolved owned heroes and towns show their authorized snapshot names at 2x and 4x. Clusters, 1x markers, allied, enemy, neutral, and empty-name markers remain unlabeled.
+- Labels are presentation-only dark capsules with stable screen-space sizing. Text truncates with an ellipsis at a 160-pixel maximum width at 2x and 220 pixels at 4x.
+- Placement tries above, below, right, and left in that fixed order. Candidates crossing the map edge or colliding with a visible marker, cluster, accepted label, or zoom badge are rejected; a label with no safe position is omitted.
+- The focused owned marker lays out first, followed by the existing stable snapshot order. Zoom, pan, filter, focus, snapshot, and cluster-layout changes recompute labels without storing separate state.
+- Labels do not participate in hit testing or expand marker targets. Existing individual-marker taps and long-presses, cluster drill-down and suppression, privacy and invalidation, same-tile offsets, zoom restoration, lists, Back, and established controls remain unchanged.
+- Android build and lint pass through the required short `R:` mapping. Candidate debug APK SHA-256: `E102F2886207192CCAB7892D93C8B4C56A41FB5FDA943838C151DEF8B3AFF390`. The APK installed successfully and cold-launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief state checks found the resumed and drawn main activity, the companion package window on display 4, and no matching fatal log entry.
+
+#### Focused owned-label validation
+
+1. At 1x, verify there are no labels. At 2x and 4x, verify only individual owned heroes and towns receive names.
+2. Check long names and markers near all four edges; verify clean ellipsis, in-map placement, and no overlap with visible markers, clusters, or the zoom badge.
+3. Use a dense owned area and same-tile hero/town pairs; verify stable placement, focused-label priority, and clean omission when no position is available.
+4. Pan, pinch, drill into clusters, and cycle both filters; verify labels appear, disappear, and reposition immediately without stale names.
+5. Tap and long-press through and beside labels; verify unchanged marker targeting and privacy-aware information, with no label touch targets.
+6. Verify exact Heroes/Towns and Back restoration, compact minimap, View World, upper touchscreen, mouse, hotkeys, and physical controls.
+
+All six focused checks passed on the Thor, including 1x suppression, owned-only individual labels at 2x and 4x, clean truncation and edge handling, stable collision avoidance and focused-label priority, same-tile behavior, immediate zoom/filter/pan/cluster transitions, input transparency, information privacy, exact restoration, and all requested View World, touchscreen, mouse, hotkey, and physical-control regressions.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.
@@ -790,10 +812,10 @@ All six focused checks passed on the Thor, including deterministic density reduc
 
 ## Next recommended planning point
 
-- Plan zoom-aware, collision-avoiding labels for individually resolved owned markers on the Expanded Adventure Map. Owned hero and settlement names already exist in the authorized selection snapshot, so the initial label slice can remain Android-only without exposing new native data.
-- Limit labels to individually rendered owned markers at 2x and 4x; clusters, 1x markers, allied, enemy, and neutral markers remain unlabeled. Plan deterministic placement, truncation, collision priority, focused-marker priority, viewport-edge handling, filter and zoom transitions, and rendering/hit-test separation so labels never intercept input.
-- Preserve clustering membership and drill-down, same-tile offsets, zoom anchoring and restoration, filters, information-card authorization, native privacy and invalidation, owned focus, safe non-owned navigation, lists, Back, and every established control path. Broader authorized non-owned labels, sprites, army-management interactions, haptics, and configurable layouts remain deferred separately.
-- Propose the exact owned-label behavior and focused manual acceptance tests, then wait for user approval before implementation.
+- Plan context-aware haptic feedback for accepted lower-touch Expanded Adventure Map interactions. Keep the initial slice Android-only and limited to one subtle confirmation for owned-marker focus, cluster drill-down, completed zoom-level changes, and filter changes.
+- Do not vibrate for ordinary panning, empty-map viewport navigation, non-owned safe navigation, long-press information, rejected or cancelled gestures, stale revisions, multitouch rejection, physical controls, upper touchscreen, mouse, or hotkeys. Respect the Android system haptic-feedback setting and avoid duplicate feedback when one gesture changes more than one presentation state.
+- Preserve label placement and input transparency, clustering, zoom anchoring and restoration, filters, privacy and invalidation, owned focus, safe non-owned navigation, lists, Back, and all established controls. Configurable haptic choices, broader authorized non-owned labels, sprites, army-management interactions, and configurable layouts remain deferred separately.
+- Propose the exact haptic types, trigger boundaries, and focused manual acceptance tests, then wait for user approval before implementation.
 
 ## Milestone 4: interactive second-screen tools
 
