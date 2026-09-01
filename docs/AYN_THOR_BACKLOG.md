@@ -6,16 +6,16 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.7.0` was published on 2026-08-31 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.7.0
-- Source commit: `4e396a814874312438f45d85246a746e30df95fb`.
-- APK: `fheroes2-thor-v0.7.0-debug.apk`.
-- APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
-- The release adds the complete hardware-validated Expanded Adventure Map with fog-safe relationship markers, privacy-aware information cards, kind and relationship filters, and bounded presentation zoom on top of every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- `thor-v0.8.0` was published on 2026-09-01 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.8.0
+- Source commit: `457e4fe1066568820ed97da9bfd3c93bc1f341cb`.
+- APK: `fheroes2-thor-v0.8.0-debug.apk`.
+- APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
+- The release adds deterministic marker clustering, native-authorized owned/allied/enemy/neutral labels, system-respecting context-aware haptics, and the safe unknown-menu fallback on top of the complete hardware-validated Expanded Adventure Map and every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
 
 ## Latest validated development checkpoint
 
-- The neutral-marker label checkpoint at `457e4fe1066568820ed97da9bfd3c93bc1f341cb` is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- The neutral-marker label checkpoint at `457e4fe1066568820ed97da9bfd3c93bc1f341cb` is the latest hardware-validated source state and the source of published prerelease `thor-v0.8.0`.
 - This checkpoint completes native-authorized relationship labels with neutral hero and town names at 2x and 4x. Neutral labels yield after focused-owned, owned, allied, and enemy labels and retain the validated privacy, clustering, filtering, haptic, restoration, and input-transparency behavior.
 - Debug APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
 - Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused neutral-label checks covering zoom eligibility, fog withdrawal, recruitment and capture reclassification, priority and collision layout, filters and clustering, input transparency, restoration, and established controls.

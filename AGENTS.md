@@ -14,10 +14,10 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.7.0`.
-- Release source commit: `4e396a814874312438f45d85246a746e30df95fb`.
-- Release APK SHA-256: `BABA7499AAD2BAB8805131FD59C0040B4385AC9434F92DCBB2B913280DBCD663`.
-- v0.7.0 contains the complete hardware-validated Expanded Adventure Map with fog-safe relationship markers, privacy-aware information cards, kind and relationship filters, and bounded presentation zoom, plus every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- Latest published release: `thor-v0.8.0`.
+- Release source commit: `457e4fe1066568820ed97da9bfd3c93bc1f341cb`.
+- Release APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
+- v0.8.0 contains the complete hardware-validated Expanded Adventure Map with deterministic clustering, native-authorized owned/allied/enemy/neutral labels, context-aware haptics, fog-safe relationship markers, privacy-aware information cards, filters, and bounded presentation zoom; it also adds the safe unknown-menu fallback and retains every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
 - Latest hardware-validated source commit: `457e4fe1066568820ed97da9bfd3c93bc1f341cb`.
 - This development checkpoint completes Expanded Adventure Map relationship labels with native-authorized neutral hero and town names at 2x and 4x. All six focused checks passed, including 1x and cluster suppression, fog withdrawal, recruitment and capture reclassification, focused-owned / owned / allied / enemy / neutral collision priority, dense and edge placement, filter and zoom transitions, input transparency, unchanged haptics and safe navigation, exact restoration, and established controls. Its final debug APK SHA-256 is `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
