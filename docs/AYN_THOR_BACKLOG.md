@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The privacy-safe enemy-marker label checkpoint at `490282958f641b685df5df322be6d631b7e1c34c` is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
-- This checkpoint adds native-authorized enemy hero and town labels at 2x and 4x while preserving 1x and cluster suppression, deterministic focused-owned / owned / allied / enemy placement priority, live fog and relationship withdrawal, input transparency, and all validated haptic and interaction behavior. Neutral markers remain unlabeled.
-- Debug APK SHA-256: `007414B348B7DC59D59F167D308BAF1B998C48FBE27650DD68E93CEE5B857B94`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused enemy-label checks covering authorization, fog and relationship withdrawal, collision priority, transitions, input transparency, information, haptics, restoration, and established controls.
+- The safe unknown-menu fallback checkpoint at `4260100d658f6354a06fc4dcb0c48b92db40d140` is the latest hardware-validated source state; published prerelease `thor-v0.7.0` remains sourced from `4e396a814874312438f45d85246a746e30df95fb`.
+- This checkpoint separates inert invalid/loading/transition fallback from explicitly classified generic menu navigation. Unknown upstream dispatcher states no longer masquerade as Dialog, existing context identifiers remain stable, and context changes cancel fallback input without disturbing any validated dedicated deck or upper-screen control path.
+- Debug APK SHA-256: `320D2B73CFCD73A14DC2783959A4EC82B03DD3AE03E0BDFBAE12771068BA3DFD`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused fallback checks covering Credits navigation, inert transitions, invalid-state suppression, rapid-input cancellation, lifecycle recovery, restoration, and established controls.
 
 ## Agreed product decisions
 
@@ -871,6 +871,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - Menu Fallback exposes key-based Up, Down, Left, Right, Confirm, and Back navigation without inventing semantic actions. Context changes release pressed keys and clear all native semantic, viewport, selection, marker-information, and information state through the established context transition path.
 - Existing known dispatcher transitions are classified explicitly so they cannot briefly inherit the interactive menu fallback while their dedicated screen is opening.
 - Dialog remains reserved for real modal choices. Upper touchscreen, mouse, hotkeys, physical controls, and every validated dedicated deck remain unchanged.
+- Validated source commit: `4260100d658f6354a06fc4dcb0c48b92db40d140`.
 - Android build and lint passed through the required short `R:` mapping. The candidate installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; a brief state check confirmed the resumed activity and command deck on display 4. Debug APK SHA-256: `320D2B73CFCD73A14DC2783959A4EC82B03DD3AE03E0BDFBAE12771068BA3DFD`.
 
 #### Focused safe-fallback validation
