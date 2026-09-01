@@ -860,7 +860,29 @@ All six focused checks passed on the Thor, including enemy-only authorization at
 - High Scores is hardware-validated; retain its Standard/Campaign synchronization, availability rules, Dialog restoration, and direct Exit without regression.
 - Game Settings is hardware-validated; retain its enabled states, live summary, nested-dialog restoration, persistence, and existing input paths without regression.
 - In-map Editor File Options, System Options, Map Specifications, Editor Tools, and live map information are hardware-validated.
-- A safe Menu fallback for an unknown or newly added upstream menu state.
+- The safe unknown-menu fallback is hardware-validated; retain its inert transition/invalid state, explicitly classified generic menu navigation, input cancellation, and established controls without regression.
+
+### Safe unknown-menu fallback
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-01.
+
+- Invalid context identifiers, an unavailable native bridge, and explicit transition states use an inert Upper-Screen Control deck. They expose no guessed Confirm, Cancel, navigation, semantic, information, or viewport actions.
+- A separate appended Menu Fallback context preserves every existing context identifier and is published only for an explicitly menu-classified unsupported state or a newly added main-menu dispatcher state.
+- Menu Fallback exposes key-based Up, Down, Left, Right, Confirm, and Back navigation without inventing semantic actions. Context changes release pressed keys and clear all native semantic, viewport, selection, marker-information, and information state through the established context transition path.
+- Existing known dispatcher transitions are classified explicitly so they cannot briefly inherit the interactive menu fallback while their dedicated screen is opening.
+- Dialog remains reserved for real modal choices. Upper touchscreen, mouse, hotkeys, physical controls, and every validated dedicated deck remain unchanged.
+- Android build and lint passed through the required short `R:` mapping. The candidate installed successfully over wireless ADB and was explicitly launched as `org.fheroes2.thor/org.fheroes2.GameActivity`; a brief state check confirmed the resumed activity and command deck on display 4. Debug APK SHA-256: `320D2B73CFCD73A14DC2783959A4EC82B03DD3AE03E0BDFBAE12771068BA3DFD`.
+
+#### Focused safe-fallback validation
+
+1. Open Credits and verify the lower display shows Menu Navigation rather than Dialog or a stale parent deck; verify a navigation key exits through the existing upper-screen behavior without duplicate input.
+2. Exercise an inert transition into gameplay or the Editor and verify Upper-Screen Control exposes no touch actions while the destination deck is unavailable.
+3. Verify an invalid or unavailable native context cannot expose Confirm, Cancel, navigation, stale information, radar, selection, or semantic controls.
+4. Rapidly tap during fallback-to-known-context transitions and verify no fallback input fires in the restored context and no button remains pressed.
+5. Toggle the lower panel or suspend and resume while fallback is visible; verify exact recovery without a stuck press or stale deck.
+6. Recheck Main Menu, one nested menu, Dialog, Adventure Map, upper touchscreen, mouse, hotkeys, and physical controls.
+
+All six focused checks passed on the Thor, including Credits menu fallback and single-action exit, inert gameplay and Editor transitions, invalid/unavailable-state suppression, rapid-transition input cancellation, panel and lifecycle recovery, exact dedicated-deck restoration, and the requested menu, Dialog, Adventure Map, upper-input, mouse, hotkey, and physical-control regressions.
 
 ### Acceptance criteria
 
@@ -879,7 +901,7 @@ All six focused checks passed on the Thor, including enemy-only authorization at
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include the safe unknown-menu fallback, neutral labels, player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include neutral labels, player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
 
 ## Milestone 4: interactive second-screen tools
 

@@ -78,6 +78,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_ADVENTURE_HERO_LIST = 41;
     private static final int CONTEXT_ADVENTURE_CASTLE_LIST = 42;
     private static final int CONTEXT_ADVENTURE_MAP_OVERVIEW = 43;
+    private static final int CONTEXT_MENU_FALLBACK = 44;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -501,7 +502,7 @@ final class ThorSecondScreenPresentation extends Presentation
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final String[] requestedSelectionSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_ADVENTURE_MAP_OVERVIEW ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_MENU_FALLBACK ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
@@ -1511,10 +1512,18 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "DIALOG";
                 addDialogActions();
                 break;
+            case CONTEXT_MENU_FALLBACK:
+                contextTitle = "MENU NAVIGATION";
+                addAction( "LEFT", KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "UP", KeyEvent.KEYCODE_DPAD_UP );
+                addAction( "RIGHT", KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "BACK", KeyEvent.KEYCODE_ESCAPE );
+                addAction( "DOWN", KeyEvent.KEYCODE_DPAD_DOWN );
+                addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
+                break;
             case CONTEXT_FALLBACK:
             default:
-                contextTitle = "COMMAND DECK";
-                addDialogActions();
+                contextTitle = "UPPER-SCREEN CONTROL";
                 break;
             }
         }

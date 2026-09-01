@@ -61,8 +61,12 @@ namespace fheroes2::thor
         EDITOR_TOOL_ERASE,
         ADVENTURE_HERO_LIST,
         ADVENTURE_CASTLE_LIST,
-        ADVENTURE_MAP_OVERVIEW
+        ADVENTURE_MAP_OVERVIEW,
+        MENU_FALLBACK
     };
+
+    static_assert( static_cast<int32_t>( UiContext::ADVENTURE_MAP_OVERVIEW ) == 43 );
+    static_assert( static_cast<int32_t>( UiContext::MENU_FALLBACK ) == 44 );
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
     // when adding actions so Java and native builds cannot silently disagree.

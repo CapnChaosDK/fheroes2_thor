@@ -172,8 +172,31 @@ void Game::runMainGameLoop()
         case fheroes2::GameMode::EDITOR_LOAD_MAP:
             fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
             break;
+        case fheroes2::GameMode::HIGHSCORES_STANDARD:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::HIGH_SCORES_STANDARD );
+            break;
+        case fheroes2::GameMode::HIGHSCORES_CAMPAIGN:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::HIGH_SCORES_CAMPAIGN );
+            break;
+        case fheroes2::GameMode::CREDITS:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::MENU_FALLBACK );
+            break;
+        case fheroes2::GameMode::NEW_STANDARD:
+        case fheroes2::GameMode::NEW_SUCCESSION_WARS_CAMPAIGN:
+        case fheroes2::GameMode::NEW_PRICE_OF_LOYALTY_CAMPAIGN:
+        case fheroes2::GameMode::NEW_BATTLE_ONLY:
+        case fheroes2::GameMode::LOAD_STANDARD:
+        case fheroes2::GameMode::LOAD_CAMPAIGN:
+        case fheroes2::GameMode::LOAD_HOT_SEAT:
+        case fheroes2::GameMode::SELECT_CAMPAIGN_SCENARIO:
+        case fheroes2::GameMode::COMPLETE_CAMPAIGN_SCENARIO:
+        case fheroes2::GameMode::COMPLETE_CAMPAIGN_SCENARIO_FROM_LOAD_FILE:
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::FALLBACK );
+            break;
         default:
-            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::DIALOG );
+            // A newly added menu dispatcher state may not have a dedicated Thor deck yet.
+            // Retain generic key navigation without guessing semantic actions.
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::MENU_FALLBACK );
             break;
         }
 
