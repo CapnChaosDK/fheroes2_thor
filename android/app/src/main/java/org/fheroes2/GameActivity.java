@@ -46,6 +46,7 @@ public final class GameActivity extends SDLActivity
     private static native long nativeGetThorEnabledActionMask();
     private static native String[] nativeGetThorInformationSnapshot( long knownRevision );
     private static native int[] nativeGetThorRadarSnapshot( long knownRevision );
+    private static native int[] nativeGetThorVisualSnapshot( long knownRevision );
     private static native boolean nativeIsThorViewportControlEnabled();
     private static native boolean nativeEnqueueThorViewportRequest( float normalizedX, float normalizedY );
     private static native String[] nativeGetThorSelectionSnapshot( long knownRevision );
@@ -102,6 +103,16 @@ public final class GameActivity extends SDLActivity
     {
         try {
             return nativeGetThorRadarSnapshot( knownRevision );
+        }
+        catch ( final UnsatisfiedLinkError ex ) {
+            return null;
+        }
+    }
+
+    int[] getThorVisualSnapshot( final long knownRevision )
+    {
+        try {
+            return nativeGetThorVisualSnapshot( knownRevision );
         }
         catch ( final UnsatisfiedLinkError ex ) {
             return null;

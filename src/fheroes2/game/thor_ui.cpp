@@ -32,6 +32,8 @@ namespace
     fheroes2::thor::InformationSnapshot informationSnapshot;
     std::mutex radarMutex;
     fheroes2::thor::RadarSnapshot radarSnapshot;
+    std::mutex visualMutex;
+    fheroes2::thor::VisualSnapshot visualSnapshot;
     std::mutex viewportRequestMutex;
     fheroes2::thor::ViewportRequest viewportRequest;
     std::atomic<bool> viewportControlEnabled{ false };
@@ -615,6 +617,14 @@ namespace fheroes2::thor
                 selectionSnapshot = std::move( emptySelection );
             }
 
+            {
+                std::lock_guard<std::mutex> visualLock( visualMutex );
+                VisualSnapshot emptyVisual;
+                emptyVisual.context = context;
+                emptyVisual.revision = visualSnapshot.revision + 1;
+                visualSnapshot = std::move( emptyVisual );
+            }
+
             std::lock_guard<std::mutex> informationLock( informationMutex );
             InformationSnapshot emptySnapshot;
             emptySnapshot.context = context;
@@ -731,6 +741,37 @@ namespace fheroes2::thor
 
         snapshot.revision = radarSnapshot.revision + 1;
         radarSnapshot = std::move( snapshot );
+    }
+
+    bool getVisualSnapshot( const uint64_t knownRevision, VisualSnapshot & snapshot )
+    {
+        std::lock_guard<std::mutex> lock( visualMutex );
+        if ( visualSnapshot.revision == knownRevision ) {
+            return false;
+        }
+
+        snapshot = visualSnapshot;
+        return true;
+    }
+
+    void publishVisualSnapshot( VisualSnapshot snapshot )
+    {
+        constexpr int32_t maximumVisualDimension = 256;
+        if ( snapshot.width < 0 || snapshot.height < 0 || snapshot.width > maximumVisualDimension || snapshot.height > maximumVisualDimension
+             || snapshot.pixels.size() != static_cast<size_t>( snapshot.width ) * snapshot.height ) {
+            snapshot.width = 0;
+            snapshot.height = 0;
+            snapshot.pixels.clear();
+        }
+
+        std::lock_guard<std::mutex> lock( visualMutex );
+        if ( visualSnapshot.version == snapshot.version && visualSnapshot.context == snapshot.context && visualSnapshot.width == snapshot.width
+             && visualSnapshot.height == snapshot.height && visualSnapshot.pixels == snapshot.pixels ) {
+            return;
+        }
+
+        snapshot.revision = visualSnapshot.revision + 1;
+        visualSnapshot = std::move( snapshot );
     }
 
     bool enqueueViewportRequest( const float normalizedX, const float normalizedY )
@@ -1035,6 +1076,37 @@ extern "C" JNIEXPORT jintArray JNICALL Java_org_fheroes2_GameActivity_nativeGetT
     values[9] = snapshot.viewportWidth;
     values[10] = snapshot.viewportHeight;
     values[11] = static_cast<jint>( pixelCount );
+    for ( size_t index = 0; index < pixelCount; ++index ) {
+        values[headerSize + index] = static_cast<jint>( snapshot.pixels[index] );
+    }
+
+    jintArray result = env->NewIntArray( static_cast<jsize>( values.size() ) );
+    if ( result != nullptr ) {
+        env->SetIntArrayRegion( result, 0, static_cast<jsize>( values.size() ), values.data() );
+    }
+    return result;
+}
+
+extern "C" JNIEXPORT jintArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorVisualSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    fheroes2::thor::VisualSnapshot snapshot;
+    if ( !fheroes2::thor::getVisualSnapshot( static_cast<uint64_t>( knownRevision ), snapshot ) ) {
+        return nullptr;
+    }
+
+    constexpr jsize headerSize = 6;
+    const size_t pixelCount = snapshot.pixels.size();
+    if ( pixelCount > static_cast<size_t>( std::numeric_limits<jsize>::max() - headerSize ) ) {
+        return nullptr;
+    }
+
+    std::vector<jint> values( headerSize + pixelCount );
+    values[0] = snapshot.version;
+    values[1] = static_cast<jint>( snapshot.context );
+    values[2] = static_cast<jint>( snapshot.revision );
+    values[3] = snapshot.width;
+    values[4] = snapshot.height;
+    values[5] = static_cast<jint>( pixelCount );
     for ( size_t index = 0; index < pixelCount; ++index ) {
         values[headerSize + index] = static_cast<jint>( snapshot.pixels[index] );
     }

@@ -326,6 +326,18 @@ namespace fheroes2::thor
         std::vector<uint32_t> pixels;
     };
 
+    struct VisualSnapshot
+    {
+        static constexpr int32_t currentVersion = 1;
+
+        int32_t version{ currentVersion };
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        int32_t width{ 0 };
+        int32_t height{ 0 };
+        std::vector<uint32_t> pixels;
+    };
+
     struct ViewportRequest
     {
         UiContext context{ UiContext::FALLBACK };
@@ -424,6 +436,8 @@ namespace fheroes2::thor
     void publishInformationSnapshot( InformationSnapshot snapshot );
     bool getRadarSnapshot( uint64_t knownRevision, RadarSnapshot & snapshot );
     void publishRadarSnapshot( RadarSnapshot snapshot );
+    bool getVisualSnapshot( uint64_t knownRevision, VisualSnapshot & snapshot );
+    void publishVisualSnapshot( VisualSnapshot snapshot );
 
     // Lower-screen pointer movement is coalesced into one latest-position request. The SDL
     // thread remains the sole owner of viewport changes and rejects requests after context changes.

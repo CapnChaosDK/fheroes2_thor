@@ -925,7 +925,29 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include player-installed sprites, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+
+### Player-installed Hero portrait
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-02.
+
+- The Hero information card shows the current hero's large portrait beside the existing text. The image is rendered by the native engine from the player's installed Heroes II assets; no proprietary artwork is added to the APK.
+- A bounded, versioned native visual snapshot carries only context, revision, dimensions, and ARGB pixels. Android accepts images no larger than 256 by 256 pixels, caches only the latest bitmap, and falls back to the established text-only card for empty or invalid snapshots.
+- Portrait changes are revision-driven. Previous and Next update the portrait and text together, while context transitions publish an empty visual snapshot so dialogs, player changes, panel recreation, and unrelated screens cannot retain stale artwork.
+- The portrait is decorative and outside hit testing. Existing Hero semantic actions, information, modal restoration, Adventure restoration, upper touchscreen, mouse, hotkeys, and physical controls remain unchanged.
+- Broader hero-list portraits, castle imagery, creature sprites, army management, configurable haptics, and configurable layouts remain deferred as separate slices.
+- Android build and lint pass through the required short `R:` mapping. The final guarded candidate limits portrait publication to the Android Thor Hero context. It installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks found the resumed game process and the package presentation window on lower display 4, with no matching fatal startup log. Debug APK SHA-256: `252983E52575C5B0E3F8DBC3C315AA589A4A6CCC2BC60156755A4484D4D5D1BF`.
+
+#### Focused player-installed portrait validation
+
+1. Open several heroes and verify each lower portrait matches the upper Hero screen. Use Previous and Next in both directions and verify portrait and text update together.
+2. Check heroes with long names and full information values; verify the name, level/race, stats, movement/mana, morale/luck, and portrait remain readable and inside the card.
+3. Open and cancel Dismiss or another modal from Hero; verify the same portrait, information, and Hero deck restore exactly once.
+4. Close Hero, select a different hero on the Adventure Map, and reopen. Verify no stale portrait appears during either transition.
+5. Toggle the lower panel and suspend/resume while Hero is open. Verify the correct portrait recovers without a blank, corrupt, or previous-player image.
+6. Recheck Hero semantic actions, Adventure restoration, upper touchscreen, mouse, hotkeys, and physical controls.
+
+All six focused checks passed on the Thor. Portraits matched the upper Hero screen and stayed synchronized with Previous and Next; long names and full information remained bounded and readable; modal, Adventure, panel, and suspend/resume restoration retained the correct portrait without stale or corrupt artwork; and Hero semantic actions, upper touchscreen, mouse, hotkeys, and physical controls remained unchanged.
 
 ## Milestone 4: interactive second-screen tools
 

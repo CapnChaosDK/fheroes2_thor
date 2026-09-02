@@ -400,10 +400,10 @@ final class ThorSecondScreenPresentation extends Presentation
     }
 
     void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled,
-                       final int[] radarSnapshot, final String[] selectionSnapshot )
+                       final int[] radarSnapshot, final int[] visualSnapshot, final String[] selectionSnapshot )
     {
         if ( commandDeckView != null ) {
-            commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot, selectionSnapshot );
+            commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot, visualSnapshot, selectionSnapshot );
         }
     }
 
@@ -451,6 +451,9 @@ final class ThorSecondScreenPresentation extends Presentation
         private int radarViewportY;
         private int radarViewportWidth;
         private int radarViewportHeight;
+        private Bitmap visualBitmap;
+        private int visualContext = -1;
+        private long visualRevision = -1;
         private boolean viewportControlEnabled;
         private boolean radarGestureActive;
         private boolean radarGestureMoved;
@@ -495,19 +498,21 @@ final class ThorSecondScreenPresentation extends Presentation
             };
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null );
+            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null );
         }
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot,
-                           final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final String[] requestedSelectionSnapshot )
+                           final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final int[] requestedVisualSnapshot,
+                           final String[] requestedSelectionSnapshot )
         {
             final int context
                 = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_MENU_FALLBACK ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
+            final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
             final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled
-                 && !informationChanged && !radarChanged && !selectionChanged ) {
+                 && !informationChanged && !radarChanged && !visualChanged && !selectionChanged ) {
                 return;
             }
 
@@ -589,6 +594,26 @@ final class ThorSecondScreenPresentation extends Presentation
             catch ( final NumberFormatException ex ) {
                 return false;
             }
+        }
+
+        private boolean applyVisualSnapshot( final int[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 6 || snapshot[0] != 1 || snapshot[2] == visualRevision ) {
+                return false;
+            }
+
+            visualRevision = snapshot[2];
+            visualContext = snapshot[1];
+            final int width = snapshot[3];
+            final int height = snapshot[4];
+            final int pixelCount = snapshot[5];
+            if ( width <= 0 || height <= 0 || width > 256 || height > 256 || pixelCount != width * height || snapshot.length != 6 + pixelCount ) {
+                visualBitmap = null;
+                return true;
+            }
+
+            visualBitmap = Bitmap.createBitmap( snapshot, 6, width, width, height, Bitmap.Config.ARGB_8888 );
+            return true;
         }
 
         private boolean applySelectionSnapshot( final String[] snapshot )
@@ -706,6 +731,18 @@ final class ThorSecondScreenPresentation extends Presentation
             }
             else {
                 radarBounds.setEmpty();
+            }
+
+            if ( hasHeroPortraitSnapshot() ) {
+                final float maximumHeight = innerPanel.height() - 16f;
+                final float maximumWidth = innerPanel.width() * 0.2f;
+                final float scale = Math.min( maximumWidth / visualBitmap.getWidth(), maximumHeight / visualBitmap.getHeight() );
+                final float portraitWidth = visualBitmap.getWidth() * scale;
+                final float portraitHeight = visualBitmap.getHeight() * scale;
+                final RectF portraitBounds = new RectF( innerPanel.left + 8f, innerPanel.centerY() - portraitHeight * 0.5f,
+                                                        innerPanel.left + 8f + portraitWidth, innerPanel.centerY() + portraitHeight * 0.5f );
+                drawHeroPortrait( canvas, portraitBounds );
+                informationPanel.left = portraitBounds.right + 20f;
             }
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
@@ -983,6 +1020,27 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             return true;
+        }
+
+        private boolean hasHeroPortraitSnapshot()
+        {
+            return gameContext == CONTEXT_HERO && visualContext == CONTEXT_HERO && visualRevision >= 0 && visualBitmap != null;
+        }
+
+        private void drawHeroPortrait( final Canvas canvas, final RectF bounds )
+        {
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( SHADOW_COLOR );
+            canvas.drawRect( new RectF( bounds.left + 5f, bounds.top + 6f, bounds.right + 5f, bounds.bottom + 6f ), paint );
+
+            paint.setFilterBitmap( false );
+            canvas.drawBitmap( visualBitmap, null, bounds, paint );
+
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 4f );
+            paint.setColor( GOLD_COLOR );
+            canvas.drawRect( bounds, paint );
+            paint.setStyle( Paint.Style.FILL );
         }
 
         private boolean sendViewportRequest( final float x, final float y )

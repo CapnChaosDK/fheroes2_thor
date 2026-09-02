@@ -45,6 +45,7 @@
 #include "heroes_indicator.h"
 #include "icn.h"
 #include "image.h"
+#include "image_palette.h"
 #include "interface_gamearea.h"
 #include "kingdom.h"
 #include "localevent.h"
@@ -91,6 +92,26 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
                           + std::to_string( GetSpellPoints() ) + " / " + std::to_string( GetMaxSpellPoints() );
         snapshot.resources = "MORALE  " + std::to_string( GetMorale() ) + "     LUCK  " + std::to_string( GetLuck() );
         fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+        if ( fheroes2::thor::getUiContext() == fheroes2::thor::UiContext::HERO ) {
+            fheroes2::thor::VisualSnapshot visualSnapshot;
+            visualSnapshot.context = fheroes2::thor::UiContext::HERO;
+            const fheroes2::Sprite & portrait = GetPortrait( PORT_BIG );
+            visualSnapshot.width = portrait.width();
+            visualSnapshot.height = portrait.height();
+            if ( !portrait.empty() ) {
+                const size_t pixelCount = static_cast<size_t>( visualSnapshot.width ) * visualSnapshot.height;
+                visualSnapshot.pixels.resize( pixelCount );
+                const uint8_t * indexedPixels = portrait.image();
+                const auto palette = fheroes2::getNormalizedRGBGamePalette();
+                for ( size_t index = 0; index < pixelCount; ++index ) {
+                    visualSnapshot.pixels[index] = palette[indexedPixels[index]].getBGRA();
+                }
+            }
+            fheroes2::thor::publishVisualSnapshot( std::move( visualSnapshot ) );
+        }
+#endif
     };
 
     publishThorInformation();

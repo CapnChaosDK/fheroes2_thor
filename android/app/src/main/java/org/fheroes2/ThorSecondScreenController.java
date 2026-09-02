@@ -57,6 +57,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                 if ( radarSnapshot != null && radarSnapshot.length >= 3 ) {
                     radarRevision = radarSnapshot[2];
                 }
+                final int[] visualSnapshot = activity.getThorVisualSnapshot( visualRevision );
+                if ( visualSnapshot != null && visualSnapshot.length >= 3 ) {
+                    visualRevision = visualSnapshot[2];
+                }
                 final String[] selectionSnapshot = activity.getThorSelectionSnapshot( selectionRevision );
                 if ( selectionSnapshot != null && selectionSnapshot.length >= 3 ) {
                     try {
@@ -68,7 +72,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                 }
                 ( (ThorSecondScreenPresentation)presentation )
                     .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot,
-                                   activity.isThorViewportControlEnabled(), radarSnapshot, selectionSnapshot );
+                                   activity.isThorViewportControlEnabled(), radarSnapshot, visualSnapshot, selectionSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -78,6 +82,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private boolean isStarted;
     private long informationRevision = -1;
     private long radarRevision = -1;
+    private long visualRevision = -1;
     private long selectionRevision = -1;
 
     ThorSecondScreenController( final GameActivity activity )
