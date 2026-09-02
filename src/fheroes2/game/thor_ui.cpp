@@ -215,6 +215,21 @@ namespace
         }
     }
 
+    bool isHeroMeetingAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::HERO_MEETING_TRANSFER_TO_RIGHT:
+        case Action::HERO_MEETING_TRANSFER_TO_LEFT:
+        case Action::HERO_MEETING_SWAP_ARMIES:
+        case Action::HERO_MEETING_CLOSE:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isAdventureSelectionAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::ADVENTURE_SELECTION_BACK;
@@ -491,7 +506,8 @@ namespace
         using UiContext = fheroes2::thor::UiContext;
 
         return context == UiContext::MAIN_MENU || context == UiContext::BATTLE || context == UiContext::ADVENTURE_MAP || context == UiContext::HERO
-               || context == UiContext::CASTLE || context == UiContext::ADVENTURE_HERO_LIST || context == UiContext::ADVENTURE_CASTLE_LIST
+               || context == UiContext::CASTLE || context == UiContext::HERO_MEETING || context == UiContext::ADVENTURE_HERO_LIST
+               || context == UiContext::ADVENTURE_CASTLE_LIST
                || context == UiContext::ADVENTURE_MAP_OVERVIEW
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
@@ -524,6 +540,8 @@ namespace
             return isHeroAction( action );
         case fheroes2::thor::UiContext::CASTLE:
             return isCastleAction( action );
+        case fheroes2::thor::UiContext::HERO_MEETING:
+            return isHeroMeetingAction( action );
         case fheroes2::thor::UiContext::NEW_GAME_MENU:
             return isNewGameMenuAction( action );
         case fheroes2::thor::UiContext::CAMPAIGN_MENU:

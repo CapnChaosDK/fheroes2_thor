@@ -925,7 +925,29 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, army-management interactions, configurable haptic choices, and configurable layouts; each remains deferred until its behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, lower-screen troop-slot interactions, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+
+### Hero Meeting army-transfer deck
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-02.
+
+- Meeting two owned heroes switches the lower display from Adventure Map controls to a dedicated Hero Meeting context with Army Right, Army Left, Swap Armies, and Close actions.
+- The actions are consumed in the existing Hero Meeting loop on the SDL thread and reuse the native `MoveTroops` and `SwapTroops` paths. Native preflight checks mute a directional transfer when it cannot change either army; Swap and Close remain available while both meeting armies are valid.
+- The information card identifies both heroes and shows each army's live occupied-stack and total-creature counts. Selecting a troop on the upper screen retains the existing native keep-creature behavior and updates the lower guidance and action availability.
+- Opening either nested Hero screen temporarily restores the validated Hero deck and returns to Hero Meeting on close. Closing the meeting restores Adventure exactly once; context changes clear queued actions and stale information.
+- Lower-screen troop slots, drag-and-drop, split and join within the meeting, creature sprites, portraits, artifact transfers, configurable haptics, and configurable layouts remain deferred as separate slices. Upper-screen artifact controls and all established input paths remain unchanged.
+- Android build and lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks found the resumed game process and the package presentation window on lower display 4, with no matching fatal startup log. Candidate debug APK SHA-256: `5CD009D8E0EFF19E8DC31D7F90A87A1088C315C30532C80CB892FAF743E47CBD`.
+
+#### Focused Hero Meeting validation
+
+1. Meet two owned heroes and verify the dedicated deck replaces Adventure controls; verify no Adventure command can fire while the meeting is open.
+2. Move armies in both directions and verify the upper army bars and lower summaries update immediately, including selected-stack retention and the last-stack rule. Verify a transfer mutes when it cannot change the armies.
+3. Swap armies and verify both heroes receive the correct troops with one operation per accepted tap.
+4. Open each Hero screen from the meeting and return. Verify Hero to Hero Meeting to Adventure restoration is exact and no stale information appears.
+5. Rapidly tap, cancel a touch, toggle the lower panel, and suspend/resume. Verify no queued transfer, stuck press, stale deck, or stale army summary.
+6. Verify upper touchscreen, mouse, hotkeys, physical controls, existing Hero and Castle army actions, and established haptics remain unchanged.
+
+All six focused checks passed on the Thor. The dedicated deck replaced Adventure controls without action leakage; both transfer directions, selected-stack retention, last-stack protection, no-op availability, live summaries, and one-shot army swapping behaved correctly. Nested Hero, Adventure, panel, and suspend/resume restoration remained exact without stale state or stuck input, and all requested upper-screen, mouse, hotkey, physical-control, Hero, Castle, and haptic regressions passed.
 
 ### Player-installed Hero portrait
 

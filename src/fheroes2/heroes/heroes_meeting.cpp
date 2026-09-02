@@ -51,6 +51,7 @@
 #include "screen.h"
 #include "skill.h"
 #include "skill_bar.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -61,6 +62,40 @@
 
 namespace
 {
+    bool canMoveArmyTroops( const Army & target, const Army & source, const int monsterIdToKeep )
+    {
+        if ( !target.isValid() || !source.isValid() ) {
+            return false;
+        }
+
+        if ( monsterIdToKeep != Monster::UNKNOWN ) {
+            bool targetHasMonsterToKeep = false;
+            bool sourceHasDifferentMonster = false;
+            for ( size_t index = 0; index < target.Size(); ++index ) {
+                const Troop * troop = target.GetTroop( index );
+                targetHasMonsterToKeep = targetHasMonsterToKeep || ( troop != nullptr && troop->isValid() && troop->GetID() == monsterIdToKeep );
+            }
+            for ( size_t index = 0; index < source.Size(); ++index ) {
+                const Troop * troop = source.GetTroop( index );
+                sourceHasDifferentMonster = sourceHasDifferentMonster || ( troop != nullptr && troop->isValid() && troop->GetID() != monsterIdToKeep );
+            }
+            if ( targetHasMonsterToKeep && sourceHasDifferentMonster ) {
+                return true;
+            }
+        }
+
+        const uint32_t occupiedSourceSlots = source.GetOccupiedSlotCount();
+        for ( size_t index = 0; index < source.Size(); ++index ) {
+            const Troop * troop = source.GetTroop( index );
+            if ( troop != nullptr && troop->isValid() && target.CanJoinTroop( troop->GetMonster() )
+                 && ( occupiedSourceSlots > 1 || troop->GetCount() > 1 ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     fheroes2::ButtonSprite createMoveButton( const int32_t icnId, const int32_t offsetX, const int32_t offsetY, const fheroes2::Image & display )
     {
         const fheroes2::Sprite & originalReleasedImage = Assets::getImage( icnId, 0 );
@@ -302,6 +337,9 @@ private:
 
 void Heroes::MeetingDialog( Heroes & otherHero )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::HERO_MEETING );
+    using ThorAction = fheroes2::thor::Action;
+
     fheroes2::Display & display = fheroes2::Display::instance();
 
     // Set the cursor image. This dialog is called after hero's move and does not require a cursor restorer:
@@ -451,6 +489,39 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     selectArmy2.setInBetweenItemsOffset( { 2, 0 } );
     selectArmy2.Redraw( display );
 
+    const auto getSelectedMonsterId = [&selectArmy1, &selectArmy2]() {
+        const ArmyTroop * selectedTroop = selectArmy1.isSelected() ? selectArmy1.GetSelectedItem()
+                                         : selectArmy2.isSelected() ? selectArmy2.GetSelectedItem()
+                                                                    : nullptr;
+        return selectedTroop != nullptr ? selectedTroop->GetID() : Monster::UNKNOWN;
+    };
+
+    const auto publishThorMeetingState = [this, &otherHero, &getSelectedMonsterId]() {
+        const int selectedMonsterId = getSelectedMonsterId();
+        fheroes2::thor::ActionMask actions = fheroes2::thor::actionMask( ThorAction::HERO_MEETING_SWAP_ARMIES )
+                                                   | fheroes2::thor::actionMask( ThorAction::HERO_MEETING_CLOSE );
+        if ( canMoveArmyTroops( otherHero.GetArmy(), GetArmy(), selectedMonsterId ) ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_TRANSFER_TO_RIGHT );
+        }
+        if ( canMoveArmyTroops( GetArmy(), otherHero.GetArmy(), selectedMonsterId ) ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_TRANSFER_TO_LEFT );
+        }
+        fheroes2::thor::setEnabledActions( actions );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::HERO_MEETING;
+        snapshot.category = "HERO MEETING";
+        snapshot.title = GetName() + "  <->  " + otherHero.GetName();
+        snapshot.detail = "LEFT  " + std::to_string( GetArmy().GetOccupiedSlotCount() ) + " STACKS / " + std::to_string( GetArmy().getTotalCount() )
+                          + " CREATURES     RIGHT  " + std::to_string( otherHero.GetArmy().GetOccupiedSlotCount() ) + " STACKS / "
+                          + std::to_string( otherHero.GetArmy().getTotalCount() ) + " CREATURES";
+        snapshot.resources
+            = selectedMonsterId == Monster::UNKNOWN ? "SELECT A STACK ABOVE TO KEEP THAT CREATURE WITH ITS HERO" : "SELECTED CREATURE WILL REMAIN WITH ITS HERO";
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+    };
+
+    publishThorMeetingState();
+
     // artifact
     dst_pt.x = cur_pt.x + 23;
     dst_pt.y = cur_pt.y + 347;
@@ -501,6 +572,9 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
     // message loop
     while ( le.HandleEvents() ) {
+        publishThorMeetingState();
+        const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+
         buttonExit.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonExit.area() ) );
 
         if ( le.isMouseLeftButtonPressedInArea( moveArmyToHero2.area() ) || HotKeyHoldEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) ) {
@@ -537,7 +611,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
             swapArtifacts.drawOnRelease();
         }
 
-        if ( le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
+        if ( requestedThorAction == ThorAction::HERO_MEETING_CLOSE || le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
             break;
         }
 
@@ -658,7 +732,8 @@ void Heroes::MeetingDialog( Heroes & otherHero )
             display.updateNextRenderRoi( restorerRoi );
             fheroes2::fadeInDisplay( fadeRoi, !isDefaultScreenSize );
         }
-        else if ( le.MouseClickLeft( moveArmyToHero2.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_TRANSFER_TO_RIGHT || le.MouseClickLeft( moveArmyToHero2.area() )
+                  || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_RIGHT ) ) {
             const ArmyTroop * keep = nullptr;
 
             if ( selectArmy1.isSelected() ) {
@@ -683,7 +758,8 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
             display.render();
         }
-        else if ( le.MouseClickLeft( moveArmyToHero1.area() ) || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_TRANSFER_TO_LEFT || le.MouseClickLeft( moveArmyToHero1.area() )
+                  || HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_LEFT ) ) {
             const ArmyTroop * keep = nullptr;
 
             if ( selectArmy1.isSelected() ) {
@@ -708,7 +784,8 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
             display.render();
         }
-        else if ( le.MouseClickLeft( swapArmies.area() ) || HotKeyPressEvent( Game::HotKeyEvent::ARMY_SWAP ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_SWAP_ARMIES || le.MouseClickLeft( swapArmies.area() )
+                  || HotKeyPressEvent( Game::HotKeyEvent::ARMY_SWAP ) ) {
             GetArmy().SwapTroops( otherHero.GetArmy() );
 
             armyCountBackgroundRestorerLeft.restore();

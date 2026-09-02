@@ -79,6 +79,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_ADVENTURE_CASTLE_LIST = 42;
     private static final int CONTEXT_ADVENTURE_MAP_OVERVIEW = 43;
     private static final int CONTEXT_MENU_FALLBACK = 44;
+    private static final int CONTEXT_HERO_MEETING = 45;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -298,6 +299,10 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_ADVENTURE_OVERVIEW_OPEN_HERO_LIST = 215;
     private static final int ACTION_ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST = 216;
     private static final int ACTION_ADVENTURE_OVERVIEW_BACK = 217;
+    private static final int ACTION_HERO_MEETING_TRANSFER_TO_RIGHT = 218;
+    private static final int ACTION_HERO_MEETING_TRANSFER_TO_LEFT = 219;
+    private static final int ACTION_HERO_MEETING_SWAP_ARMIES = 220;
+    private static final int ACTION_HERO_MEETING_CLOSE = 221;
 
     private static final int SELECTION_KIND_HERO = 1;
     private static final int SELECTION_KIND_CASTLE = 2;
@@ -506,7 +511,7 @@ final class ThorSecondScreenPresentation extends Presentation
                            final String[] requestedSelectionSnapshot )
         {
             final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_MENU_FALLBACK ? requestedContext : CONTEXT_FALLBACK;
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HERO_MEETING ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
@@ -746,6 +751,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( ( gameContext == CONTEXT_ADVENTURE_MAP || gameContext == CONTEXT_HERO || gameContext == CONTEXT_CASTLE || gameContext == CONTEXT_BATTLE
+                   || gameContext == CONTEXT_HERO_MEETING
                    || gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_GAME_SETTINGS
                    || gameContext == CONTEXT_EDITOR_INTERFACE || gameContext == CONTEXT_EDITOR_SYSTEM_OPTIONS || gameContext == CONTEXT_EDITOR_MAP_SPECIFICATIONS
                    || gameContext == CONTEXT_EDITOR_MAP_SPEC_PLAYERS || gameContext == CONTEXT_EDITOR_MAP_SPEC_VICTORY
@@ -1263,6 +1269,13 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "TO GARRISON", ACTION_CASTLE_TRANSFER_TO_GARRISON, KeyEvent.KEYCODE_DPAD_UP );
                 addAction( "UPGRADE", ACTION_CASTLE_UPGRADE_SELECTED, KeyEvent.KEYCODE_U );
                 addAction( "EXIT", ACTION_CASTLE_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_HERO_MEETING:
+                contextTitle = "HERO MEETING";
+                addAction( "ARMY →", ACTION_HERO_MEETING_TRANSFER_TO_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "← ARMY", ACTION_HERO_MEETING_TRANSFER_TO_LEFT, KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "SWAP ARMIES", ACTION_HERO_MEETING_SWAP_ARMIES, KeyEvent.KEYCODE_X );
+                addAction( "CLOSE", ACTION_HERO_MEETING_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_BATTLE:
                 contextTitle = "BATTLE";

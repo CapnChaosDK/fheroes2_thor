@@ -62,11 +62,13 @@ namespace fheroes2::thor
         ADVENTURE_HERO_LIST,
         ADVENTURE_CASTLE_LIST,
         ADVENTURE_MAP_OVERVIEW,
-        MENU_FALLBACK
+        MENU_FALLBACK,
+        HERO_MEETING
     };
 
     static_assert( static_cast<int32_t>( UiContext::ADVENTURE_MAP_OVERVIEW ) == 43 );
     static_assert( static_cast<int32_t>( UiContext::MENU_FALLBACK ) == 44 );
+    static_assert( static_cast<int32_t>( UiContext::HERO_MEETING ) == 45 );
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
     // when adding actions so Java and native builds cannot silently disagree.
@@ -289,8 +291,15 @@ namespace fheroes2::thor
         ADVENTURE_OPEN_MAP_OVERVIEW,
         ADVENTURE_OVERVIEW_OPEN_HERO_LIST,
         ADVENTURE_OVERVIEW_OPEN_CASTLE_LIST,
-        ADVENTURE_OVERVIEW_BACK
+        ADVENTURE_OVERVIEW_BACK,
+        HERO_MEETING_TRANSFER_TO_RIGHT,
+        HERO_MEETING_TRANSFER_TO_LEFT,
+        HERO_MEETING_SWAP_ARMIES,
+        HERO_MEETING_CLOSE
     };
+
+    static_assert( static_cast<int32_t>( Action::ADVENTURE_OVERVIEW_BACK ) == 217 );
+    static_assert( static_cast<int32_t>( Action::HERO_MEETING_CLOSE ) == 221 );
 
     using ActionMask = uint64_t;
 
