@@ -925,7 +925,30 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, lower-screen troop-slot interactions, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, drag-and-drop or richer lower-screen army management, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+
+### Hero Meeting troop-slot transfer deck
+
+Status: `passed`; behavior and six focused acceptance tests were approved and hardware-validated on 2026-09-02.
+
+- Show both heroes' five army slots on the lower screen with native creature sprite, localized name, exact count, empty destinations, and a clear lower-only source selection.
+- A second tap on the other hero's row uses the existing native army-bar rules: move to empty, merge matching creatures, swap different creatures, and preserve the last creature required by a hero army.
+- Same-row occupied taps change the source, the selected slot cancels it, and empty source slots do nothing. Upper army interaction, whole-army actions, context changes, panel recreation, and lifecycle restoration clear pending lower selection.
+- Android owns presentation only. A versioned native snapshot supplies both armies and player-installed visuals; a revision-bound source/destination request is validated and consumed in the existing Hero Meeting loop on the SDL thread.
+- Existing Army Right, Army Left, Swap Armies, Close, upper touchscreen, mouse, hotkeys, physical controls, information, restoration, and haptics remain unchanged.
+- Drag-and-drop, splitting, same-army rearranging, artifacts, and configuration remain separate deferred slices.
+- Android assemble and lint pass through the required short `R:` mapping. The final candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks found the resumed process and lower-display presentation window on display 4 with no matching fatal or JNI-link error. Candidate debug APK SHA-256: `5E07D0D31DCDC5981857433531C86D5BE7B26344FD382D1034055B41984A786D`.
+
+#### Focused troop-slot validation
+
+1. Verify both five-slot armies, creature sprites, names, counts, empty slots, hero ownership, and selection highlight match the upper meeting screen.
+2. Move a stack into an empty opposing slot and verify both screens update once; verify the native last-stack rule leaves one creature when required.
+3. Merge matching creatures and swap different creatures; verify exact identities, counts, summaries, and one operation per accepted tap.
+4. Change and cancel lower selection, then mix lower selection with upper army interaction and whole-army controls; verify no crossed or stale selection.
+5. Exercise rapid taps, cancelled touches, multitouch, panel toggle, nested Hero screens, and suspend/resume; verify stale requests are rejected and restoration is exact.
+6. Recheck Army Right, Army Left, Swap Armies, Close, upper touchscreen, mouse, hotkeys, physical controls, existing Hero and Castle army actions, and established haptics.
+
+All six focused checks passed on the Thor. Both five-slot rows, player-installed creature sprites, localized names, exact counts, empty destinations, hero ownership, and selection highlighting matched the upper meeting. Cross-hero moves, native last-stack retention, matching-creature merges, different-creature swaps, both directions, exact summaries, and one-shot requests behaved correctly. Selection change and cancellation, mixed upper and lower interaction, whole-army controls, rapid taps, cancelled touches, multitouch, panel toggling, nested Hero screens, and suspend/resume introduced no crossed, queued, or stale state. Close, upper touchscreen, mouse, hotkeys, physical controls, established Hero and Castle army actions, and haptics remained unchanged.
 
 ### Hero Meeting army-transfer deck
 

@@ -70,9 +70,23 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                         Log.w( LOG_TAG, "Ignoring an invalid selection snapshot revision.", ex );
                     }
                 }
+                final String[] troopSnapshot = activity.getThorTroopSnapshot( troopRevision );
+                if ( troopSnapshot != null && troopSnapshot.length >= 3 ) {
+                    try {
+                        troopRevision = Long.parseLong( troopSnapshot[2] );
+                    }
+                    catch ( final NumberFormatException ex ) {
+                        Log.w( LOG_TAG, "Ignoring an invalid troop snapshot revision.", ex );
+                    }
+                }
+                final int[] troopVisualSnapshot = activity.getThorTroopVisualSnapshot( troopVisualRevision );
+                if ( troopVisualSnapshot != null && troopVisualSnapshot.length >= 3 ) {
+                    troopVisualRevision = troopVisualSnapshot[2];
+                }
                 ( (ThorSecondScreenPresentation)presentation )
                     .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot,
-                                   activity.isThorViewportControlEnabled(), radarSnapshot, visualSnapshot, selectionSnapshot );
+                                   activity.isThorViewportControlEnabled(), radarSnapshot, visualSnapshot, selectionSnapshot, troopSnapshot,
+                                   troopVisualSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -84,6 +98,8 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private long radarRevision = -1;
     private long visualRevision = -1;
     private long selectionRevision = -1;
+    private long troopRevision = -1;
+    private long troopVisualRevision = -1;
 
     ThorSecondScreenController( final GameActivity activity )
     {
@@ -154,10 +170,13 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         final ThorSecondScreenPresentation newPresentation
             = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction,
                                                 activity::enqueueThorViewportRequest, activity::enqueueThorSelectionRequest,
-                                                activity::enqueueThorMarkerInfoRequest );
+                                                activity::enqueueThorMarkerInfoRequest, activity::enqueueThorTroopTransferRequest );
         informationRevision = -1;
         radarRevision = -1;
+        visualRevision = -1;
         selectionRevision = -1;
+        troopRevision = -1;
+        troopVisualRevision = -1;
         newPresentation.setOnDismissListener( dialog -> {
             if ( presentation == dialog ) {
                 presentation = null;
@@ -206,7 +225,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         }
         informationRevision = -1;
         radarRevision = -1;
+        visualRevision = -1;
         selectionRevision = -1;
+        troopRevision = -1;
+        troopVisualRevision = -1;
     }
 
     private void sendKey( final int keyCode, final boolean pressed )

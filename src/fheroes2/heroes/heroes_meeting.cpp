@@ -45,6 +45,7 @@
 #include "heroes_indicator.h"
 #include "icn.h"
 #include "image.h"
+#include "image_palette.h"
 #include "localevent.h"
 #include "math_base.h"
 #include "monster.h"
@@ -94,6 +95,42 @@ namespace
         }
 
         return false;
+    }
+
+    fheroes2::thor::TroopSlotSnapshot makeThorTroopSlotSnapshot( const Troop * troop )
+    {
+        fheroes2::thor::TroopSlotSnapshot snapshot;
+        if ( troop == nullptr || !troop->isValid() ) {
+            return snapshot;
+        }
+
+        snapshot.monsterId = troop->GetID();
+        snapshot.count = troop->GetCount();
+        snapshot.name = troop->GetName();
+
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+        constexpr int32_t maximumSpriteDimension = 64;
+        const fheroes2::Sprite & sprite = Assets::getImage( ICN::MONS32, troop->GetSpriteIndex() );
+        snapshot.width = std::min( sprite.width(), maximumSpriteDimension );
+        snapshot.height = std::min( sprite.height(), maximumSpriteDimension );
+        if ( snapshot.width > 0 && snapshot.height > 0 ) {
+            const int32_t sourceX = ( sprite.width() - snapshot.width ) / 2;
+            const int32_t sourceY = ( sprite.height() - snapshot.height ) / 2;
+            const auto palette = fheroes2::getNormalizedRGBGamePalette();
+            const uint8_t * image = sprite.image();
+            const uint8_t * transform = sprite.singleLayer() ? nullptr : sprite.transform();
+            snapshot.pixels.resize( static_cast<size_t>( snapshot.width ) * snapshot.height );
+            for ( int32_t y = 0; y < snapshot.height; ++y ) {
+                for ( int32_t x = 0; x < snapshot.width; ++x ) {
+                    const size_t sourceIndex = static_cast<size_t>( sourceY + y ) * sprite.width() + sourceX + x;
+                    const size_t destinationIndex = static_cast<size_t>( y ) * snapshot.width + x;
+                    snapshot.pixels[destinationIndex] = transform == nullptr || transform[sourceIndex] == 0 ? palette[image[sourceIndex]].getBGRA() : 0U;
+                }
+            }
+        }
+#endif
+
+        return snapshot;
     }
 
     fheroes2::ButtonSprite createMoveButton( const int32_t icnId, const int32_t offsetX, const int32_t offsetY, const fheroes2::Image & display )
@@ -496,7 +533,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         return selectedTroop != nullptr ? selectedTroop->GetID() : Monster::UNKNOWN;
     };
 
-    const auto publishThorMeetingState = [this, &otherHero, &getSelectedMonsterId]() {
+    const auto publishThorMeetingState = [this, &otherHero, &getSelectedMonsterId, &selectArmy1, &selectArmy2]() {
         const int selectedMonsterId = getSelectedMonsterId();
         fheroes2::thor::ActionMask actions = fheroes2::thor::actionMask( ThorAction::HERO_MEETING_SWAP_ARMIES )
                                                    | fheroes2::thor::actionMask( ThorAction::HERO_MEETING_CLOSE );
@@ -518,6 +555,27 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         snapshot.resources
             = selectedMonsterId == Monster::UNKNOWN ? "SELECT A STACK ABOVE TO KEEP THAT CREATURE WITH ITS HERO" : "SELECTED CREATURE WILL REMAIN WITH ITS HERO";
         fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::TroopSnapshot troopSnapshot;
+        troopSnapshot.context = fheroes2::thor::UiContext::HERO_MEETING;
+        troopSnapshot.leftHero = GetName();
+        troopSnapshot.rightHero = otherHero.GetName();
+        if ( selectArmy1.isSelected() ) {
+            troopSnapshot.upperSelectedSide = 0;
+            troopSnapshot.upperSelectedSlot = selectArmy1.GetSelectedIndex();
+        }
+        else if ( selectArmy2.isSelected() ) {
+            troopSnapshot.upperSelectedSide = 1;
+            troopSnapshot.upperSelectedSlot = selectArmy2.GetSelectedIndex();
+        }
+        troopSnapshot.slots.reserve( GetArmy().Size() + otherHero.GetArmy().Size() );
+        for ( size_t index = 0; index < GetArmy().Size(); ++index ) {
+            troopSnapshot.slots.emplace_back( makeThorTroopSlotSnapshot( GetArmy().GetTroop( index ) ) );
+        }
+        for ( size_t index = 0; index < otherHero.GetArmy().Size(); ++index ) {
+            troopSnapshot.slots.emplace_back( makeThorTroopSlotSnapshot( otherHero.GetArmy().GetTroop( index ) ) );
+        }
+        fheroes2::thor::publishTroopSnapshot( std::move( troopSnapshot ) );
     };
 
     publishThorMeetingState();
@@ -574,6 +632,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     while ( le.HandleEvents() ) {
         publishThorMeetingState();
         const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+        const fheroes2::thor::TroopTransferRequest requestedTroopTransfer = fheroes2::thor::takeTroopTransferRequest();
 
         buttonExit.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonExit.area() ) );
 
@@ -613,6 +672,27 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
         if ( requestedThorAction == ThorAction::HERO_MEETING_CLOSE || le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
             break;
+        }
+        else if ( requestedTroopTransfer.valid ) {
+            Army & sourceArmy = requestedTroopTransfer.sourceSide == 0 ? GetArmy() : otherHero.GetArmy();
+            Army & destinationArmy = requestedTroopTransfer.destinationSide == 0 ? GetArmy() : otherHero.GetArmy();
+            Troop * sourceTroop = sourceArmy.GetTroop( static_cast<size_t>( requestedTroopTransfer.sourceSlot ) );
+            Troop * destinationTroop = destinationArmy.GetTroop( static_cast<size_t>( requestedTroopTransfer.destinationSlot ) );
+            if ( sourceTroop != nullptr && sourceTroop->isValid() && destinationTroop != nullptr ) {
+                MeetingArmyBar & destinationBar = requestedTroopTransfer.destinationSide == 0 ? selectArmy1 : selectArmy2;
+                destinationBar.ActionBarLeftMouseSingleClick( static_cast<ArmyTroop &>( *destinationTroop ), static_cast<ArmyTroop &>( *sourceTroop ) );
+
+                armyCountBackgroundRestorerLeft.restore();
+                armyCountBackgroundRestorerRight.restore();
+                selectArmy1.ResetSelected();
+                selectArmy2.ResetSelected();
+                selectArmy1.Redraw( display );
+                selectArmy2.Redraw( display );
+                moraleIndicator1.Redraw();
+                moraleIndicator2.Redraw();
+                display.render();
+            }
+            continue;
         }
 
         // selector troops event

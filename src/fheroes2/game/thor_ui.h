@@ -413,6 +413,41 @@ namespace fheroes2::thor
         bool valid{ false };
     };
 
+    struct TroopSlotSnapshot
+    {
+        int32_t monsterId{ -1 };
+        uint32_t count{ 0 };
+        std::string name;
+        int32_t width{ 0 };
+        int32_t height{ 0 };
+        std::vector<uint32_t> pixels;
+    };
+
+    struct TroopSnapshot
+    {
+        static constexpr int32_t currentVersion = 1;
+
+        int32_t version{ currentVersion };
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        std::string leftHero;
+        std::string rightHero;
+        int32_t upperSelectedSide{ -1 };
+        int32_t upperSelectedSlot{ -1 };
+        std::vector<TroopSlotSnapshot> slots;
+    };
+
+    struct TroopTransferRequest
+    {
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        int32_t sourceSide{ -1 };
+        int32_t sourceSlot{ -1 };
+        int32_t destinationSide{ -1 };
+        int32_t destinationSlot{ -1 };
+        bool valid{ false };
+    };
+
     constexpr int32_t actionMaskBit( const Action action )
     {
         const int32_t actionId = static_cast<int32_t>( action );
@@ -460,6 +495,10 @@ namespace fheroes2::thor
     SelectionRequest takeSelectionRequest();
     bool enqueueMarkerInfoRequest( UiContext context, uint64_t revision, SelectionEntry::Kind kind, int32_t id );
     MarkerInfoRequest takeMarkerInfoRequest();
+    bool getTroopSnapshot( uint64_t knownRevision, TroopSnapshot & snapshot );
+    void publishTroopSnapshot( TroopSnapshot snapshot );
+    bool enqueueTroopTransferRequest( UiContext context, uint64_t revision, int32_t sourceSide, int32_t sourceSlot, int32_t destinationSide, int32_t destinationSlot );
+    TroopTransferRequest takeTroopTransferRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final
