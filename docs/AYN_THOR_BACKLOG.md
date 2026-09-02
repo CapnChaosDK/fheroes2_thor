@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The player-installed Hero portrait checkpoint at `5a07bdeda0c5c91343a3d8a578aa9e8b301a9fbf` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the preceding neutral-marker label checkpoint.
-- This checkpoint adds the current Hero's large portrait to the lower information card using only the player's installed Heroes II assets. The bounded native visual snapshot is revision-driven, context-cleared, decorative, and restricted to the Android Thor Hero context.
-- Debug APK SHA-256: `252983E52575C5B0E3F8DBC3C315AA589A4A6CCC2BC60156755A4484D4D5D1BF`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused portrait checks covering synchronized hero switching, bounded text and portrait layout, modal and Adventure restoration, panel and suspend/resume recovery without stale artwork, and unchanged semantic, touchscreen, mouse, hotkey, and physical controls.
+- The Hero Meeting army-transfer checkpoint at `256369f9132639cc7791dee0b25db7f1dc9ae095` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
+- This checkpoint adds a dedicated Hero Meeting context with native-authorized directional transfers, army swapping, live stack and creature summaries, exact nested Hero and Adventure restoration, and protection against Adventure-action leakage.
+- Debug APK SHA-256: `5CD009D8E0EFF19E8DC31D7F90A87A1088C315C30532C80CB892FAF743E47CBD`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused checks covering both transfer directions, selected-stack retention, last-stack protection, no-op availability, one-shot swapping, live summaries, lifecycle restoration without stale state, and unchanged upper-screen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
 
 ## Agreed product decisions
 
@@ -930,6 +930,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 ### Hero Meeting army-transfer deck
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-02.
+
+- Validated source commit: `256369f9132639cc7791dee0b25db7f1dc9ae095`.
 
 - Meeting two owned heroes switches the lower display from Adventure Map controls to a dedicated Hero Meeting context with Army Right, Army Left, Swap Armies, and Close actions.
 - The actions are consumed in the existing Hero Meeting loop on the SDL thread and reuse the native `MoveTroops` and `SwapTroops` paths. Native preflight checks mute a directional transfer when it cannot change either army; Swap and Close remain available while both meeting armies are valid.
