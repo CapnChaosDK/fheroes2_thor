@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The neutral-marker label checkpoint at `457e4fe1066568820ed97da9bfd3c93bc1f341cb` is the latest hardware-validated source state and the source of published prerelease `thor-v0.8.0`.
-- This checkpoint completes native-authorized relationship labels with neutral hero and town names at 2x and 4x. Neutral labels yield after focused-owned, owned, allied, and enemy labels and retain the validated privacy, clustering, filtering, haptic, restoration, and input-transparency behavior.
-- Debug APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused neutral-label checks covering zoom eligibility, fog withdrawal, recruitment and capture reclassification, priority and collision layout, filters and clustering, input transparency, restoration, and established controls.
+- The player-installed Hero portrait checkpoint at `5a07bdeda0c5c91343a3d8a578aa9e8b301a9fbf` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the preceding neutral-marker label checkpoint.
+- This checkpoint adds the current Hero's large portrait to the lower information card using only the player's installed Heroes II assets. The bounded native visual snapshot is revision-driven, context-cleared, decorative, and restricted to the Android Thor Hero context.
+- Debug APK SHA-256: `252983E52575C5B0E3F8DBC3C315AA589A4A6CCC2BC60156755A4484D4D5D1BF`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused portrait checks covering synchronized hero switching, bounded text and portrait layout, modal and Adventure restoration, panel and suspend/resume recovery without stale artwork, and unchanged semantic, touchscreen, mouse, hotkey, and physical controls.
 
 ## Agreed product decisions
 
@@ -930,6 +930,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 ### Player-installed Hero portrait
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-02.
+
+- Validated source commit: `5a07bdeda0c5c91343a3d8a578aa9e8b301a9fbf`.
 
 - The Hero information card shows the current hero's large portrait beside the existing text. The image is rendered by the native engine from the player's installed Heroes II assets; no proprietary artwork is added to the APK.
 - A bounded, versioned native visual snapshot carries only context, revision, dimensions, and ARGB pixels. Android accepts images no larger than 256 by 256 pixels, caches only the latest bitmap, and falls back to the established text-only card for empty or invalid snapshots.
