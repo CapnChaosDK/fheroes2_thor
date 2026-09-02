@@ -6,10 +6,10 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.8.0` at `457e4fe1066568820ed97da9bfd3c93bc1f341cb`
-- Latest hardware-validated source commit: `5a07bdeda0c5c91343a3d8a578aa9e8b301a9fbf`
-- Development APK SHA-256: `252983E52575C5B0E3F8DBC3C315AA589A4A6CCC2BC60156755A4484D4D5D1BF`
+- Latest hardware-validated source commit: `40aa66cbb79967c15061a41c8cb0ab9425e75b49`
+- Development APK SHA-256: `5E07D0D31DCDC5981857433531C86D5BE7B26344FD382D1034055B41984A786D`
 - Release APK: `fheroes2-thor-v0.8.0-debug.apk`; SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
-- The player-installed Hero portrait, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from broader player-installed sprite use, army management, configurable haptics, or configurable layouts.
+- The player-installed Hero portrait and Hero Meeting troop sprites, revision-safe troop-slot and whole-army transfers, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from broader player-installed sprite use, richer army management, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint

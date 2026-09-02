@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The Hero Meeting army-transfer checkpoint at `256369f9132639cc7791dee0b25db7f1dc9ae095` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
-- This checkpoint adds a dedicated Hero Meeting context with native-authorized directional transfers, army swapping, live stack and creature summaries, exact nested Hero and Adventure restoration, and protection against Adventure-action leakage.
-- Debug APK SHA-256: `5CD009D8E0EFF19E8DC31D7F90A87A1088C315C30532C80CB892FAF743E47CBD`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused checks covering both transfer directions, selected-stack retention, last-stack protection, no-op availability, one-shot swapping, live summaries, lifecycle restoration without stale state, and unchanged upper-screen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
+- The Hero Meeting troop-slot checkpoint at `40aa66cbb79967c15061a41c8cb0ab9425e75b49` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
+- This checkpoint adds two native-backed five-slot army rows with player-installed creature sprites, localized names, exact counts, empty destinations, lower-only selection, and revision-safe cross-hero move, merge, and swap interactions. It retains the validated whole-army deck, native last-stack rules, exact restoration, and all established controls.
+- Debug APK SHA-256: `5E07D0D31DCDC5981857433531C86D5BE7B26344FD382D1034055B41984A786D`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused checks covering visual fidelity, moves, last-stack retention, merges, swaps, selection cancellation, mixed upper/lower interaction, one-shot and stale-request safety, lifecycle restoration, and unchanged whole-army, touchscreen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
 
 ## Agreed product decisions
 
@@ -931,6 +931,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 Status: `passed`; behavior and six focused acceptance tests were approved and hardware-validated on 2026-09-02.
 
+- Validated source commit: `40aa66cbb79967c15061a41c8cb0ab9425e75b49`.
+
 - Show both heroes' five army slots on the lower screen with native creature sprite, localized name, exact count, empty destinations, and a clear lower-only source selection.
 - A second tap on the other hero's row uses the existing native army-bar rules: move to empty, merge matching creatures, swap different creatures, and preserve the last creature required by a hero army.
 - Same-row occupied taps change the source, the selected slot cancels it, and empty source slots do nothing. Upper army interaction, whole-army actions, context changes, panel recreation, and lifecycle restoration clear pending lower selection.
@@ -960,7 +962,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 - The actions are consumed in the existing Hero Meeting loop on the SDL thread and reuse the native `MoveTroops` and `SwapTroops` paths. Native preflight checks mute a directional transfer when it cannot change either army; Swap and Close remain available while both meeting armies are valid.
 - The information card identifies both heroes and shows each army's live occupied-stack and total-creature counts. Selecting a troop on the upper screen retains the existing native keep-creature behavior and updates the lower guidance and action availability.
 - Opening either nested Hero screen temporarily restores the validated Hero deck and returns to Hero Meeting on close. Closing the meeting restores Adventure exactly once; context changes clear queued actions and stale information.
-- Lower-screen troop slots, drag-and-drop, split and join within the meeting, creature sprites, portraits, artifact transfers, configurable haptics, and configurable layouts remain deferred as separate slices. Upper-screen artifact controls and all established input paths remain unchanged.
+- Drag-and-drop, split and join within the meeting, same-army rearranging, portraits, broader creature-sprite use, artifact transfers, configurable haptics, and configurable layouts remain deferred as separate slices. Upper-screen artifact controls and all established input paths remain unchanged.
 - Android build and lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks found the resumed game process and the package presentation window on lower display 4, with no matching fatal startup log. Candidate debug APK SHA-256: `5CD009D8E0EFF19E8DC31D7F90A87A1088C315C30532C80CB892FAF743E47CBD`.
 
 #### Focused Hero Meeting validation
