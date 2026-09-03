@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The Hero Meeting troop-slot checkpoint at `40aa66cbb79967c15061a41c8cb0ab9425e75b49` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
-- This checkpoint adds two native-backed five-slot army rows with player-installed creature sprites, localized names, exact counts, empty destinations, lower-only selection, and revision-safe cross-hero move, merge, and swap interactions. It retains the validated whole-army deck, native last-stack rules, exact restoration, and all established controls.
-- Debug APK SHA-256: `5E07D0D31DCDC5981857433531C86D5BE7B26344FD382D1034055B41984A786D`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused checks covering visual fidelity, moves, last-stack retention, merges, swaps, selection cancellation, mixed upper/lower interaction, one-shot and stale-request safety, lifecycle restoration, and unchanged whole-army, touchscreen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
+- The Hero Meeting direct-manipulation checkpoint at `3c1a09c5e65fcfd536b952ec9f9df53ee7e5969a` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
+- This checkpoint adds drag-and-drop between any of the ten native-backed army slots, including same-army repositioning, merging, and swapping while retaining the validated cross-hero rules, tap workflow, whole-army deck, revision safety, exact restoration, and all established controls. Player-installed creature sprites now preserve their native proportions in both slots and drag previews.
+- Debug APK SHA-256: `D29FB481A4DB6B923BD2CDD7EE02B889CA9C749D4A0FFD4E9E54CDC5317D6F31`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused interaction checks plus the sprite aspect-ratio retest, covering same- and cross-army operations, last-stack retention, tap and cancellation behavior, mixed input, one-shot and stale-request safety, lifecycle restoration, and unchanged whole-army, touchscreen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
 
 ## Agreed product decisions
 
@@ -930,6 +930,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 ### Hero Meeting direct troop manipulation
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-03.
+
+- Validated source commit: `3c1a09c5e65fcfd536b952ec9f9df53ee7e5969a`.
 
 - Drag an occupied lower-screen Hero Meeting stack to any other army slot. Cross-hero drops retain the validated native move, merge, swap, and last-stack rules. Same-hero drops reposition into an empty slot, merge matching creatures, or swap different creatures.
 - A drag begins only after crossing the system touch-slop threshold. The validated tap-select/tap-destination workflow remains available and unchanged; releasing outside a slot or without crossing the threshold cannot accidentally move a stack.
