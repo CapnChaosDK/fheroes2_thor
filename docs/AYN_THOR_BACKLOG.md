@@ -6,19 +6,19 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.8.0` was published on 2026-09-01 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.8.0
-- Source commit: `457e4fe1066568820ed97da9bfd3c93bc1f341cb`.
-- APK: `fheroes2-thor-v0.8.0-debug.apk`.
-- APK SHA-256: `49D1C4EFB5BE1F4C4674B4E9CF5D687E6292ABA126E807BB9A3431B6751EA3EA`.
-- The release adds deterministic marker clustering, native-authorized owned/allied/enemy/neutral labels, system-respecting context-aware haptics, and the safe unknown-menu fallback on top of the complete hardware-validated Expanded Adventure Map and every previously validated quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and complete Map Editor workflow.
+- `thor-v0.9.0` was published on 2026-09-03 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.9.0
+- Source commit: `271d2a0fa3c9f55d69b20b5caf01169536478b72`.
+- APK: `fheroes2-thor-v0.9.0-debug.apk`.
+- APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
+- The release adds Hero Meeting direct manipulation, tap and whole-army transfers, player-installed Hero and creature visuals, complete in-game Adventure and File Options, and semantic anti-stuck gameplay dialogs with exact save/load, treasure, Level Up, Arena, standard-prompt, and battle-result controls. It retains every hardware-validated v0.8.0 map, menu, editor, campaign, information, and input workflow.
 
 ## Latest validated development checkpoint
 
-- The Hero Meeting direct-manipulation checkpoint at `3c1a09c5e65fcfd536b952ec9f9df53ee7e5969a` is the latest hardware-validated source state. Published prerelease `thor-v0.8.0` remains based on the earlier neutral-marker label checkpoint.
-- This checkpoint adds drag-and-drop between any of the ten native-backed army slots, including same-army repositioning, merging, and swapping while retaining the validated cross-hero rules, tap workflow, whole-army deck, revision safety, exact restoration, and all established controls. Player-installed creature sprites now preserve their native proportions in both slots and drag previews.
-- Debug APK SHA-256: `D29FB481A4DB6B923BD2CDD7EE02B889CA9C749D4A0FFD4E9E54CDC5317D6F31`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused interaction checks plus the sprite aspect-ratio retest, covering same- and cross-army operations, last-stack retention, tap and cancellation behavior, mixed input, one-shot and stale-request safety, lifecycle restoration, and unchanged whole-army, touchscreen, mouse, hotkey, physical-controller, Hero, Castle, and haptic paths.
+- The gameplay-dialog checkpoint at `271d2a0fa3c9f55d69b20b5caf01169536478b72` is the latest hardware-validated source state and the source of prerelease `thor-v0.9.0`.
+- This checkpoint includes every validated v0.9.0 feature and completes the in-game options and gameplay-dialog anti-stuck audit with exact semantic actions, nested restoration, stacked localized Level Up choices, and a centered Battle Result close control.
+- Debug APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused dialog, options, layout, restoration, mixed-input, and established-path regression checks.
 
 ## Agreed product decisions
 
@@ -879,6 +879,8 @@ All six focused checks passed on the Thor, including neutral-only eligibility at
 ### In-game Adventure and File Options
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-03.
+
+- Validated source commit: `271d2a0fa3c9f55d69b20b5caf01169536478b72`.
 
 - Adventure Options replaces the generic Dialog deck with View World, Puzzle, Scenario Information, Dig, and Cancel while the matching upper menu is visible. Dig follows the native focused-hero availability.
 - File Options replaces the generic Dialog deck with New Game, Load Game, Restart Game, Save Game, Quick Save, Quit, and Cancel. Restart remains present but muted because the matching native upper button is disabled.
