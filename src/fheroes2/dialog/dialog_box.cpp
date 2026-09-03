@@ -93,7 +93,9 @@ namespace
 }
 
 Dialog::ResizableFrameBox::ResizableFrameBox( int width, int height, int startYPos, const bool showButtons )
-    : _middleFragmentCount( 0 )
+    : _thorContextGuard( fheroes2::thor::isDialogUiContext( fheroes2::thor::getUiContext() ) ? fheroes2::thor::getUiContext()
+                                                                                           : fheroes2::thor::UiContext::DIALOG )
+    , _middleFragmentCount( 0 )
     , _middleFragmentHeight( 0 )
 {
     if ( showButtons ) {

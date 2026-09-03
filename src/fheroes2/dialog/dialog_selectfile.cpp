@@ -322,6 +322,8 @@ namespace
 
     std::string selectFileListSimple( const std::string & header, const std::string & lastfile, const bool isEditing )
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( isEditing ? fheroes2::thor::UiContext::DIALOG_SAVE : fheroes2::thor::UiContext::DIALOG_LOAD );
+
         // setup cursor
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 

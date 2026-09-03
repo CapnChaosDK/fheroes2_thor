@@ -80,6 +80,18 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_ADVENTURE_MAP_OVERVIEW = 43;
     private static final int CONTEXT_MENU_FALLBACK = 44;
     private static final int CONTEXT_HERO_MEETING = 45;
+    private static final int CONTEXT_ADVENTURE_OPTIONS = 46;
+    private static final int CONTEXT_ADVENTURE_FILE_OPTIONS = 47;
+    private static final int CONTEXT_DIALOG_CLOSE = 48;
+    private static final int CONTEXT_DIALOG_OK = 49;
+    private static final int CONTEXT_DIALOG_YES_NO = 50;
+    private static final int CONTEXT_DIALOG_OK_CANCEL = 51;
+    private static final int CONTEXT_DIALOG_LOAD = 52;
+    private static final int CONTEXT_DIALOG_SAVE = 53;
+    private static final int CONTEXT_DIALOG_TREASURE = 54;
+    private static final int CONTEXT_DIALOG_LEVEL_UP = 55;
+    private static final int CONTEXT_DIALOG_ARENA = 56;
+    private static final int CONTEXT_DIALOG_BATTLE_RESULT = 57;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -303,6 +315,18 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_HERO_MEETING_TRANSFER_TO_LEFT = 219;
     private static final int ACTION_HERO_MEETING_SWAP_ARMIES = 220;
     private static final int ACTION_HERO_MEETING_CLOSE = 221;
+    private static final int ACTION_ADVENTURE_OPTIONS_VIEW_WORLD = 222;
+    private static final int ACTION_ADVENTURE_OPTIONS_PUZZLE = 223;
+    private static final int ACTION_ADVENTURE_OPTIONS_SCENARIO_INFORMATION = 224;
+    private static final int ACTION_ADVENTURE_OPTIONS_DIG = 225;
+    private static final int ACTION_ADVENTURE_OPTIONS_CANCEL = 226;
+    private static final int ACTION_ADVENTURE_FILE_NEW_GAME = 227;
+    private static final int ACTION_ADVENTURE_FILE_LOAD_GAME = 228;
+    private static final int ACTION_ADVENTURE_FILE_RESTART_GAME = 229;
+    private static final int ACTION_ADVENTURE_FILE_SAVE_GAME = 230;
+    private static final int ACTION_ADVENTURE_FILE_QUICK_SAVE = 231;
+    private static final int ACTION_ADVENTURE_FILE_QUIT = 232;
+    private static final int ACTION_ADVENTURE_FILE_CANCEL = 233;
 
     private static final int SELECTION_KIND_HERO = 1;
     private static final int SELECTION_KIND_CASTLE = 2;
@@ -548,8 +572,7 @@ final class ThorSecondScreenPresentation extends Presentation
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final int[] requestedVisualSnapshot,
                            final String[] requestedSelectionSnapshot, final String[] requestedTroopSnapshot, final int[] requestedTroopVisualSnapshot )
         {
-            final int context
-                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_HERO_MEETING ? requestedContext : CONTEXT_FALLBACK;
+            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_DIALOG_BATTLE_RESULT ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
@@ -573,7 +596,8 @@ final class ThorSecondScreenPresentation extends Presentation
                 radarGestureActive = false;
             }
             if ( contextChanged || selectionChanged || troopChanged
-                 || ( informationChanged && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP ) ) ) {
+                 || ( informationChanged
+                      && ( gameContext == CONTEXT_SCENARIO_SETUP || gameContext == CONTEXT_BATTLE_ONLY_SETUP || gameContext == CONTEXT_DIALOG_LEVEL_UP ) ) ) {
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
             }
@@ -1593,6 +1617,24 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "DIG", ACTION_ADVENTURE_DIG_ARTIFACT, KeyEvent.KEYCODE_D );
                 addAction( "MAP", ACTION_ADVENTURE_OPEN_MAP_OVERVIEW, KeyEvent.KEYCODE_UNKNOWN );
                 break;
+            case CONTEXT_ADVENTURE_OPTIONS:
+                contextTitle = "ADVENTURE OPTIONS";
+                addAction( "VIEW WORLD", ACTION_ADVENTURE_OPTIONS_VIEW_WORLD, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "PUZZLE", ACTION_ADVENTURE_OPTIONS_PUZZLE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SCENARIO INFO", ACTION_ADVENTURE_OPTIONS_SCENARIO_INFORMATION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "DIG", ACTION_ADVENTURE_OPTIONS_DIG, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CANCEL", ACTION_ADVENTURE_OPTIONS_CANCEL, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_ADVENTURE_FILE_OPTIONS:
+                contextTitle = "FILE OPTIONS";
+                addAction( "NEW GAME", ACTION_ADVENTURE_FILE_NEW_GAME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "LOAD GAME", ACTION_ADVENTURE_FILE_LOAD_GAME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "RESTART GAME", ACTION_ADVENTURE_FILE_RESTART_GAME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SAVE GAME", ACTION_ADVENTURE_FILE_SAVE_GAME, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "QUICK SAVE", ACTION_ADVENTURE_FILE_QUICK_SAVE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "QUIT", ACTION_ADVENTURE_FILE_QUIT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CANCEL", ACTION_ADVENTURE_FILE_CANCEL, KeyEvent.KEYCODE_ESCAPE );
+                break;
             case CONTEXT_ADVENTURE_MAP_OVERVIEW:
                 contextTitle = "KINGDOM MAP";
                 buttons.add( new CommandButton( overviewKindFilterLabel(), LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) );
@@ -1949,6 +1991,59 @@ final class ThorSecondScreenPresentation extends Presentation
                 contextTitle = "DIALOG";
                 addDialogActions();
                 break;
+            case CONTEXT_DIALOG_CLOSE:
+                contextTitle = "INFORMATION";
+                addAction( "CLOSE", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_OK:
+                contextTitle = "MESSAGE";
+                addAction( "OKAY", KeyEvent.KEYCODE_ENTER );
+                break;
+            case CONTEXT_DIALOG_YES_NO:
+                contextTitle = "CHOICE";
+                addAction( "YES", KeyEvent.KEYCODE_ENTER );
+                addAction( "NO", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_OK_CANCEL:
+                contextTitle = "DIALOG";
+                addAction( "OKAY", KeyEvent.KEYCODE_ENTER );
+                addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_LOAD:
+                contextTitle = "LOAD GAME";
+                addAction( "PREVIOUS SAVE", KeyEvent.KEYCODE_DPAD_UP );
+                addAction( "NEXT SAVE", KeyEvent.KEYCODE_DPAD_DOWN );
+                addAction( "LOAD", KeyEvent.KEYCODE_ENTER );
+                addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_SAVE:
+                contextTitle = "SAVE GAME";
+                addAction( "PREVIOUS SAVE", KeyEvent.KEYCODE_DPAD_UP );
+                addAction( "NEXT SAVE", KeyEvent.KEYCODE_DPAD_DOWN );
+                addAction( "SAVE", KeyEvent.KEYCODE_ENTER );
+                addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_TREASURE:
+                contextTitle = "TREASURE CHEST";
+                addAction( "KEEP GOLD", KeyEvent.KEYCODE_ENTER );
+                addAction( "TAKE EXPERIENCE", KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_DIALOG_LEVEL_UP:
+                contextTitle = informationDetail.isEmpty() ? "LEVEL UP" : "LEVEL UP — " + informationDetail;
+                addAction( informationTitle.isEmpty() ? "LEARN LEFT SKILL" : "LEARN " + informationTitle, KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( informationCategory.isEmpty() ? "LEARN RIGHT SKILL" : "LEARN " + informationCategory, KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "VIEW HERO", KeyEvent.KEYCODE_ENTER );
+                break;
+            case CONTEXT_DIALOG_ARENA:
+                contextTitle = "ARENA TRAINING";
+                addAction( "PREVIOUS SKILL", KeyEvent.KEYCODE_DPAD_LEFT );
+                addAction( "NEXT SKILL", KeyEvent.KEYCODE_DPAD_RIGHT );
+                addAction( "LEARN SELECTED", KeyEvent.KEYCODE_ENTER );
+                break;
+            case CONTEXT_DIALOG_BATTLE_RESULT:
+                contextTitle = "BATTLE RESULT";
+                addAction( "CLOSE", KeyEvent.KEYCODE_ESCAPE );
+                break;
             case CONTEXT_MENU_FALLBACK:
                 contextTitle = "MENU NAVIGATION";
                 addAction( "LEFT", KeyEvent.KEYCODE_DPAD_LEFT );
@@ -1967,7 +2062,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void addDialogActions()
         {
-            addAction( "CONFIRM", KeyEvent.KEYCODE_ENTER );
+            addAction( "OKAY", KeyEvent.KEYCODE_ENTER );
             addAction( "CANCEL", KeyEvent.KEYCODE_ESCAPE );
         }
 
@@ -2626,6 +2721,24 @@ final class ThorSecondScreenPresentation extends Presentation
                     button.bounds.set( left, buttonTop, right, buttonTop + buttonHeight );
                     buttonTop += buttonHeight + buttonGap;
                 }
+                return;
+            }
+            if ( gameContext == CONTEXT_DIALOG_LEVEL_UP ) {
+                final float top = height * 0.265f;
+                final float rowHeight = ( height - top - margin - 2f * gap ) / 3f;
+                for ( int index = 0; index < buttons.size(); ++index ) {
+                    final float buttonTop = top + index * ( rowHeight + gap );
+                    buttons.get( index ).bounds.set( margin, buttonTop, width - margin, buttonTop + rowHeight );
+                }
+                return;
+            }
+            if ( gameContext == CONTEXT_DIALOG_BATTLE_RESULT ) {
+                final float actionTop = height * 0.265f;
+                final float buttonWidth = Math.min( width - 2f * margin, width * 0.68f );
+                final float buttonHeight = Math.min( 240f, height * 0.24f );
+                final float centerY = ( actionTop + height - margin ) * 0.5f;
+                buttons.get( 0 ).bounds.set( ( width - buttonWidth ) * 0.5f, centerY - buttonHeight * 0.5f, ( width + buttonWidth ) * 0.5f,
+                                             centerY + buttonHeight * 0.5f );
                 return;
             }
             final float top = gameContext == CONTEXT_HERO_MEETING ? height * 0.76f : height * 0.265f;

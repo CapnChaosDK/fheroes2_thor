@@ -876,6 +876,50 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor, including neutral-only eligibility at 2x and 4x, 1x and cluster suppression, live fog withdrawal, recruitment and capture reclassification, deterministic focused-owned / owned / allied / enemy / neutral collision priority, truncation and edge behavior, zoom/pan/cluster/filter transitions, label input transparency, native-authorized information, unchanged haptics and safe navigation, exact restoration, and the requested minimap, View World, upper-input, mouse, hotkey, and physical-control regressions.
 
+### In-game Adventure and File Options
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-03.
+
+- Adventure Options replaces the generic Dialog deck with View World, Puzzle, Scenario Information, Dig, and Cancel while the matching upper menu is visible. Dig follows the native focused-hero availability.
+- File Options replaces the generic Dialog deck with New Game, Load Game, Restart Game, Save Game, Quick Save, Quit, and Cancel. Restart remains present but muted because the matching native upper button is disabled.
+- Lower-screen actions are consumed by the existing native menu loops on the SDL thread. Confirmations, help, warnings, and save/load selectors temporarily use Dialog context; cancelled nested operations restore the exact parent menu once.
+- Context changes clear queued input, and an accepted semantic choice disables follow-up actions until the operation completes. Existing upper touchscreen, mouse, hotkeys, physical controls, Adventure actions, and editor option menus remain unchanged.
+- Android assemble and lint pass through the required short `R:` mapping. The first hardware check exposed that Android's defensive context-range guard still ended at the prior Hero Meeting context, so it converted both new native context identifiers to the inert Upper-Screen Control fallback. The corrected guard accepts the two appended identifiers while retaining fallback for every larger invalid value. The corrected candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; the focused hardware checks passed with the final validated gameplay-dialog build recorded below.
+
+#### Focused in-game options validation
+
+1. Open Adventure Options and File Options and verify the lower actions, ordering, availability, and visible upper menus agree.
+2. Verify Dig enables with a focused hero and mutes without one; verify Restart Game remains visible and disabled.
+3. Exercise View World, Puzzle, Scenario Information, Save Game, Quick Save, and Cancel. Verify each action occurs once and Adventure restores correctly.
+4. Cancel New Game, Load Game, and Quit confirmations. Verify Dialog appears for the nested prompt and restores File Options exactly once.
+5. Exercise rapid mixed taps, right-click help, upper touchscreen, mouse, hotkeys, and physical controls. Recheck established Adventure Map and Editor option-menu behavior for regressions.
+
+### Gameplay dialog anti-stuck audit
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-03.
+
+- Generic frame-based dialogs publish a modal context for their complete visible lifetime instead of relying on every caller to wrap them correctly. The shared fallback now exposes only Okay and Cancel; standard messages and the audited custom choices use more precise appended contexts.
+- Custom full-screen or standard-window dialogs that do not use the shared frame explicitly publish Dialog. The audited paths include Scenario Information, recruitment, army information, Thieves' Guild, and save/load file selection.
+- Standard prompts expose the exact Close, Okay, Yes/No, or Okay/Cancel actions represented by their native button mask. Scenario Information and the battle result use a single Close action.
+- Load and Save browsers expose Previous Save, Next Save, Load or Save, and Cancel without irrelevant horizontal controls. Treasure chests expose Keep Gold and Take Experience instead of generic Yes/No labels.
+- Two-choice level-up dialogs publish both localized native skill names and expose Learn Skill 1, Learn Skill 2, and View Hero. The names are republished after nested Hero or skill-information windows. Arena training exposes Previous Skill, Next Skill, and Learn Selected.
+- A dialog context remains active until its upper window has restored. Nested dialogs restore their exact Dialog parent first, and the outer guard then restores Adventure, Adventure Options, File Options, Hero, Castle, Battle, or the originating menu. Context transitions release pressed controls so rapid taps cannot leak into the restored screen.
+- Dedicated semantic contexts remain unchanged. Quick information that exists only while an upper right-button press is held keeps its existing press-and-release behavior.
+- The first installed candidate used one directional deck for every gameplay dialog. Hardware feedback confirmed that it prevented getting stuck, but exposed irrelevant Left/Right controls in file lists and meaningless directions in Scenario Information and treasure-chest choices; the battle-result screen still inherited Battle controls, and level-up directions did not identify their skills. The refined candidate replaces those controls with the semantic layouts above. Android assemble and lint pass through the required short `R:` mapping. Debug APK SHA-256: `21E5A1E503C8CC25F76BF933314AA216F432A2A7E68FF2EB630017D7B6980E13`. It installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; the activity is resumed and the presentation window is attached to display 4 without an Android runtime failure. Focused manual validation is pending.
+- Hardware validation passed Scenario Information, battle results, treasure-chest rewards, file navigation, standard prompts, and restoration. The level-up `View Hero` check exposed that the nested `Heroes::OpenDialog()` relies on its caller to publish Hero context: it wrote Hero information into the still-active Level Up layout, producing corrupted dynamic labels. The corrected level-up caller scopes the nested screen as Hero, then restores Level Up and republishes both skill choices after Hero closes. Build and lint pass, and the corrected APK installed and launched successfully. Corrected debug APK SHA-256: `E30D03A573FAA22513364746C5C26787F091C9C04D8D9823250D34FA3DF63C3B`. The focused View Hero retest is pending.
+- The corrected Hero transition worked, but a live lower-screen capture showed `Learn Advanced Leadership` clipped in the narrow three-column level-up layout. The approved visual refinement stacks the two complete localized Learn choices and View Hero as three full-width rows with shared text fitting and safe horizontal insets. Other dialog layouts remain unchanged. Build and lint pass; the candidate installed and launched successfully. Debug APK SHA-256: `FFA118B06F9512F50D1913565CFF7C5FBEF3DA5995ABE08E2458CDB21A540D21`. Focused visual validation is pending.
+- The stacked Level Up layout passed its focused hardware retest. A subsequent live battle-result capture showed the single Close control occupying an oversized left-hand half-column with unused space on the right. The approved correction gives battle results a dedicated context and title with one centered, wide horizontal Close control; other one-action dialogs and all established behavior remain unchanged. Build and lint pass, and the candidate installed and launched successfully. Debug APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`. The focused battle-result validation passed.
+
+#### Focused gameplay-dialog validation
+
+1. Open Scenario Information and a battle victory/defeat summary. Verify each shows only Close, closes from the lower screen, and restores Adventure or the post-battle flow once.
+2. Collect two land treasure chests. Choose Keep Gold once and Take Experience once; verify the named lower action grants the matching reward and restores Adventure once.
+3. Reach a two-choice level-up. Verify both localized skill names match the upper choices, each Learn action grants the named skill, View Hero opens the Hero screen, and closing Hero restores the same two named choices.
+4. Open Load and Save browsers. Verify only Previous Save, Next Save, Load/Save, and Cancel appear; navigate vertically, complete or cancel, and verify the exact parent returns.
+5. Exercise representative Okay, Yes/No, Okay/Cancel, Arena, recruitment/count, marketplace, Hero, Castle, and Battle dialogs. Open nested help where available, use rapid mixed taps, toggle the lower panel, and suspend/resume; verify every modal remains completable, restoration is exact, and no stale action fires.
+
+The focused hardware validation passed. Adventure Options and File Options expose their complete native choices; Scenario Information and battle results close from the lower display; treasure-chest rewards, standard prompts, and vertical save/load navigation match their labels; and dialogs restore their exact parent without trapping the player. Two-choice Level Up shows complete localized skill names in three full-width rows, enters the normal Hero deck for View Hero, restores the same choices, and selects either skill correctly. The centered Battle Result Close control passed visually and advances the post-battle flow once. Existing upper touchscreen, mouse, hotkey, physical-controller, Adventure, Battle, and Editor paths remained unchanged. Final validated debug APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
+
 ### Later menu slices
 
 - Battle Only setup is hardware-validated; retain its controls, information card, modal restoration, and Battle transition without regression.

@@ -63,6 +63,7 @@
 #include "resource.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
 #include "ui_button.h"
@@ -473,6 +474,8 @@ void Battle::GetSummaryParams( const uint32_t res1, const uint32_t res2, const H
 // Returns true if player wants to restart the battle
 bool Battle::Arena::DialogBattleSummary( const Result & res, const std::vector<Artifact> & artifacts, const bool allowToRestart ) const
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_BATTLE_RESULT );
+
     const bool attackerIsHuman = _attackingArmy->GetControl() & CONTROL_HUMAN;
     const bool defenderIsHuman = _defendingArmy->GetControl() & CONTROL_HUMAN;
 

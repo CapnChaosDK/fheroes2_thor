@@ -93,6 +93,22 @@ namespace fheroes2
 {
     int showMessage( const TextBase & header, const TextBase & body, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        thor::UiContext dialogContext = thor::UiContext::DIALOG;
+        if ( ( buttons & Dialog::YES ) != 0 && ( buttons & Dialog::NO ) != 0 ) {
+            dialogContext = thor::UiContext::DIALOG_YES_NO;
+        }
+        else if ( ( buttons & Dialog::OK ) != 0 && ( buttons & Dialog::CANCEL ) != 0 ) {
+            dialogContext = thor::UiContext::DIALOG_OK_CANCEL;
+        }
+        else if ( ( buttons & Dialog::OK ) != 0 ) {
+            dialogContext = thor::UiContext::DIALOG_OK;
+        }
+        else if ( buttons == Dialog::ZERO ) {
+            dialogContext = thor::UiContext::DIALOG_CLOSE;
+        }
+
+        const thor::UiContextGuard thorContextGuard( dialogContext );
+
         outputInTextSupportMode( header, body, buttons );
 
         const bool isProperDialog = ( buttons != 0 );
@@ -322,8 +338,6 @@ namespace fheroes2
 
     int showStandardTextMessage( std::string headerText, std::string messageBody, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
-        const thor::UiContextGuard thorContextGuard( thor::UiContext::DIALOG );
-
         const Text header( std::move( headerText ), FontType::normalYellow() );
         const Text body( std::move( messageBody ), FontType::normalWhite() );
         return showMessage( header, body, buttons, elements );

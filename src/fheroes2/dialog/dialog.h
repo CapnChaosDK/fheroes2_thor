@@ -32,6 +32,7 @@
 #include "game_mode.h"
 #include "image.h"
 #include "math_base.h"
+#include "thor_ui.h"
 #include "ui_constants.h"
 
 class Castle;
@@ -153,6 +154,9 @@ namespace Dialog
         static int32_t getButtonAreaHeight();
 
     protected:
+        // Frame-based dialogs own their lower-screen modal context so callers cannot
+        // accidentally leave an unrelated command deck active while the dialog waits.
+        fheroes2::thor::UiContextGuard _thorContextGuard;
         std::unique_ptr<fheroes2::ImageRestorer> _restorer;
         fheroes2::Rect area;
 

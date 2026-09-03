@@ -28,6 +28,7 @@
 #include "localevent.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -68,31 +69,57 @@ namespace
 
         LocalEvent & le = LocalEvent::Get();
 
+        using ThorAction = fheroes2::thor::Action;
+        fheroes2::thor::ActionMask thorActions = fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS_VIEW_WORLD )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS_PUZZLE )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS_SCENARIO_INFORMATION )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS_CANCEL );
+        if ( enableDig ) {
+            thorActions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS_DIG );
+        }
+
         // dialog menu loop
-        while ( le.HandleEvents() ) {
+        while ( true ) {
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_OPTIONS );
+            fheroes2::thor::setEnabledActions( thorActions );
+
+            if ( !le.HandleEvents() ) {
+                break;
+            }
+
             buttonWorld.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonWorld.area() ) );
             buttonPuzzle.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonPuzzle.area() ) );
             buttonInfo.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonInfo.area() ) );
             buttonDig.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonDig.area() ) );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
-            if ( le.MouseClickLeft( buttonWorld.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_VIEW_WORLD ) ) {
+            const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != ThorAction::NONE ) {
+                // Reject rapid follow-up taps after a choice has been made.
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == ThorAction::ADVENTURE_OPTIONS_VIEW_WORLD || le.MouseClickLeft( buttonWorld.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_VIEW_WORLD ) ) {
                 result = Dialog::WORLD;
                 break;
             }
-            if ( le.MouseClickLeft( buttonPuzzle.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_PUZZLE_MAP ) ) {
+            if ( requestedThorAction == ThorAction::ADVENTURE_OPTIONS_PUZZLE || le.MouseClickLeft( buttonPuzzle.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_PUZZLE_MAP ) ) {
                 result = Dialog::PUZZLE;
                 break;
             }
-            if ( le.MouseClickLeft( buttonInfo.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SCENARIO_INFORMATION ) ) {
+            if ( requestedThorAction == ThorAction::ADVENTURE_OPTIONS_SCENARIO_INFORMATION || le.MouseClickLeft( buttonInfo.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SCENARIO_INFORMATION ) ) {
                 result = Dialog::INFO;
                 break;
             }
-            if ( enableDig && ( le.MouseClickLeft( buttonDig.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_DIG_ARTIFACT ) ) ) {
+            if ( enableDig && ( requestedThorAction == ThorAction::ADVENTURE_OPTIONS_DIG || le.MouseClickLeft( buttonDig.area() )
+                                || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_DIG_ARTIFACT ) ) ) {
                 result = Dialog::DIG;
                 break;
             }
-            if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
+            if ( requestedThorAction == ThorAction::ADVENTURE_OPTIONS_CANCEL || le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
                 result = Dialog::CANCEL;
                 break;
             }

@@ -32,6 +32,7 @@
 #include "localevent.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -75,36 +76,62 @@ namespace
 
         LocalEvent & le = LocalEvent::Get();
 
+        using ThorAction = fheroes2::thor::Action;
+        const fheroes2::thor::ActionMask thorActions = fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_NEW_GAME )
+                                                          | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_LOAD_GAME )
+                                                          | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_SAVE_GAME )
+                                                          | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_QUICK_SAVE )
+                                                          | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_QUIT )
+                                                          | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_CANCEL );
+
         // dialog menu loop
-        while ( le.HandleEvents() ) {
+        while ( true ) {
+            fheroes2::thor::setUiContext( fheroes2::thor::UiContext::ADVENTURE_FILE_OPTIONS );
+            fheroes2::thor::setEnabledActions( thorActions );
+
+            if ( !le.HandleEvents() ) {
+                break;
+            }
+
             optionButtons.drawOnState( le );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
-            if ( le.MouseClickLeft( newGameButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_NEW_GAME ) ) {
+            const ThorAction requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != ThorAction::NONE ) {
+                // Reject rapid follow-up taps until this operation or its nested dialog has completed.
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == ThorAction::ADVENTURE_FILE_NEW_GAME || le.MouseClickLeft( newGameButton.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_NEW_GAME ) ) {
                 if ( Interface::AdventureMap::Get().EventNewGame() == fheroes2::GameMode::NEW_GAME ) {
                     result = fheroes2::GameMode::NEW_GAME;
                     break;
                 }
             }
-            else if ( le.MouseClickLeft( loadGameButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_LOAD_GAME ) ) {
+            else if ( requestedThorAction == ThorAction::ADVENTURE_FILE_LOAD_GAME || le.MouseClickLeft( loadGameButton.area() )
+                      || Game::HotKeyPressEvent( Game::HotKeyEvent::MAIN_MENU_LOAD_GAME ) ) {
                 if ( Interface::AdventureMap::Get().EventLoadGame() == fheroes2::GameMode::LOAD_GAME ) {
                     result = fheroes2::GameMode::LOAD_GAME;
                     break;
                 }
             }
-            else if ( restartGameButton.isEnabled() && le.MouseClickLeft( restartGameButton.area() ) ) {
+            else if ( restartGameButton.isEnabled()
+                      && ( requestedThorAction == ThorAction::ADVENTURE_FILE_RESTART_GAME || le.MouseClickLeft( restartGameButton.area() ) ) ) {
                 // TODO: restart the campaign here.
                 fheroes2::showStandardTextMessage( _( "Restart Game" ), "This option is under construction.", Dialog::OK );
                 result = fheroes2::GameMode::CANCEL;
                 break;
             }
-            else if ( le.MouseClickLeft( saveGameButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SAVE_GAME ) ) {
+            else if ( requestedThorAction == ThorAction::ADVENTURE_FILE_SAVE_GAME || le.MouseClickLeft( saveGameButton.area() )
+                      || Game::HotKeyPressEvent( Game::HotKeyEvent::WORLD_SAVE_GAME ) ) {
                 // Special case: since we show a window about file saving we don't want to display the current dialog anymore.
                 background.hideWindow();
 
+                const fheroes2::thor::UiContextGuard dialogContext( fheroes2::thor::UiContext::DIALOG );
                 return Interface::AdventureMap::Get().EventSaveGame();
             }
-            else if ( le.MouseClickLeft( quickSaveButton.area() ) ) {
+            else if ( requestedThorAction == ThorAction::ADVENTURE_FILE_QUICK_SAVE || le.MouseClickLeft( quickSaveButton.area() ) ) {
                 if ( !Game::QuickSave() ) {
                     fheroes2::showStandardTextMessage( "", _( "There was an issue during saving." ), Dialog::OK );
                 }
@@ -113,13 +140,14 @@ namespace
                 break;
             }
 
-            if ( le.MouseClickLeft( quitButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) ) {
+            if ( requestedThorAction == ThorAction::ADVENTURE_FILE_QUIT || le.MouseClickLeft( quitButton.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::GLOBAL_APP_QUIT ) ) {
                 if ( Game::processExitEvent() == fheroes2::GameMode::QUIT_GAME ) {
                     result = fheroes2::GameMode::QUIT_GAME;
                     break;
                 }
             }
-            else if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
+            else if ( requestedThorAction == ThorAction::ADVENTURE_FILE_CANCEL || le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyCloseWindow() ) {
                 result = fheroes2::GameMode::CANCEL;
                 break;
             }

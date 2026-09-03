@@ -101,6 +101,8 @@ namespace
 
 int Dialog::SelectSkillFromArena()
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_ARENA );
+
     fheroes2::Display & display = fheroes2::Display::instance();
     const int system = Settings::Get().isEvilInterfaceEnabled() ? ICN::SYSTEME : ICN::SYSTEM;
 

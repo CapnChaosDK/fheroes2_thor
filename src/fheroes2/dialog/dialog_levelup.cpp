@@ -80,6 +80,18 @@ namespace
 
     int DialogSelectSecondary( const std::string & name, const int primarySkillType, const Skill::Secondary & sec1, const Skill::Secondary & sec2, Heroes & hero )
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_LEVEL_UP );
+
+        const auto publishThorSkillChoices = [&sec1, &sec2, &hero]() {
+            fheroes2::thor::InformationSnapshot snapshot;
+            snapshot.context = fheroes2::thor::UiContext::DIALOG_LEVEL_UP;
+            snapshot.title = sec1.GetName();
+            snapshot.category = sec2.GetName();
+            snapshot.detail = hero.GetName();
+            fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+        };
+        publishThorSkillChoices();
+
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
         std::string header = _( "%{name} has gained a level.\n\n%{skill} +1" );
@@ -170,39 +182,50 @@ namespace
 
             if ( le.MouseClickLeft( buttonHero.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY ) ) {
                 le.reset();
-                hero.OpenDialog( false, true, true, true, true, false, fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() ) );
+                {
+                    const fheroes2::thor::UiContextGuard heroContextGuard( fheroes2::thor::UiContext::HERO );
+                    hero.OpenDialog( false, true, true, true, true, false, fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() ) );
+                }
+                publishThorSkillChoices();
                 display.render();
             }
 
             if ( le.MouseClickLeft( skillLeftRoi ) ) {
                 skillLeft.showPopup( Dialog::OK );
+                publishThorSkillChoices();
             }
             else if ( le.MouseClickLeft( skillRightRoi ) ) {
                 skillRight.showPopup( Dialog::OK );
+                publishThorSkillChoices();
             }
 
             if ( le.isMouseRightButtonPressedInArea( skillLeftRoi ) ) {
                 skillLeft.showPopup( Dialog::ZERO );
+                publishThorSkillChoices();
                 display.render();
             }
             else if ( le.isMouseRightButtonPressedInArea( skillRightRoi ) ) {
                 skillRight.showPopup( Dialog::ZERO );
+                publishThorSkillChoices();
                 display.render();
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonHero.area() ) ) {
                 fheroes2::showStandardTextMessage( "", _( "View Hero" ), Dialog::ZERO );
+                publishThorSkillChoices();
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonLearnLeft.area() ) ) {
                 std::string message = _( "Learn %{secondary-skill}" );
                 StringReplace( message, "%{secondary-skill}", sec1.GetName() );
 
                 fheroes2::showStandardTextMessage( "", std::move( message ), Dialog::ZERO );
+                publishThorSkillChoices();
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonLearnRight.area() ) ) {
                 std::string message = _( "Learn %{secondary-skill}" );
                 StringReplace( message, "%{secondary-skill}", sec2.GetName() );
 
                 fheroes2::showStandardTextMessage( "", std::move( message ), Dialog::ZERO );
+                publishThorSkillChoices();
             }
         }
 

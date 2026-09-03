@@ -515,6 +515,8 @@ namespace
 
 int Dialog::ArmyInfo( const Troop & troop, int flags, bool isReflected, const int32_t windowOffsetY )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     // Unit cannot be dismissed or upgraded during combat
     assert( !troop.isBattle() || !( flags & BUTTONS ) || !( flags & ( UPGRADE | DISMISS ) ) );
     // This function should not be called with the UPGRADE flag for a non-upgradeable unit

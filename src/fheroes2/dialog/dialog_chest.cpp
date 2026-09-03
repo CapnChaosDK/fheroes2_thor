@@ -44,6 +44,8 @@
 
 bool Dialog::SelectGoldOrExp( const std::string & header, const std::string & message, uint32_t gold, uint32_t expr, const Heroes & hero )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_TREASURE );
+
     fheroes2::Display & display = fheroes2::Display::instance();
 
     // setup cursor

@@ -31,8 +31,16 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | Map Editor | File Options, System Options |
 | Editor File Options | New Map, Load Map, Start Map, Save Map, Main Menu, Quit, Auto Playtest, Cancel |
 | Editor System Options | Language, Graphics, Audio, Hot Keys, Animation, Passability, Interface Type, Cursor Type, Scroll Speed, Okay / Back |
-| Dialog or fallback | Confirm, Cancel |
+| Standard dialogs | Exact Close, Okay, Yes/No, or Okay/Cancel choices |
+| Save/load browser | Previous Save, Next Save, Load/Save, Cancel |
+| Treasure chest | Keep Gold, Take Experience |
+| Level up | Three full-width rows for both localized Learn choices and View Hero |
+| Arena training | Previous Skill, Next Skill, Learn Selected |
+| Battle result | Centered Close action |
+| Menu fallback | Left, Up, Right, Down, Confirm, Back |
 | Adventure map | Next Hero, Next Town, Heroes, Towns, Move, Action, Spell, End Turn, Adventure, File, Puzzle, Kingdom, View World, Dig |
+| Adventure Options | View World, Puzzle, Scenario Information, context-aware Dig, Cancel |
+| Adventure File Options | New Game, Load Game, disabled Restart Game, Save Game, Quick Save, Quit, Cancel |
 | Adventure hero/town lists | Native kingdom order, compact status, current-focus highlight, paging, direct selection, Back |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
 | Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Upgrade, Exit |
@@ -53,6 +61,10 @@ Selecting the Price of Loyalty expansion exposes all four campaigns and Back on 
 Game Settings shows the current language, cursor, interface, and text-support states. Direct toggles refresh both displays immediately, unavailable language selection is muted, and the existing Language, Graphics, Audio, and Hot Keys dialogs restore the Settings deck when they close.
 
 The Adventure information panel includes an engine-owned minimap for clamped upper-screen viewport navigation. Heroes and Towns open revisioned lower-screen lists in native kingdom order; selection is revalidated and applied on the SDL thread through the existing focus paths, then returns directly to Adventure.
+
+Adventure Options and File Options expose their complete native menu choices on the lower screen. Dig follows the focused-hero state and Restart Game remains visibly disabled to match the upper menu. Confirmations, help, and save/load selectors temporarily use Dialog controls, while cancellation restores the exact parent menu without retaining rapid taps.
+
+Gameplay dialogs own their lower-screen context for their complete visible lifetime instead of relying on each caller to publish it. Standard prompts expose their exact Close, Okay, Yes/No, or Okay/Cancel choices. File browsers expose only vertical save navigation and their Load/Save and Cancel actions; treasure chests name both rewards; level-up choices use three full-width rows for the localized skill names and View Hero; Arena training names its selection workflow. Frame-based choices, nested information, and custom full-screen dialogs restore the exact Adventure, Hero, Castle, Battle, or menu parent when they close.
 
 The Editor entry hierarchy mirrors New Map, Load Map, From Scratch, Random, map-size selection, and exact Back/Main Menu behavior. Creating or loading a map enters a dedicated Map Editor deck. File Options delegates saving, loading, playtesting, confirmations, and transitions to the existing editor logic.
 

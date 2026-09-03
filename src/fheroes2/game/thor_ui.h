@@ -63,12 +63,34 @@ namespace fheroes2::thor
         ADVENTURE_CASTLE_LIST,
         ADVENTURE_MAP_OVERVIEW,
         MENU_FALLBACK,
-        HERO_MEETING
+        HERO_MEETING,
+        ADVENTURE_OPTIONS,
+        ADVENTURE_FILE_OPTIONS,
+        DIALOG_CLOSE,
+        DIALOG_OK,
+        DIALOG_YES_NO,
+        DIALOG_OK_CANCEL,
+        DIALOG_LOAD,
+        DIALOG_SAVE,
+        DIALOG_TREASURE,
+        DIALOG_LEVEL_UP,
+        DIALOG_ARENA,
+        DIALOG_BATTLE_RESULT
     };
 
     static_assert( static_cast<int32_t>( UiContext::ADVENTURE_MAP_OVERVIEW ) == 43 );
     static_assert( static_cast<int32_t>( UiContext::MENU_FALLBACK ) == 44 );
     static_assert( static_cast<int32_t>( UiContext::HERO_MEETING ) == 45 );
+    static_assert( static_cast<int32_t>( UiContext::ADVENTURE_OPTIONS ) == 46 );
+    static_assert( static_cast<int32_t>( UiContext::ADVENTURE_FILE_OPTIONS ) == 47 );
+    static_assert( static_cast<int32_t>( UiContext::DIALOG_CLOSE ) == 48 );
+    static_assert( static_cast<int32_t>( UiContext::DIALOG_ARENA ) == 56 );
+    static_assert( static_cast<int32_t>( UiContext::DIALOG_BATTLE_RESULT ) == 57 );
+
+    constexpr bool isDialogUiContext( const UiContext context )
+    {
+        return context == UiContext::DIALOG || ( context >= UiContext::DIALOG_CLOSE && context <= UiContext::DIALOG_BATTLE_RESULT );
+    }
 
     // Stable identifiers shared with the Android command deck. Keep existing values unchanged
     // when adding actions so Java and native builds cannot silently disagree.
@@ -295,11 +317,24 @@ namespace fheroes2::thor
         HERO_MEETING_TRANSFER_TO_RIGHT,
         HERO_MEETING_TRANSFER_TO_LEFT,
         HERO_MEETING_SWAP_ARMIES,
-        HERO_MEETING_CLOSE
+        HERO_MEETING_CLOSE,
+        ADVENTURE_OPTIONS_VIEW_WORLD,
+        ADVENTURE_OPTIONS_PUZZLE,
+        ADVENTURE_OPTIONS_SCENARIO_INFORMATION,
+        ADVENTURE_OPTIONS_DIG,
+        ADVENTURE_OPTIONS_CANCEL,
+        ADVENTURE_FILE_NEW_GAME,
+        ADVENTURE_FILE_LOAD_GAME,
+        ADVENTURE_FILE_RESTART_GAME,
+        ADVENTURE_FILE_SAVE_GAME,
+        ADVENTURE_FILE_QUICK_SAVE,
+        ADVENTURE_FILE_QUIT,
+        ADVENTURE_FILE_CANCEL
     };
 
     static_assert( static_cast<int32_t>( Action::ADVENTURE_OVERVIEW_BACK ) == 217 );
     static_assert( static_cast<int32_t>( Action::HERO_MEETING_CLOSE ) == 221 );
+    static_assert( static_cast<int32_t>( Action::ADVENTURE_FILE_CANCEL ) == 233 );
 
     using ActionMask = uint64_t;
 

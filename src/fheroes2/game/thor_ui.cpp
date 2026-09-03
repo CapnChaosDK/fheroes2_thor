@@ -92,6 +92,40 @@ namespace
         }
     }
 
+    bool isAdventureOptionsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::ADVENTURE_OPTIONS_VIEW_WORLD:
+        case Action::ADVENTURE_OPTIONS_PUZZLE:
+        case Action::ADVENTURE_OPTIONS_SCENARIO_INFORMATION:
+        case Action::ADVENTURE_OPTIONS_DIG:
+        case Action::ADVENTURE_OPTIONS_CANCEL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isAdventureFileOptionsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::ADVENTURE_FILE_NEW_GAME:
+        case Action::ADVENTURE_FILE_LOAD_GAME:
+        case Action::ADVENTURE_FILE_RESTART_GAME:
+        case Action::ADVENTURE_FILE_SAVE_GAME:
+        case Action::ADVENTURE_FILE_QUICK_SAVE:
+        case Action::ADVENTURE_FILE_QUIT:
+        case Action::ADVENTURE_FILE_CANCEL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool isHeroAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
@@ -512,6 +546,7 @@ namespace
                || context == UiContext::CASTLE || context == UiContext::HERO_MEETING || context == UiContext::ADVENTURE_HERO_LIST
                || context == UiContext::ADVENTURE_CASTLE_LIST
                || context == UiContext::ADVENTURE_MAP_OVERVIEW
+               || context == UiContext::ADVENTURE_OPTIONS || context == UiContext::ADVENTURE_FILE_OPTIONS
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
@@ -534,6 +569,10 @@ namespace
             return isBattleAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_MAP:
             return isAdventureAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_OPTIONS:
+            return isAdventureOptionsAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_FILE_OPTIONS:
+            return isAdventureFileOptionsAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_HERO_LIST:
         case fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST:
             return isAdventureSelectionAction( action );

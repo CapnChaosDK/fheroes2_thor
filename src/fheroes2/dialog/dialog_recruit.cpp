@@ -252,6 +252,8 @@ namespace
 
 Troop Dialog::RecruitMonster( const Monster & monster0, const uint32_t available, const bool allowDowngradedMonster, const int32_t windowOffsetY )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+
     const bool isEvilInterface = Settings::Get().isEvilInterfaceEnabled();
 
     fheroes2::Display & display = fheroes2::Display::instance();

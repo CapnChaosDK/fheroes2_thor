@@ -267,7 +267,7 @@ fheroes2::GameMode Interface::AdventureMap::EventEndTurn() const
 
 fheroes2::GameMode Interface::AdventureMap::EventAdventureDialog()
 {
-    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::ADVENTURE_OPTIONS );
 
     switch ( Dialog::AdventureOptions( GameFocus::HEROES == GetFocusType() ) ) {
     case Dialog::WORLD:
@@ -300,7 +300,7 @@ void Interface::AdventureMap::EventViewWorld()
 
 fheroes2::GameMode Interface::AdventureMap::EventFileDialog() const
 {
-    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::ADVENTURE_FILE_OPTIONS );
 
     return Dialog::FileOptions();
 }

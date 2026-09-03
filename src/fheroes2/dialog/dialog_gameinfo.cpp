@@ -80,6 +80,8 @@ namespace
 
 void Dialog::GameInfo()
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_CLOSE );
+
     fheroes2::Display & display = fheroes2::Display::instance();
     Settings & conf = Settings::Get();
     const Maps::FileInfo & mapInfo = conf.getCurrentMapInfo();
