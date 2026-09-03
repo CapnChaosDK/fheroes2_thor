@@ -925,7 +925,30 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include broader player-installed sprite use, drag-and-drop or richer lower-screen army management, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+- Select and propose the next focused slice before implementation. Remaining candidates include partial-stack splitting or richer lower-screen army management, artifact transfers, broader player-installed sprite use, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+
+### Hero Meeting direct troop manipulation
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-03.
+
+- Drag an occupied lower-screen Hero Meeting stack to any other army slot. Cross-hero drops retain the validated native move, merge, swap, and last-stack rules. Same-hero drops reposition into an empty slot, merge matching creatures, or swap different creatures.
+- A drag begins only after crossing the system touch-slop threshold. The validated tap-select/tap-destination workflow remains available and unchanged; releasing outside a slot or without crossing the threshold cannot accidentally move a stack.
+- The source and current destination receive clear drag feedback using the already cached player-installed creature visual. Android submits only a revision-bound source/destination request; the existing Hero Meeting loop validates and applies it on the SDL thread.
+- Multitouch, cancellation, context or snapshot changes, upper army interaction, whole-army actions, panel recreation, and lifecycle transitions cancel any pending drag. Rejected and cancelled drops remain silent; accepted operations retain the established haptic behavior.
+- Partial-stack splitting, quantity dialogs, artifact management, and configuration remain separate deferred slices.
+- Android assemble and lint pass through the required short `R:` mapping. The validated candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; a brief state and log check confirmed the resumed activity and command deck on display 4 without a fatal exception or JNI-link error. Validated debug APK SHA-256: `D29FB481A4DB6B923BD2CDD7EE02B889CA9C749D4A0FFD4E9E54CDC5317D6F31`.
+- The first hardware run passed all six interaction checks but exposed forced-square scaling of non-square creature sprites in both army slots and the drag preview. The corrected candidate preserves each native bitmap's aspect ratio while fitting and centering it within the existing bounds; the focused visual retest passed with several differently shaped stationary and dragged creatures.
+
+#### Focused direct-manipulation validation
+
+1. Drag stacks across rows into empty, matching, and different destinations; verify move, merge, swap, exact counts, both directions, and native last-stack retention.
+2. Reposition, merge, and swap within each hero's row in both directions; verify the upper and lower army bars remain identical.
+3. Use short taps and small finger movement; verify the existing lower selection workflow remains unchanged and no unintended drag begins.
+4. Drop between slots and outside the army area; verify cancellation without an army change, stale selection, or haptic feedback.
+5. Exercise rapid drags, cancelled touches, multitouch, mixed upper/lower interaction, panel toggling, nested Hero screens, and suspend/resume; verify stale requests are rejected and restoration is exact.
+6. Recheck Army Right, Army Left, Swap Armies, Close, upper touchscreen, mouse, hotkeys, physical controls, existing Hero and Castle army actions, and established haptics.
+
+All six focused interaction checks passed on the Thor. Cross-hero moves, merges, swaps, exact counts, and last-stack retention remained correct; same-row repositioning, merging, and swapping worked in both armies; tap selection and small-movement handling were unchanged; off-slot drops, rapid input, cancellation, multitouch, mixed upper/lower interaction, panel toggling, nested Hero screens, and suspend/resume remained safe. Whole-army actions, Close, upper touchscreen, mouse, hotkeys, physical controls, Hero and Castle army actions, and established haptics retained their validated behavior. The follow-up aspect-ratio correction also passed visual validation for stationary slots and the drag preview.
 
 ### Hero Meeting troop-slot transfer deck
 

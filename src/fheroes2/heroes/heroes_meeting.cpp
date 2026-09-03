@@ -632,7 +632,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     while ( le.HandleEvents() ) {
         publishThorMeetingState();
         const ThorAction requestedThorAction = fheroes2::thor::takeAction();
-        const fheroes2::thor::TroopTransferRequest requestedTroopTransfer = fheroes2::thor::takeTroopTransferRequest();
+        const fheroes2::thor::TroopMoveRequest requestedTroopMove = fheroes2::thor::takeTroopMoveRequest();
 
         buttonExit.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonExit.area() ) );
 
@@ -673,14 +673,25 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         if ( requestedThorAction == ThorAction::HERO_MEETING_CLOSE || le.MouseClickLeft( buttonExit.area() ) || Game::HotKeyCloseWindow() ) {
             break;
         }
-        else if ( requestedTroopTransfer.valid ) {
-            Army & sourceArmy = requestedTroopTransfer.sourceSide == 0 ? GetArmy() : otherHero.GetArmy();
-            Army & destinationArmy = requestedTroopTransfer.destinationSide == 0 ? GetArmy() : otherHero.GetArmy();
-            Troop * sourceTroop = sourceArmy.GetTroop( static_cast<size_t>( requestedTroopTransfer.sourceSlot ) );
-            Troop * destinationTroop = destinationArmy.GetTroop( static_cast<size_t>( requestedTroopTransfer.destinationSlot ) );
+        else if ( requestedTroopMove.valid ) {
+            Army & sourceArmy = requestedTroopMove.sourceSide == 0 ? GetArmy() : otherHero.GetArmy();
+            Army & destinationArmy = requestedTroopMove.destinationSide == 0 ? GetArmy() : otherHero.GetArmy();
+            Troop * sourceTroop = sourceArmy.GetTroop( static_cast<size_t>( requestedTroopMove.sourceSlot ) );
+            Troop * destinationTroop = destinationArmy.GetTroop( static_cast<size_t>( requestedTroopMove.destinationSlot ) );
             if ( sourceTroop != nullptr && sourceTroop->isValid() && destinationTroop != nullptr ) {
-                MeetingArmyBar & destinationBar = requestedTroopTransfer.destinationSide == 0 ? selectArmy1 : selectArmy2;
-                destinationBar.ActionBarLeftMouseSingleClick( static_cast<ArmyTroop &>( *destinationTroop ), static_cast<ArmyTroop &>( *sourceTroop ) );
+                if ( &sourceArmy == &destinationArmy ) {
+                    if ( destinationTroop->isValid() && destinationTroop->GetID() == sourceTroop->GetID() ) {
+                        destinationTroop->SetCount( destinationTroop->GetCount() + sourceTroop->GetCount() );
+                        sourceTroop->Reset();
+                    }
+                    else {
+                        Army::SwapTroops( *destinationTroop, *sourceTroop );
+                    }
+                }
+                else {
+                    MeetingArmyBar & destinationBar = requestedTroopMove.destinationSide == 0 ? selectArmy1 : selectArmy2;
+                    destinationBar.ActionBarLeftMouseSingleClick( static_cast<ArmyTroop &>( *destinationTroop ), static_cast<ArmyTroop &>( *sourceTroop ) );
+                }
 
                 armyCountBackgroundRestorerLeft.restore();
                 armyCountBackgroundRestorerRight.restore();

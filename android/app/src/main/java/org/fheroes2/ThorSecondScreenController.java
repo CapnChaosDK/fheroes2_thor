@@ -170,7 +170,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
         final ThorSecondScreenPresentation newPresentation
             = new ThorSecondScreenPresentation( activity, targetDisplay, this::sendKey, activity::enqueueThorAction,
                                                 activity::enqueueThorViewportRequest, activity::enqueueThorSelectionRequest,
-                                                activity::enqueueThorMarkerInfoRequest, activity::enqueueThorTroopTransferRequest );
+                                                activity::enqueueThorMarkerInfoRequest, activity::enqueueThorTroopMoveRequest );
         informationRevision = -1;
         radarRevision = -1;
         visualRevision = -1;

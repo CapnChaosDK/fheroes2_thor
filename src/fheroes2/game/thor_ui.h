@@ -437,7 +437,7 @@ namespace fheroes2::thor
         std::vector<TroopSlotSnapshot> slots;
     };
 
-    struct TroopTransferRequest
+    struct TroopMoveRequest
     {
         UiContext context{ UiContext::FALLBACK };
         uint64_t revision{ 0 };
@@ -497,8 +497,8 @@ namespace fheroes2::thor
     MarkerInfoRequest takeMarkerInfoRequest();
     bool getTroopSnapshot( uint64_t knownRevision, TroopSnapshot & snapshot );
     void publishTroopSnapshot( TroopSnapshot snapshot );
-    bool enqueueTroopTransferRequest( UiContext context, uint64_t revision, int32_t sourceSide, int32_t sourceSlot, int32_t destinationSide, int32_t destinationSlot );
-    TroopTransferRequest takeTroopTransferRequest();
+    bool enqueueTroopMoveRequest( UiContext context, uint64_t revision, int32_t sourceSide, int32_t sourceSlot, int32_t destinationSide, int32_t destinationSlot );
+    TroopMoveRequest takeTroopMoveRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.
     class UiContextGuard final

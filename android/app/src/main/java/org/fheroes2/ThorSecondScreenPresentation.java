@@ -359,7 +359,7 @@ final class ThorSecondScreenPresentation extends Presentation
         boolean send( int context, long revision, int kind, int id );
     }
 
-    interface TroopTransferSender
+    interface TroopMoveSender
     {
         boolean send( int context, long revision, int sourceSide, int sourceSlot, int destinationSide, int destinationSlot );
     }
@@ -369,12 +369,12 @@ final class ThorSecondScreenPresentation extends Presentation
     private final ViewportSender viewportSender;
     private final SelectionSender selectionSender;
     private final MarkerInfoSender markerInfoSender;
-    private final TroopTransferSender troopTransferSender;
+    private final TroopMoveSender troopMoveSender;
     private CommandDeckView commandDeckView;
 
     ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender,
                                   final ViewportSender viewportSender, final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender,
-                                  final TroopTransferSender troopTransferSender )
+                                  final TroopMoveSender troopMoveSender )
     {
         super( context, display );
         this.keySender = keySender;
@@ -382,7 +382,7 @@ final class ThorSecondScreenPresentation extends Presentation
         this.viewportSender = viewportSender;
         this.selectionSender = selectionSender;
         this.markerInfoSender = markerInfoSender;
-        this.troopTransferSender = troopTransferSender;
+        this.troopMoveSender = troopMoveSender;
     }
 
     @Override
@@ -400,7 +400,7 @@ final class ThorSecondScreenPresentation extends Presentation
         }
 
         commandDeckView
-            = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender, markerInfoSender, troopTransferSender );
+            = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender, markerInfoSender, troopMoveSender );
         setContentView( commandDeckView );
     }
 
@@ -443,7 +443,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final ViewportSender viewportSender;
         private final SelectionSender selectionSender;
         private final MarkerInfoSender markerInfoSender;
-        private final TroopTransferSender troopTransferSender;
+        private final TroopMoveSender troopMoveSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -496,6 +496,13 @@ final class ThorSecondScreenPresentation extends Presentation
         private int selectedTroopSide = -1;
         private int selectedTroopSlot = -1;
         private int pressedTroopIndex = -1;
+        private final int troopTouchSlop;
+        private float troopTouchDownX;
+        private float troopTouchDownY;
+        private boolean troopDragActive;
+        private int troopDragDestinationIndex = -1;
+        private float troopDragX;
+        private float troopDragY;
         private int overviewKindFilter = OVERVIEW_KIND_FILTER_BOTH;
         private int overviewRelationshipFilter = OVERVIEW_RELATIONSHIP_FILTER_ALL;
         private int overviewZoomLevel;
@@ -510,7 +517,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final Runnable radarLongPress;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
-                         final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender, final TroopTransferSender troopTransferSender )
+                         final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender, final TroopMoveSender troopMoveSender )
         {
             super( context );
             this.keySender = keySender;
@@ -518,7 +525,8 @@ final class ThorSecondScreenPresentation extends Presentation
             this.viewportSender = viewportSender;
             this.selectionSender = selectionSender;
             this.markerInfoSender = markerInfoSender;
-            this.troopTransferSender = troopTransferSender;
+            this.troopMoveSender = troopMoveSender;
+            troopTouchSlop = ViewConfiguration.get( context ).getScaledTouchSlop();
             for ( int index = 0; index < troopSlotBounds.length; ++index ) {
                 troopSlotBounds[index] = new RectF();
             }
@@ -933,6 +941,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             drawTroopRow( canvas, 0, leftHeroName );
             drawTroopRow( canvas, 1, rightHeroName );
+            drawTroopDragPreview( canvas );
         }
 
         private void drawTroopRow( final Canvas canvas, final int side, final String heroName )
@@ -952,13 +961,15 @@ final class ThorSecondScreenPresentation extends Presentation
                 final RectF bounds = troopSlotBounds[index];
                 final boolean selected = selectedTroopSide == side && selectedTroopSlot == slot;
                 final boolean pressed = pressedTroopIndex == index;
+                final boolean dragSource = troopDragActive && pressed;
+                final boolean dragDestination = troopDragActive && troopDragDestinationIndex == index;
 
                 paint.setStyle( Paint.Style.FILL );
-                paint.setColor( selected || pressed ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
+                paint.setColor( selected || pressed || dragDestination ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
                 canvas.drawRoundRect( bounds, 13f, 13f, paint );
                 paint.setStyle( Paint.Style.STROKE );
-                paint.setStrokeWidth( selected ? 6f : 3f );
-                paint.setColor( selected ? GOLD_LIGHT_COLOR : GOLD_COLOR );
+                paint.setStrokeWidth( selected || dragSource || dragDestination ? 6f : 3f );
+                paint.setColor( selected || dragSource || dragDestination ? GOLD_LIGHT_COLOR : GOLD_COLOR );
                 canvas.drawRoundRect( bounds, 13f, 13f, paint );
 
                 if ( troop.isOccupied() ) {
@@ -966,9 +977,9 @@ final class ThorSecondScreenPresentation extends Presentation
                                               ? troopBitmaps.get( index )
                                               : null;
                     if ( bitmap != null ) {
-                        final float imageSize = Math.min( bounds.height() * 0.48f, 62f );
-                        final RectF imageBounds = new RectF( bounds.centerX() - imageSize * 0.5f, bounds.top + 9f,
-                                                            bounds.centerX() + imageSize * 0.5f, bounds.top + 9f + imageSize );
+                        final float maximumImageWidth = Math.min( bounds.width() - 18f, 62f );
+                        final float maximumImageHeight = Math.min( bounds.height() * 0.48f, 62f );
+                        final RectF imageBounds = fitTroopBitmap( bitmap, bounds.centerX(), bounds.top + 9f, maximumImageWidth, maximumImageHeight );
                         paint.setFilterBitmap( false );
                         canvas.drawBitmap( bitmap, null, imageBounds, paint );
                     }
@@ -990,6 +1001,56 @@ final class ThorSecondScreenPresentation extends Presentation
                     canvas.drawText( "EMPTY", bounds.centerX(), bounds.centerY() - ( paint.ascent() + paint.descent() ) * 0.5f, paint );
                 }
             }
+        }
+
+        private void drawTroopDragPreview( final Canvas canvas )
+        {
+            if ( !troopDragActive || pressedTroopIndex < 0 || pressedTroopIndex >= troopSlots.size() ) {
+                return;
+            }
+
+            final float previewWidth = 112f;
+            final float previewHeight = 104f;
+            final float centerX = Math.max( previewWidth * 0.5f, Math.min( getWidth() - previewWidth * 0.5f, troopDragX ) );
+            final float centerY = Math.max( previewHeight * 0.5f, Math.min( getHeight() - previewHeight * 0.5f, troopDragY - 72f ) );
+            final RectF previewBounds
+                = new RectF( centerX - previewWidth * 0.5f, centerY - previewHeight * 0.5f, centerX + previewWidth * 0.5f, centerY + previewHeight * 0.5f );
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( BUTTON_PRESSED_COLOR );
+            paint.setAlpha( 225 );
+            canvas.drawRoundRect( previewBounds, 13f, 13f, paint );
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 5f );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            paint.setAlpha( 225 );
+            canvas.drawRoundRect( previewBounds, 13f, 13f, paint );
+
+            final Bitmap bitmap = troopVisualContext == troopContext && troopVisualRevision == troopRevision && troopBitmaps.size() == 10
+                                      ? troopBitmaps.get( pressedTroopIndex )
+                                      : null;
+            if ( bitmap != null ) {
+                final RectF imageBounds = fitTroopBitmap( bitmap, centerX, previewBounds.top + 7f, 64f, 64f );
+                paint.setFilterBitmap( false );
+                paint.setAlpha( 225 );
+                canvas.drawBitmap( bitmap, null, imageBounds, paint );
+            }
+
+            paint.setAlpha( 255 );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, Long.toString( troopSlots.get( pressedTroopIndex ).count ), centerX, previewBounds.bottom - 10f, previewWidth - 16f, 22f );
+        }
+
+        private RectF fitTroopBitmap( final Bitmap bitmap, final float centerX, final float top, final float maximumWidth, final float maximumHeight )
+        {
+            final float scale = Math.min( maximumWidth / bitmap.getWidth(), maximumHeight / bitmap.getHeight() );
+            final float width = bitmap.getWidth() * scale;
+            final float height = bitmap.getHeight() * scale;
+            final float centeredTop = top + ( maximumHeight - height ) * 0.5f;
+            return new RectF( centerX - width * 0.5f, centeredTop, centerX + width * 0.5f, centeredTop + height );
         }
 
         private void drawBattleInformationCard( final Canvas canvas, final RectF panel )
@@ -1106,6 +1167,10 @@ final class ThorSecondScreenPresentation extends Presentation
                 if ( event.getPointerCount() == 1 && gameContext == CONTEXT_HERO_MEETING ) {
                     pressedTroopIndex = troopSlotAt( event.getX(), event.getY() );
                     if ( pressedTroopIndex >= 0 ) {
+                        troopTouchDownX = event.getX();
+                        troopTouchDownY = event.getY();
+                        troopDragX = troopTouchDownX;
+                        troopDragY = troopTouchDownY;
                         invalidate();
                         return true;
                     }
@@ -1152,8 +1217,33 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( action == MotionEvent.ACTION_MOVE ) {
                 if ( pressedTroopIndex >= 0 ) {
-                    if ( event.getPointerCount() != 1 || !troopSlotBounds[pressedTroopIndex].contains( event.getX(), event.getY() ) ) {
-                        pressedTroopIndex = -1;
+                    if ( event.getPointerCount() != 1 ) {
+                        cancelTroopGesture();
+                        invalidate();
+                        return true;
+                    }
+
+                    final float deltaX = event.getX() - troopTouchDownX;
+                    final float deltaY = event.getY() - troopTouchDownY;
+                    if ( !troopDragActive && deltaX * deltaX + deltaY * deltaY > troopTouchSlop * troopTouchSlop ) {
+                        if ( pressedTroopIndex < troopSlots.size() && troopSlots.get( pressedTroopIndex ).isOccupied() ) {
+                            troopDragActive = true;
+                            selectedTroopSide = -1;
+                            selectedTroopSlot = -1;
+                        }
+                        else {
+                            cancelTroopGesture();
+                            invalidate();
+                            return true;
+                        }
+                    }
+                    if ( troopDragActive ) {
+                        troopDragX = event.getX();
+                        troopDragY = event.getY();
+                        troopDragDestinationIndex = troopSlotAt( troopDragX, troopDragY );
+                        if ( troopDragDestinationIndex == pressedTroopIndex ) {
+                            troopDragDestinationIndex = -1;
+                        }
                         invalidate();
                     }
                     return true;
@@ -1199,10 +1289,18 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( action == MotionEvent.ACTION_UP ) {
                 if ( pressedTroopIndex >= 0 ) {
-                    final int releasedTroopIndex = pressedTroopIndex;
-                    pressedTroopIndex = -1;
-                    if ( troopSlotBounds[releasedTroopIndex].contains( event.getX(), event.getY() ) ) {
-                        handleTroopTap( releasedTroopIndex );
+                    final int sourceIndex = pressedTroopIndex;
+                    final boolean wasDrag = troopDragActive;
+                    final int destinationIndex = wasDrag ? troopSlotAt( event.getX(), event.getY() ) : -1;
+                    cancelTroopGesture();
+                    if ( wasDrag ) {
+                        if ( destinationIndex >= 0 && destinationIndex != sourceIndex ) {
+                            troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5,
+                                                  destinationIndex % 5 );
+                        }
+                    }
+                    else if ( troopSlotBounds[sourceIndex].contains( event.getX(), event.getY() ) ) {
+                        handleTroopTap( sourceIndex );
                     }
                     invalidate();
                     return true;
@@ -1277,7 +1375,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 return;
             }
 
-            if ( troopTransferSender.send( gameContext, troopRevision, selectedTroopSide, selectedTroopSlot, side, slot ) ) {
+            if ( troopMoveSender.send( gameContext, troopRevision, selectedTroopSide, selectedTroopSlot, side, slot ) ) {
                 clearTroopSelection();
             }
         }
@@ -1286,7 +1384,14 @@ final class ThorSecondScreenPresentation extends Presentation
         {
             selectedTroopSide = -1;
             selectedTroopSlot = -1;
+            cancelTroopGesture();
+        }
+
+        private void cancelTroopGesture()
+        {
             pressedTroopIndex = -1;
+            troopDragActive = false;
+            troopDragDestinationIndex = -1;
         }
 
         private boolean hasHeroPortraitSnapshot()
@@ -2610,8 +2715,8 @@ final class ThorSecondScreenPresentation extends Presentation
             radarTapItem = null;
             radarZoomGestureActive = false;
             radarZoomReferenceDistance = 0f;
-            if ( pressedTroopIndex >= 0 ) {
-                pressedTroopIndex = -1;
+            if ( pressedTroopIndex >= 0 || troopDragActive ) {
+                cancelTroopGesture();
                 invalidate();
             }
             if ( pressedButton != null ) {

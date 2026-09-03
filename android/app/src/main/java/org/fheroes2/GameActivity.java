@@ -54,8 +54,8 @@ public final class GameActivity extends SDLActivity
     private static native boolean nativeEnqueueThorMarkerInfoRequest( int context, long revision, int kind, int id );
     private static native String[] nativeGetThorTroopSnapshot( long knownRevision );
     private static native int[] nativeGetThorTroopVisualSnapshot( long knownRevision );
-    private static native boolean nativeEnqueueThorTroopTransferRequest( int context, long revision, int sourceSide, int sourceSlot,
-                                                                         int destinationSide, int destinationSlot );
+    private static native boolean nativeEnqueueThorTroopMoveRequest( int context, long revision, int sourceSide, int sourceSlot,
+                                                                     int destinationSide, int destinationSlot );
 
     int getThorUiContext()
     {
@@ -193,11 +193,11 @@ public final class GameActivity extends SDLActivity
         }
     }
 
-    boolean enqueueThorTroopTransferRequest( final int context, final long revision, final int sourceSide, final int sourceSlot,
-                                             final int destinationSide, final int destinationSlot )
+    boolean enqueueThorTroopMoveRequest( final int context, final long revision, final int sourceSide, final int sourceSlot,
+                                         final int destinationSide, final int destinationSlot )
     {
         try {
-            return nativeEnqueueThorTroopTransferRequest( context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot );
+            return nativeEnqueueThorTroopMoveRequest( context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot );
         }
         catch ( final UnsatisfiedLinkError ex ) {
             return false;
