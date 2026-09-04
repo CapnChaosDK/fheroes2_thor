@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The precise Hero Meeting stack-splitting checkpoint at `b09695653a83e48c2779e0002f076710e14f68f4` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
-- This checkpoint adds lower-screen long-press splitting into empty or matching slots across either army, exact One/Half/Max and ±1/±10 controls, live count previews, revision-bound native validation, safe cancellation, and explicit whole-army creature-type guidance without a misleading per-slot KEEP badge. It retains every validated v0.9.0 feature.
-- Debug APK SHA-256: `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed the complete six-check splitting/regression run plus the focused whole-army-guidance correction retest.
+- The upstream and CI maintenance checkpoint at `151f62abdda066e798c336b922fac6922b3965e9` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
+- This checkpoint integrates official upstream through `d778cb44b`, including the surrendered-hero empty-army repair and water-Hero Editor support. It adds Thor-default-branch Android CI without development-push releases, complete native/Java identifier parity, and a compile-time same-context action-mask collision guard. It retains the validated precise-splitting and every v0.9.0 feature.
+- Debug APK SHA-256: `2EDE3EBEE1240236D9D167CA5DB286A52554B07F5C38704215CD286F079CA05A`.
+- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused upstream, CI-guard, splitting, surrender, Editor, lifecycle, restoration, haptic, dual-screen, upper-touchscreen, and physical-controller regression run.
 
 ## Agreed product decisions
 

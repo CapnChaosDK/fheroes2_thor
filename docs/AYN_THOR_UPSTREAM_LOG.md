@@ -6,8 +6,8 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.9.0` at `271d2a0fa3c9f55d69b20b5caf01169536478b72`
-- Latest hardware-validated source commit: `b09695653a83e48c2779e0002f076710e14f68f4`
-- Development APK SHA-256: `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`
+- Latest hardware-validated source commit: `151f62abdda066e798c336b922fac6922b3965e9`
+- Development APK SHA-256: `2EDE3EBEE1240236D9D167CA5DB286A52554B07F5C38704215CD286F079CA05A`
 - Release APK: `fheroes2-thor-v0.9.0-debug.apk`; SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
@@ -77,7 +77,7 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - Pre-integration Thor commit: `f9d67fa9bb0c2e4a7ccad253933e4ad64451006a`
 - Recovery tag: `thor-pre-upstream-d778cb44b`
 - Upstream candidate: `d778cb44b30e4fcf81ee70ccf96354b355c81c4f`
-- Integration method: non-fast-forward merge staged with `--no-commit`; published Thor history has not been rewritten and no integration commit has been created.
+- Integration method: non-fast-forward merge commit `151f62abdda066e798c336b922fac6922b3965e9`; published Thor history was not rewritten.
 - Divergence before integration: 24 upstream-only commits and 106 Thor-only commits.
 - Conflicts: none. Both sides changed `editor_interface.cpp`, `editor_interface_panel.cpp`, and `game_assets.cpp`; inspection confirmed that Thor semantic Editor state and 16:9 main-menu scaling remain present alongside upstream water-Hero placement, cursor, and rendering changes.
 - Gameplay rule review: upstream's surrendered-hero repair is present in `Heroes::Dismiss()`. An invalid army left after surrender is reset to one tier-1 creature, covering surrender with only temporary or resurrected creatures.
