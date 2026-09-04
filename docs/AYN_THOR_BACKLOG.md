@@ -191,7 +191,7 @@ All five Castle/Town checks passed on the Thor.
 
 ## Milestone 3: information panel
 
-Status: `in progress`
+Status: `done`
 
 ### Snapshot bridge
 
@@ -280,13 +280,9 @@ Checks 1, 3, and 4 passed on the Thor. Check 2 initially exposed ambiguous aggre
 
 Corrected checks 2 and 5 passed on the Thor. All five Battle information checks are validated, including active-stack accuracy, per-creature and aggregate hit points, turn-order refresh, spell and casualty updates, single-instance Options behavior, context restoration, and control regression coverage.
 
-- Selected hero portrait, movement, mana, primary stats, army, and artifacts summary.
-- Kingdom resources, player color, and current date.
-- Explicit privacy/fog-of-war rules so the lower screen never exposes hidden information.
-
 ## Navigable menu workflows
 
-Status: `in progress`
+Status: `done`
 
 Goal: make the lower display follow menu hierarchy so choices can be completed directly instead of falling back to generic Dialog navigation.
 
@@ -971,7 +967,7 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Precise Hero Meeting stack splitting is the approved next focused slice. Artifact transfers, broader player-installed sprite use, configurable haptic choices, configurable layouts, and multi-slot redistribution remain deferred until their exact behavior and focused tests are approved.
+- Precise Hero Meeting stack splitting is complete and hardware-validated. Select the next focused slice from artifact transfers, broader player-installed sprite use, configurable haptic choices, configurable layouts, or multi-slot redistribution; each remains deferred until its exact behavior and focused tests are approved.
 
 ### Hero Meeting precise stack splitting
 
@@ -992,7 +988,7 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 #### Focused precise-splitting validation
 
-1. Select a stack on the upper screen and another on the lower screen. Verify KEEP and lower MOVE or SPLIT selection are visually distinct and affect only their intended operations.
+1. Select a stack on the upper screen and another on the lower screen. Verify the information card names the creature type retained by a whole-army move, while lower MOVE or SPLIT selection remains visually distinct and affects only its intended operation.
 2. Split stacks into empty slots within each army and across both armies using One, Half, Max, and exact adjustments. Verify the upper and lower counts remain identical.
 3. Split into matching-creature stacks in both directions. Verify only the chosen amount merges and total creature counts remain exact.
 4. Try single-creature sources, different-creature destinations, stale revisions, invalid amounts, and last-stack-sensitive transfers. Verify rejection without an army change, stuck selection, or unintended feedback.
@@ -1097,21 +1093,19 @@ Status: `passed`; behavior and focused acceptance tests were approved and hardwa
 
 All six focused checks passed on the Thor. Portraits matched the upper Hero screen and stayed synchronized with Previous and Next; long names and full information remained bounded and readable; modal, Adventure, panel, and suspend/resume restoration retained the correct portrait without stale or corrupt artwork; and Hero semantic actions, upper touchscreen, mouse, hotkeys, and physical controls remained unchanged.
 
-## Milestone 4: interactive second-screen tools
+## Milestone 4: remaining interactive second-screen tools
 
 Status: `deferred`
 
-- Touch radar or minimap with upper-screen viewport control is hardware-validated; retain it without regression.
-- Hero and castle quick-selection lists are hardware-validated; retain native ordering, focus ownership, revision checks, paging, and exact Adventure restoration without regression.
-- Optional drag-and-drop army management after semantic actions are proven safe.
-- Configurable layouts, button sizing, left/right-handed modes, and controls-only battery-saving mode.
-- Optional haptics and configurable long-press actions.
+- Completed and hardware-validated foundations: touch minimap and expanded-map viewport control, Hero and Castle quick-selection, Hero Meeting tap/drag transfers, whole-army controls, and precise stack splitting.
+- Remaining candidates: multi-slot army redistribution, artifact transfers, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
 
-## Milestone 5: native visual integration
+## Milestone 5: remaining native visual integration
 
 Status: `deferred`
 
-- Investigate rendering engine-owned widgets or player-installed Heroes II sprites on the lower display.
+- Player-installed Hero portraits and creature sprites are hardware-validated; retain their revision, scaling, and lifecycle behavior without regression.
+- Investigate broader engine-owned widgets or player-installed Heroes II sprite use on the lower display.
 - Prefer a native rendering/state bridge over duplicating gameplay logic in Java.
 - Measure memory, battery, frame pacing, and lifecycle behavior before enabling continuous second-screen rendering.
 
@@ -1121,20 +1115,25 @@ Status: `planned`
 
 - Context transition matrix covering main menu, nested dialogs, adventure map, hero, castle, battle, and editor paths.
 - Touch cancellation, multi-touch rejection, rapid context changes, screen sleep, rotation lock, and panel hot-plug tests.
-- Thor startup cursor fix passed: controller/touch initialization enabled the software cursor, but the later display initializer overwrote it from the saved cursor-emulation setting. Thor display initialization now always retains software cursor emulation, while other platforms continue honoring their saved preference. Cold-start cursor visibility, controller buttons, touchscreen input, and both displays passed on the Thor without toggling away from Follow Standard mode.
 - Verify Snapdragon 865 and Snapdragon 8 Gen 2 Thor variants where hardware is available.
 - Document ADB diagnostics and capture context/action transitions under the `fheroes2-thor` log tag.
+
+### Validated coverage retained
+
+- Thor startup cursor handling is hardware-validated: Thor display initialization retains software cursor emulation, while other platforms continue honoring their saved preference. Cold-start cursor visibility, controller buttons, touchscreen input, and both displays passed without changing Follow Standard mode.
 
 ## Fork maintenance and upstream synchronization
 
 Status: `in progress`
+
+- The upstream-through-`d778cb44b` candidate merged without conflicts. Thor-branch CI, complete native/Java identifier parity, and a compile-time same-context action-mask collision guard are included. Android build, app/isotools lint, installation, explicit launch, display-4 presentation attachment, and focused user hardware validation passed on the AYN Thor.
 
 - Maintain `origin` as the user-owned Thor repository and `upstream` as the official read-only source. Keep the upstream push URL disabled locally to prevent accidental writes.
 - Keep Thor-specific changes isolated behind `TARGET_AYN_THOR`, in focused commits and dedicated bridge/UI files where practical, to reduce conflicts with upstream gameplay work.
 - Maintain a clean upstream-tracking branch and periodically integrate `upstream/master` into `ayn-thor-dual-screen` using a documented merge or rebase policy. Never rewrite a published validated branch without an explicit decision.
 - Before each upstream integration, record the last validated Thor commit and create a recoverable tag or backup branch. Review upstream Android, SDL/controller, rendering, resolution, JNI, and dialog-event changes for overlap.
 - After integration, run Android build and lint through the short `R:` path, inspect the Thor-specific diff, install on hardware, and repeat a compact dual-screen, controller, context-transition, and save/load smoke test.
-- Add an integration log describing the upstream commit, conflicts and resolutions, APK checksum, device variant, and validation result. Consider CI for compile/lint once the fork remote is established.
+- Add an integration log describing the upstream commit, conflicts and resolutions, APK checksum, device variant, and validation result. Keep Thor-branch CI focused on Android build, lint, and static contract checks without publishing releases from ordinary development pushes.
 
 ### Initial maintenance checkpoint
 

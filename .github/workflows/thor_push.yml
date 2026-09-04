@@ -1,0 +1,50 @@
+name: AYN Thor Push
+
+on:
+  push:
+    branches: [ ayn-thor-dual-screen ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android build, lint, and Thor contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: 17
+    - name: Install dependencies
+      run: |
+        bash script/android/install_packages.sh
+        sudo apt-get -y update
+        sudo apt-get -y install gettext
+    - name: Generate translations
+      run: make -C files/lang -j "$(nproc)"
+    - name: Verify Thor identifier contract
+      run: python3 script/android/check_thor_contract.py
+    - name: Build and lint Thor debug app
+      run: |
+        cd android
+        ./gradlew --no-daemon :app:assembleDebug :app:lintDebug :isotools:lint
+    - uses: actions/upload-artifact@v7
+      if: ${{ success() || failure() }}
+      with:
+        name: ayn-thor-debug
+        path: |
+          android/app/build/outputs/apk/debug/app-debug.apk
+          android/app/build/reports/
+          android/isotools/build/reports/
+        if-no-files-found: warn

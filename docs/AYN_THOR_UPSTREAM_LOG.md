@@ -71,3 +71,19 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - Integration performed: no; upstream integration remains a separate planned maintenance decision
 - Build/lint: passed for the Thor implementation through the required short `R:` drive mapping
 - APK/device validation: installed and explicitly launched on the AYN Thor; the complete precise-splitting run and wording correction retest passed
+
+## 2026-09-04: integrate upstream through d778cb44b
+
+- Pre-integration Thor commit: `f9d67fa9bb0c2e4a7ccad253933e4ad64451006a`
+- Recovery tag: `thor-pre-upstream-d778cb44b`
+- Upstream candidate: `d778cb44b30e4fcf81ee70ccf96354b355c81c4f`
+- Integration method: non-fast-forward merge staged with `--no-commit`; published Thor history has not been rewritten and no integration commit has been created.
+- Divergence before integration: 24 upstream-only commits and 106 Thor-only commits.
+- Conflicts: none. Both sides changed `editor_interface.cpp`, `editor_interface_panel.cpp`, and `game_assets.cpp`; inspection confirmed that Thor semantic Editor state and 16:9 main-menu scaling remain present alongside upstream water-Hero placement, cursor, and rendering changes.
+- Gameplay rule review: upstream's surrendered-hero repair is present in `Heroes::Dismiss()`. An invalid army left after surrender is reset to one tier-1 creature, covering surrender with only temporary or resurrected creatures.
+- Maintenance candidate: dedicated `ayn-thor-dual-screen` push CI builds and lints the debug app, runs complete native/Java identifier parity, and publishes no release. A compile-time check rejects same-context action-mask collisions.
+- Static checks: all 58 context identifiers and 234 action identifiers match between native and Java; no current same-context mask collision exists.
+- Android build and lint: passed through the required short `R:` drive mapping, including `:app:assembleDebug`, `:app:lintDebug`, and `:isotools:lint`.
+- Candidate APK SHA-256: `2EDE3EBEE1240236D9D167CA5DB286A52554B07F5C38704215CD286F079CA05A`.
+- Device installation and launch: passed on AYN Thor `kalama` at `192.168.68.58:35751`; `org.fheroes2.thor/org.fheroes2.GameActivity` is resumed and the non-focusable command-deck presentation is attached to display 4.
+- User hardware validation: passed on 2026-09-04. Cold-start dual displays, cursor, physical controller, upper touchscreen, Hero Meeting One/Half splitting, tap/drag and whole-army transfers, split cancellation and lifecycle recovery, the surrendered-hero edge case, Editor Hero placement on land and water, dialog and save/load restoration, and established haptics all passed.

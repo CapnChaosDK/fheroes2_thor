@@ -45,7 +45,7 @@ namespace
     fheroes2::thor::TroopSnapshot troopSnapshot;
     fheroes2::thor::TroopMoveRequest troopMoveRequest;
 
-    bool isBattleAction( const fheroes2::thor::Action action )
+    constexpr bool isBattleAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -65,7 +65,7 @@ namespace
         }
     }
 
-    bool isAdventureAction( const fheroes2::thor::Action action )
+    constexpr bool isAdventureAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -92,7 +92,7 @@ namespace
         }
     }
 
-    bool isAdventureOptionsAction( const fheroes2::thor::Action action )
+    constexpr bool isAdventureOptionsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -108,7 +108,7 @@ namespace
         }
     }
 
-    bool isAdventureFileOptionsAction( const fheroes2::thor::Action action )
+    constexpr bool isAdventureFileOptionsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -126,7 +126,7 @@ namespace
         }
     }
 
-    bool isHeroAction( const fheroes2::thor::Action action )
+    constexpr bool isHeroAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -147,7 +147,7 @@ namespace
         }
     }
 
-    bool isCastleAction( const fheroes2::thor::Action action )
+    constexpr bool isCastleAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -172,7 +172,7 @@ namespace
         }
     }
 
-    bool isNewGameMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isNewGameMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -189,21 +189,21 @@ namespace
         }
     }
 
-    bool isCampaignMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isCampaignMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::MENU_ORIGINAL_CAMPAIGN || action == Action::MENU_EXPANSION_CAMPAIGN || action == Action::MENU_BACK;
     }
 
-    bool isMultiplayerMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isMultiplayerMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::MENU_HOT_SEAT || action == Action::MENU_BACK;
     }
 
-    bool isHotSeatMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isHotSeatMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -220,14 +220,14 @@ namespace
         }
     }
 
-    bool isLoadGameMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isLoadGameMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::MENU_LOAD_STANDARD || action == Action::MENU_LOAD_CAMPAIGN || action == Action::MENU_LOAD_HOT_SEAT || action == Action::MENU_BACK;
     }
 
-    bool isScenarioSetupAction( const fheroes2::thor::Action action )
+    constexpr bool isScenarioSetupAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -252,7 +252,7 @@ namespace
         }
     }
 
-    bool isHeroMeetingAction( const fheroes2::thor::Action action )
+    constexpr bool isHeroMeetingAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -267,12 +267,12 @@ namespace
         }
     }
 
-    bool isAdventureSelectionAction( const fheroes2::thor::Action action )
+    constexpr bool isAdventureSelectionAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::ADVENTURE_SELECTION_BACK;
     }
 
-    bool isAdventureOverviewAction( const fheroes2::thor::Action action )
+    constexpr bool isAdventureOverviewAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -280,12 +280,12 @@ namespace
                || action == Action::ADVENTURE_OVERVIEW_BACK;
     }
 
-    bool isMainMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isMainMenuAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::MENU_EDITOR;
     }
 
-    bool isBattleOnlySetupAction( const fheroes2::thor::Action action )
+    constexpr bool isBattleOnlySetupAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -304,28 +304,28 @@ namespace
         }
     }
 
-    bool isHighScoresStandardAction( const fheroes2::thor::Action action )
+    constexpr bool isHighScoresStandardAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::HIGH_SCORES_VIEW_CAMPAIGN || action == Action::HIGH_SCORES_EXIT;
     }
 
-    bool isHighScoresCampaignAction( const fheroes2::thor::Action action )
+    constexpr bool isHighScoresCampaignAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::HIGH_SCORES_VIEW_STANDARD || action == Action::HIGH_SCORES_EXIT;
     }
 
-    bool isSuccessionWarsCampaignAction( const fheroes2::thor::Action action )
+    constexpr bool isSuccessionWarsCampaignAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::CAMPAIGN_SELECT_ROLAND || action == Action::CAMPAIGN_SELECT_ARCHIBALD || action == Action::MENU_BACK;
     }
 
-    bool isPriceOfLoyaltyCampaignAction( const fheroes2::thor::Action action )
+    constexpr bool isPriceOfLoyaltyCampaignAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -333,7 +333,7 @@ namespace
                || action == Action::CAMPAIGN_SELECT_WIZARDS_ISLE || action == Action::CAMPAIGN_SELECT_DESCENDANTS || action == Action::MENU_BACK;
     }
 
-    bool isGameSettingsAction( const fheroes2::thor::Action action )
+    constexpr bool isGameSettingsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -352,21 +352,21 @@ namespace
         }
     }
 
-    bool isEditorMainMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorMainMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::EDITOR_NEW_MAP || action == Action::EDITOR_LOAD_MAP || action == Action::EDITOR_EXIT_TO_MAIN_MENU;
     }
 
-    bool isEditorNewMapMenuAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorNewMapMenuAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
         return action == Action::EDITOR_FROM_SCRATCH || action == Action::EDITOR_RANDOM_MAP || action == Action::MENU_BACK;
     }
 
-    bool isEditorMapSizeAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorMapSizeAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -374,13 +374,13 @@ namespace
                || action == Action::EDITOR_MAP_SIZE_EXTRA_LARGE || action == Action::MENU_BACK;
     }
 
-    bool isEditorInterfaceAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorInterfaceAction( const fheroes2::thor::Action action )
     {
         return action == fheroes2::thor::Action::EDITOR_OPEN_FILE_OPTIONS || action == fheroes2::thor::Action::EDITOR_OPEN_SYSTEM_OPTIONS
                || action == fheroes2::thor::Action::EDITOR_OPEN_MAP_SPECIFICATIONS || action == fheroes2::thor::Action::EDITOR_OPEN_TOOLS;
     }
 
-    bool isEditorToolsAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorToolsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -404,7 +404,7 @@ namespace
         }
     }
 
-    bool isEditorBrushAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorBrushAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -412,7 +412,7 @@ namespace
                || action == Action::EDITOR_BRUSH_AREA;
     }
 
-    bool isEditorToolSubpanelAction( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
+    constexpr bool isEditorToolSubpanelAction( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         using Action = fheroes2::thor::Action;
         using UiContext = fheroes2::thor::UiContext;
@@ -445,7 +445,7 @@ namespace
         }
     }
 
-    bool isEditorSystemOptionsAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorSystemOptionsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -466,7 +466,7 @@ namespace
         }
     }
 
-    bool isEditorFileOptionsAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorFileOptionsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -485,7 +485,7 @@ namespace
         }
     }
 
-    bool isEditorMapSpecificationsAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorMapSpecificationsAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -508,7 +508,7 @@ namespace
         }
     }
 
-    bool isEditorMapSpecPlayersAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorMapSpecPlayersAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -516,7 +516,7 @@ namespace
                || action == Action::EDITOR_MAP_SPEC_PLAYER_TYPE || action == Action::EDITOR_MAP_SPEC_SUBMENU_BACK;
     }
 
-    bool isEditorMapSpecConditionAction( const fheroes2::thor::Action action )
+    constexpr bool isEditorMapSpecConditionAction( const fheroes2::thor::Action action )
     {
         using Action = fheroes2::thor::Action;
 
@@ -538,7 +538,7 @@ namespace
         }
     }
 
-    bool isSemanticContext( const fheroes2::thor::UiContext context )
+    constexpr bool isSemanticContext( const fheroes2::thor::UiContext context )
     {
         using UiContext = fheroes2::thor::UiContext;
 
@@ -560,7 +560,7 @@ namespace
                || ( context >= UiContext::EDITOR_TOOL_TERRAIN && context <= UiContext::EDITOR_TOOL_ERASE );
     }
 
-    bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
+    constexpr bool isActionValidForContext( const fheroes2::thor::Action action, const fheroes2::thor::UiContext context )
     {
         switch ( context ) {
         case fheroes2::thor::UiContext::MAIN_MENU:
@@ -644,6 +644,41 @@ namespace
             return false;
         }
     }
+
+    constexpr bool hasUniqueActionMaskBitsPerContext()
+    {
+        using Action = fheroes2::thor::Action;
+        using UiContext = fheroes2::thor::UiContext;
+
+        constexpr int32_t firstActionId = static_cast<int32_t>( Action::BATTLE_CAST_SPELL );
+        constexpr int32_t lastActionId = static_cast<int32_t>( Action::ADVENTURE_FILE_CANCEL );
+        constexpr int32_t firstContextId = static_cast<int32_t>( UiContext::FALLBACK );
+        constexpr int32_t lastContextId = static_cast<int32_t>( UiContext::DIALOG_BATTLE_RESULT );
+
+        for ( int32_t contextId = firstContextId; contextId <= lastContextId; ++contextId ) {
+            const UiContext context = static_cast<UiContext>( contextId );
+            for ( int32_t firstId = firstActionId; firstId <= lastActionId; ++firstId ) {
+                const Action firstAction = static_cast<Action>( firstId );
+                if ( !isActionValidForContext( firstAction, context ) ) {
+                    continue;
+                }
+
+                constexpr int32_t usableActionMaskBitCount = 63;
+                for ( int32_t secondId = firstId + usableActionMaskBitCount; secondId <= lastActionId;
+                      secondId += usableActionMaskBitCount ) {
+                    const Action secondAction = static_cast<Action>( secondId );
+                    if ( isActionValidForContext( secondAction, context )
+                         && fheroes2::thor::actionMask( firstAction ) == fheroes2::thor::actionMask( secondAction ) ) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    static_assert( hasUniqueActionMaskBitsPerContext(), "Thor actions valid in the same context must use distinct enabled-action mask bits." );
 }
 
 namespace fheroes2::thor
