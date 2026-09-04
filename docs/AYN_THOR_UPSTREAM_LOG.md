@@ -6,10 +6,10 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.9.0` at `271d2a0fa3c9f55d69b20b5caf01169536478b72`
-- Latest hardware-validated source commit: `271d2a0fa3c9f55d69b20b5caf01169536478b72`
-- Development APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`
+- Latest hardware-validated source commit: `b09695653a83e48c2779e0002f076710e14f68f4`
+- Development APK SHA-256: `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`
 - Release APK: `fheroes2-thor-v0.9.0-debug.apk`; SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
-- The semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, player-installed Hero portrait and correctly proportioned Hero Meeting troop sprites, revision-safe direct manipulation, tap-based troop-slot and whole-army transfers, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from partial-stack or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
+- Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
 ## 2026-08-23: initial fork checkpoint
@@ -60,3 +60,14 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - User hardware smoke test: passed on 2026-08-23
 - Smoke coverage: cold-start dual displays and input, Hero/Castle context and information restoration, Battle information and single-instance Options behavior, save/load context restoration, and display sleep/wake recovery
 - Integration status: hardware validated
+
+## 2026-09-04: pre-slice upstream assessment
+
+- Validated Thor commit after the assessed slice: `b09695653a83e48c2779e0002f076710e14f68f4`
+- Assessed upstream commit: `d778cb44b30e4fcf81ee70ccf96354b355c81c4f`
+- Divergence after the validated implementation commit: 24 upstream-only commits and 105 Thor-only commits
+- Upstream changes since the last integration touch 50 files. None overlap the precise-splitting implementation files in Hero Meeting, army-bar, split-dialog, Thor native bridge, or Android presentation code; the only Android-path change is the upstream Android workflow.
+- Operation performed: read-only fetch and overlap assessment before the precise Hero Meeting stack-splitting slice
+- Integration performed: no; upstream integration remains a separate planned maintenance decision
+- Build/lint: passed for the Thor implementation through the required short `R:` drive mapping
+- APK/device validation: installed and explicitly launched on the AYN Thor; the complete precise-splitting run and wording correction retest passed

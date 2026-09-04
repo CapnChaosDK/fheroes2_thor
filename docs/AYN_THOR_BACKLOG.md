@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The gameplay-dialog checkpoint at `271d2a0fa3c9f55d69b20b5caf01169536478b72` is the latest hardware-validated source state and the source of prerelease `thor-v0.9.0`.
-- This checkpoint includes every validated v0.9.0 feature and completes the in-game options and gameplay-dialog anti-stuck audit with exact semantic actions, nested restoration, stacked localized Level Up choices, and a centered Battle Result close control.
-- Debug APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
-- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused dialog, options, layout, restoration, mixed-input, and established-path regression checks.
+- The precise Hero Meeting stack-splitting checkpoint at `b09695653a83e48c2779e0002f076710e14f68f4` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
+- This checkpoint adds lower-screen long-press splitting into empty or matching slots across either army, exact One/Half/Max and ±1/±10 controls, live count previews, revision-bound native validation, safe cancellation, and explicit whole-army creature-type guidance without a misleading per-slot KEEP badge. It retains every validated v0.9.0 feature.
+- Debug APK SHA-256: `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`.
+- Android build and lint passed. The APK installed and launched explicitly on the Thor, and the user passed the complete six-check splitting/regression run plus the focused whole-army-guidance correction retest.
 
 ## Agreed product decisions
 
@@ -976,6 +976,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 ### Hero Meeting precise stack splitting
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-04.
+
+- Validated source commit: `b09695653a83e48c2779e0002f076710e14f68f4`.
 
 - Ordinary lower-screen taps and drags retain their validated full-stack move, merge, and swap behavior. Long-pressing an occupied stack of at least two creatures enters a lower-only Split mode without opening the upper native quantity dialog.
 - Split mode highlights valid empty or matching-creature destinations across either army. After choosing a destination, the lower action area exposes exact amount adjustment by one and ten, One, Half, Max, Move, and Cancel. Half is the default and Max means all but one creature, leaving full-stack transfer to the established tap and drag paths.

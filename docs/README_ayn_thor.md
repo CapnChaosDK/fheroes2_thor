@@ -43,6 +43,7 @@ The Heroes II-styled command deck follows the active game context. Its upper inf
 | Adventure File Options | New Game, Load Game, disabled Restart Game, Save Game, Quick Save, Quit, Cancel |
 | Adventure hero/town lists | Native kingdom order, compact status, current-focus highlight, paging, direct selection, Back |
 | Hero | Previous, Next, Dismiss, Split Half, Split One, Join, Close |
+| Hero Meeting | Two five-slot armies with player-installed creature visuals; tap/drag move, merge, or swap; long-press exact stack splitting; whole-army transfers, swap, Close |
 | Castle | Previous, Next, Well, Market, Mage Guild, Shipyard, Thieves Guild, Tavern, Build, merge to Hero/Garrison, Upgrade, Exit |
 | Battle | Spell, Wait/Defend, Auto, Quick Combat, Retreat, Surrender, Options, Turn Order |
 
@@ -138,8 +139,8 @@ Build and lint checks are automated. After installing and explicitly launching a
 
 ## Current scope
 
-The latest hardware-validated source checkpoint is `271d2a0fa`. It adds Hero Meeting direct manipulation, tap and whole-army transfers, player-installed Hero and creature visuals, complete in-game Adventure and File Options, and semantic anti-stuck gameplay dialogs with exact save/load, treasure, Level Up, Arena, standard-prompt, and battle-result controls. It retains the safe unknown-menu fallback, the complete Expanded Adventure Map, semantic controls, information cards, navigable menus, both campaign selectors, the complete Editor workflow, touch-minimap viewport control, and hero and castle quick-selection lists. Its APK SHA-256 is `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`. This checkpoint is published as [`thor-v0.9.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.9.0).
+The latest hardware-validated source checkpoint is `b09695653`. It adds precise Hero Meeting stack splitting with exact amount controls and native revision validation to the existing direct manipulation, tap and whole-army transfers, and player-installed Hero and creature visuals. It retains complete in-game Adventure and File Options, semantic gameplay dialogs, the safe unknown-menu fallback, the complete Expanded Adventure Map, information cards, navigable menus, both campaign selectors, the complete Editor workflow, touch-minimap viewport control, and hero and castle quick-selection lists. Its APK SHA-256 is `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`. [`thor-v0.9.0`](https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.9.0) remains the latest published release.
 
-The v0.9.0 checkpoint is hardware-validated. The in-game option menus expose their complete native choices, gameplay dialogs remain completable from the lower display, nested contexts restore exactly, localized Level Up choices fit in full-width rows, and the Battle Result close action is centered. Existing upper touchscreen, mouse, hotkey, physical-controller, Adventure, Battle, Editor, Hero Meeting, and Expanded Map paths remain validated. Select and approve the next focused slice before further implementation.
+The current development checkpoint is hardware-validated. Exact splits into empty and matching slots passed within and across both Hero Meeting armies, including presets, fine adjustments, previews, rejection, cancellation, lifecycle recovery, ordinary moves, and established input paths. Whole-army retention is explained as a creature-type rule rather than a misleading slot badge. Select and approve the next focused slice before further implementation.
 
 The maintained implementation plan and deferred feature list are in [AYN_THOR_BACKLOG.md](AYN_THOR_BACKLOG.md).
