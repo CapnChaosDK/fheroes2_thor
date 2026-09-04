@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <set>
 #include <string>
 #include <utility>
@@ -526,15 +527,13 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     selectArmy2.setInBetweenItemsOffset( { 2, 0 } );
     selectArmy2.Redraw( display );
 
-    const auto getSelectedMonsterId = [&selectArmy1, &selectArmy2]() {
-        const ArmyTroop * selectedTroop = selectArmy1.isSelected() ? selectArmy1.GetSelectedItem()
-                                         : selectArmy2.isSelected() ? selectArmy2.GetSelectedItem()
-                                                                    : nullptr;
-        return selectedTroop != nullptr ? selectedTroop->GetID() : Monster::UNKNOWN;
+    const auto getSelectedTroop = [&selectArmy1, &selectArmy2]() {
+        return selectArmy1.isSelected() ? selectArmy1.GetSelectedItem() : selectArmy2.isSelected() ? selectArmy2.GetSelectedItem() : nullptr;
     };
 
-    const auto publishThorMeetingState = [this, &otherHero, &getSelectedMonsterId, &selectArmy1, &selectArmy2]() {
-        const int selectedMonsterId = getSelectedMonsterId();
+    const auto publishThorMeetingState = [this, &otherHero, &getSelectedTroop, &selectArmy1, &selectArmy2]() {
+        const ArmyTroop * selectedTroop = getSelectedTroop();
+        const int selectedMonsterId = selectedTroop != nullptr ? selectedTroop->GetID() : Monster::UNKNOWN;
         fheroes2::thor::ActionMask actions = fheroes2::thor::actionMask( ThorAction::HERO_MEETING_SWAP_ARMIES )
                                                    | fheroes2::thor::actionMask( ThorAction::HERO_MEETING_CLOSE );
         if ( canMoveArmyTroops( otherHero.GetArmy(), GetArmy(), selectedMonsterId ) ) {
@@ -552,8 +551,9 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         snapshot.detail = "LEFT  " + std::to_string( GetArmy().GetOccupiedSlotCount() ) + " STACKS / " + std::to_string( GetArmy().getTotalCount() )
                           + " CREATURES     RIGHT  " + std::to_string( otherHero.GetArmy().GetOccupiedSlotCount() ) + " STACKS / "
                           + std::to_string( otherHero.GetArmy().getTotalCount() ) + " CREATURES";
-        snapshot.resources
-            = selectedMonsterId == Monster::UNKNOWN ? "SELECT A STACK ABOVE TO KEEP THAT CREATURE WITH ITS HERO" : "SELECTED CREATURE WILL REMAIN WITH ITS HERO";
+        if ( selectedTroop != nullptr ) {
+            snapshot.resources = std::string( "WHOLE-ARMY MOVE KEEPS " ) + selectedTroop->GetName() + " IN THE SOURCE ARMY";
+        }
         fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
 
         fheroes2::thor::TroopSnapshot troopSnapshot;
@@ -679,7 +679,24 @@ void Heroes::MeetingDialog( Heroes & otherHero )
             Troop * sourceTroop = sourceArmy.GetTroop( static_cast<size_t>( requestedTroopMove.sourceSlot ) );
             Troop * destinationTroop = destinationArmy.GetTroop( static_cast<size_t>( requestedTroopMove.destinationSlot ) );
             if ( sourceTroop != nullptr && sourceTroop->isValid() && destinationTroop != nullptr ) {
-                if ( &sourceArmy == &destinationArmy ) {
+                if ( requestedTroopMove.count > 0 ) {
+                    const uint32_t count = requestedTroopMove.count;
+                    if ( count >= sourceTroop->GetCount()
+                         || ( destinationTroop->isValid()
+                              && ( destinationTroop->GetID() != sourceTroop->GetID()
+                                   || destinationTroop->GetCount() > std::numeric_limits<uint32_t>::max() - count ) ) ) {
+                        continue;
+                    }
+
+                    if ( destinationTroop->isValid() ) {
+                        destinationTroop->SetCount( destinationTroop->GetCount() + count );
+                    }
+                    else {
+                        destinationTroop->Set( *sourceTroop, count );
+                    }
+                    sourceTroop->SetCount( sourceTroop->GetCount() - count );
+                }
+                else if ( &sourceArmy == &destinationArmy ) {
                     if ( destinationTroop->isValid() && destinationTroop->GetID() == sourceTroop->GetID() ) {
                         destinationTroop->SetCount( destinationTroop->GetCount() + sourceTroop->GetCount() );
                         sourceTroop->Reset();

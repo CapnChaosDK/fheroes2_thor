@@ -971,7 +971,31 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include partial-stack splitting or richer lower-screen army management, artifact transfers, broader player-installed sprite use, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+- Precise Hero Meeting stack splitting is the approved next focused slice. Artifact transfers, broader player-installed sprite use, configurable haptic choices, configurable layouts, and multi-slot redistribution remain deferred until their exact behavior and focused tests are approved.
+
+### Hero Meeting precise stack splitting
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-04.
+
+- Ordinary lower-screen taps and drags retain their validated full-stack move, merge, and swap behavior. Long-pressing an occupied stack of at least two creatures enters a lower-only Split mode without opening the upper native quantity dialog.
+- Split mode highlights valid empty or matching-creature destinations across either army. After choosing a destination, the lower action area exposes exact amount adjustment by one and ten, One, Half, Max, Move, and Cancel. Half is the default and Max means all but one creature, leaving full-stack transfer to the established tap and drag paths.
+- The lower preview identifies the source and destination and shows the resulting counts before confirmation. The already-published upper-screen army selection receives a distinct KEEP badge, while the lower direct-manipulation source retains its own MOVE or SPLIT presentation.
+- Android owns presentation and transient composition only. Confirmation sends one revision-bound source, destination, and amount request; the existing Hero Meeting loop revalidates context, revision, indices, creature compatibility, amount, and live army state on the SDL thread before applying it.
+- A changed snapshot or context, upper army interaction, whole-army action, multitouch, cancellation, panel recreation, nested Hero screen, or lifecycle transition cancels Split mode. Rejected and cancelled requests remain silent, and established overview haptics remain unchanged.
+- Multi-slot redistribution, quantity text entry, artifact management, and configuration remain separate deferred slices.
+- Android assemble and lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; the activity is resumed and the presentation window is attached to display 4 with no matching Android runtime failure. Candidate debug APK SHA-256: `B5951BA3DFFBCD01E760444D1D4EEBA40E03A279CADB6DA4948FC11077B7E823`. Focused manual validation is pending.
+- All six focused functional checks passed on the Thor: exact splits into empty and matching slots worked within and across both armies; presets, adjustments, previews, counts, invalid-target rejection, cancellation, lifecycle handling, ordinary taps and drags, whole-army controls, and established input paths behaved correctly. The run exposed one presentation issue: the per-slot KEEP badge is unclear and over-specific because the native whole-army action retains a selected creature type in its source army, not necessarily the exact badged stack. A focused wording/presentation correction is pending approval before this slice is marked passed.
+- The approved clarification removes the cyan per-slot KEEP badge and outline. When an upper army selection is active, the information card instead states that a whole-army move keeps the named creature type in the source army; no keep guidance is shown without an upper selection. MOVE and SPLIT remain the only lower slot badges. Build and lint pass, and the corrected candidate installed and launched successfully with its presentation attached to display 4. Corrected debug APK SHA-256: `884A70B1F60A3CFAE4F3DE217096D90C003ACBB72898B95C1AE162DA4E03C35F`.
+- The two-check correction retest passed on the Thor: upper selection produced clear named whole-army guidance without a KEEP badge, the selected creature type remained in the source army, clearing the upper selection removed the guidance, and precise splitting retained its validated MOVE/SPLIT presentation. The complete six-check functional run and focused clarification retest therefore pass.
+
+#### Focused precise-splitting validation
+
+1. Select a stack on the upper screen and another on the lower screen. Verify KEEP and lower MOVE or SPLIT selection are visually distinct and affect only their intended operations.
+2. Split stacks into empty slots within each army and across both armies using One, Half, Max, and exact adjustments. Verify the upper and lower counts remain identical.
+3. Split into matching-creature stacks in both directions. Verify only the chosen amount merges and total creature counts remain exact.
+4. Try single-creature sources, different-creature destinations, stale revisions, invalid amounts, and last-stack-sensitive transfers. Verify rejection without an army change, stuck selection, or unintended feedback.
+5. Cancel through Cancel, the source slot, multitouch, upper interaction, panel toggling, nested Hero screens, and suspend/resume. Verify exact restoration without a queued request.
+6. Recheck ordinary tap transfers, dragging, merging, swapping, whole-army controls, Close, upper touchscreen, mouse, hotkeys, physical controls, and established overview haptics.
 
 ### Hero Meeting direct troop manipulation
 

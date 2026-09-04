@@ -480,6 +480,9 @@ namespace fheroes2::thor
         int32_t sourceSlot{ -1 };
         int32_t destinationSide{ -1 };
         int32_t destinationSlot{ -1 };
+        // Zero keeps the established full-stack move semantics. A positive value
+        // requests an exact partial transfer that must leave the source occupied.
+        uint32_t count{ 0 };
         bool valid{ false };
     };
 
@@ -532,7 +535,8 @@ namespace fheroes2::thor
     MarkerInfoRequest takeMarkerInfoRequest();
     bool getTroopSnapshot( uint64_t knownRevision, TroopSnapshot & snapshot );
     void publishTroopSnapshot( TroopSnapshot snapshot );
-    bool enqueueTroopMoveRequest( UiContext context, uint64_t revision, int32_t sourceSide, int32_t sourceSlot, int32_t destinationSide, int32_t destinationSlot );
+    bool enqueueTroopMoveRequest( UiContext context, uint64_t revision, int32_t sourceSide, int32_t sourceSlot, int32_t destinationSide, int32_t destinationSlot,
+                                  uint32_t count );
     TroopMoveRequest takeTroopMoveRequest();
 
     // Restores the previous context when a nested screen or modal dialog closes.

@@ -55,7 +55,7 @@ public final class GameActivity extends SDLActivity
     private static native String[] nativeGetThorTroopSnapshot( long knownRevision );
     private static native int[] nativeGetThorTroopVisualSnapshot( long knownRevision );
     private static native boolean nativeEnqueueThorTroopMoveRequest( int context, long revision, int sourceSide, int sourceSlot,
-                                                                     int destinationSide, int destinationSlot );
+                                                                     int destinationSide, int destinationSlot, long count );
 
     int getThorUiContext()
     {
@@ -194,10 +194,10 @@ public final class GameActivity extends SDLActivity
     }
 
     boolean enqueueThorTroopMoveRequest( final int context, final long revision, final int sourceSide, final int sourceSlot,
-                                         final int destinationSide, final int destinationSlot )
+                                         final int destinationSide, final int destinationSlot, final long count )
     {
         try {
-            return nativeEnqueueThorTroopMoveRequest( context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot );
+            return nativeEnqueueThorTroopMoveRequest( context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot, count );
         }
         catch ( final UnsatisfiedLinkError ex ) {
             return false;

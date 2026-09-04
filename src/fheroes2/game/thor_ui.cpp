@@ -1044,7 +1044,7 @@ namespace fheroes2::thor
     }
 
     bool enqueueTroopMoveRequest( const UiContext context, const uint64_t revision, const int32_t sourceSide, const int32_t sourceSlot, const int32_t destinationSide,
-                                  const int32_t destinationSlot )
+                                  const int32_t destinationSlot, const uint32_t count )
     {
         constexpr int32_t slotCountPerSide = 5;
         if ( context != UiContext::HERO_MEETING || sourceSide < 0 || sourceSide > 1 || destinationSide < 0 || destinationSide > 1
@@ -1055,12 +1055,22 @@ namespace fheroes2::thor
 
         std::lock_guard<std::mutex> lock( troopMutex );
         const size_t sourceIndex = static_cast<size_t>( sourceSide * slotCountPerSide + sourceSlot );
-        if ( getUiContext() != context || troopSnapshot.context != context || troopSnapshot.revision != revision || troopSnapshot.slots.size() != 2U * slotCountPerSide
-             || troopSnapshot.slots[sourceIndex].monsterId < 0 || troopMoveRequest.valid ) {
+        const size_t destinationIndex = static_cast<size_t>( destinationSide * slotCountPerSide + destinationSlot );
+        if ( getUiContext() != context || troopSnapshot.context != context || troopSnapshot.revision != revision
+             || troopSnapshot.slots.size() != 2U * slotCountPerSide || troopMoveRequest.valid ) {
             return false;
         }
 
-        troopMoveRequest = { context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot, true };
+        const TroopSlotSnapshot & source = troopSnapshot.slots[sourceIndex];
+        const TroopSlotSnapshot & destination = troopSnapshot.slots[destinationIndex];
+        if ( source.monsterId < 0
+             || ( count > 0
+                  && ( count >= source.count || ( destination.monsterId >= 0 && destination.monsterId != source.monsterId )
+                       || destination.count > std::numeric_limits<uint32_t>::max() - count ) ) ) {
+            return false;
+        }
+
+        troopMoveRequest = { context, revision, sourceSide, sourceSlot, destinationSide, destinationSlot, count, true };
         return true;
     }
 
@@ -1141,10 +1151,14 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
 
 extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorTroopMoveRequest( JNIEnv *, jclass, const jint context, const jlong revision,
                                                                                                         const jint sourceSide, const jint sourceSlot,
-                                                                                                        const jint destinationSide, const jint destinationSlot )
+                                                                                                        const jint destinationSide, const jint destinationSlot,
+                                                                                                        const jlong count )
 {
+    if ( count < 0 || static_cast<uint64_t>( count ) > std::numeric_limits<uint32_t>::max() ) {
+        return JNI_FALSE;
+    }
     return fheroes2::thor::enqueueTroopMoveRequest( static_cast<fheroes2::thor::UiContext>( context ), static_cast<uint64_t>( revision ), sourceSide, sourceSlot,
-                                                    destinationSide, destinationSlot )
+                                                    destinationSide, destinationSlot, static_cast<uint32_t>( count ) )
                ? JNI_TRUE
                : JNI_FALSE;
 }

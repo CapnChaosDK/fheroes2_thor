@@ -340,6 +340,15 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int LOCAL_NEXT_PAGE = 2;
     private static final int LOCAL_CYCLE_OVERVIEW_KIND_FILTER = 3;
     private static final int LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER = 4;
+    private static final int LOCAL_SPLIT_DECREASE_TEN = 5;
+    private static final int LOCAL_SPLIT_DECREASE_ONE = 6;
+    private static final int LOCAL_SPLIT_INCREASE_ONE = 7;
+    private static final int LOCAL_SPLIT_INCREASE_TEN = 8;
+    private static final int LOCAL_SPLIT_ONE = 9;
+    private static final int LOCAL_SPLIT_HALF = 10;
+    private static final int LOCAL_SPLIT_MAX = 11;
+    private static final int LOCAL_SPLIT_MOVE = 12;
+    private static final int LOCAL_SPLIT_CANCEL = 13;
 
     private static final int OVERVIEW_KIND_FILTER_BOTH = 0;
     private static final int OVERVIEW_RELATIONSHIP_FILTER_ALL = 0;
@@ -385,7 +394,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
     interface TroopMoveSender
     {
-        boolean send( int context, long revision, int sourceSide, int sourceSlot, int destinationSide, int destinationSlot );
+        boolean send( int context, long revision, int sourceSide, int sourceSlot, int destinationSide, int destinationSlot, long count );
     }
 
     private final KeySender keySender;
@@ -432,7 +441,7 @@ final class ThorSecondScreenPresentation extends Presentation
     protected void onStop()
     {
         if ( commandDeckView != null ) {
-            commandDeckView.releasePressedButton();
+            commandDeckView.cancelTransientInteraction();
         }
         super.onStop();
     }
@@ -458,6 +467,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private static final int BUTTON_PRESSED_COLOR = Color.rgb( 163, 111, 47 );
         private static final int GOLD_COLOR = Color.rgb( 225, 188, 100 );
         private static final int GOLD_LIGHT_COLOR = Color.rgb( 255, 230, 154 );
+        private static final int VALID_TARGET_COLOR = Color.rgb( 140, 205, 120 );
         private static final int SHADOW_COLOR = Color.rgb( 30, 20, 12 );
         private static final int TEXT_COLOR = Color.rgb( 255, 239, 190 );
         private static final int MUTED_TEXT_COLOR = Color.rgb( 190, 164, 112 );
@@ -510,8 +520,6 @@ final class ThorSecondScreenPresentation extends Presentation
         private long troopRevision = -1;
         private String leftHeroName = "";
         private String rightHeroName = "";
-        private int upperSelectedSide = -1;
-        private int upperSelectedSlot = -1;
         private final List<TroopSlot> troopSlots = new ArrayList<>();
         private int troopVisualContext = -1;
         private long troopVisualRevision = -1;
@@ -527,6 +535,10 @@ final class ThorSecondScreenPresentation extends Presentation
         private int troopDragDestinationIndex = -1;
         private float troopDragX;
         private float troopDragY;
+        private int troopSplitSourceIndex = -1;
+        private int troopSplitDestinationIndex = -1;
+        private long troopSplitAmount;
+        private final Runnable troopLongPress;
         private int overviewKindFilter = OVERVIEW_KIND_FILTER_BOTH;
         private int overviewRelationshipFilter = OVERVIEW_RELATIONSHIP_FILTER_ALL;
         private int overviewZoomLevel;
@@ -563,6 +575,14 @@ final class ThorSecondScreenPresentation extends Presentation
                     }
                 }
             };
+            troopLongPress = () -> {
+                if ( pressedTroopIndex >= 0 && !troopDragActive && gameContext == CONTEXT_HERO_MEETING
+                     && troopSlotBounds[pressedTroopIndex].contains( troopTouchDownX, troopTouchDownY ) ) {
+                    beginTroopSplit( pressedTroopIndex );
+                    cancelTroopGesture();
+                    invalidate();
+                }
+            };
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
             setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null, null, null );
@@ -588,6 +608,9 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( contextChanged || selectionChanged || troopChanged || enabledActions != requestedEnabledActions
                  || ( viewportControlEnabled && !requestedViewportControlEnabled ) ) {
                 releasePressedButton();
+            }
+            if ( contextChanged || troopChanged ) {
+                clearTroopSelection();
             }
             gameContext = context;
             enabledActions = requestedEnabledActions;
@@ -755,8 +778,6 @@ final class ThorSecondScreenPresentation extends Presentation
                 troopRevision = revision;
                 leftHeroName = snapshot[3] == null ? "" : snapshot[3];
                 rightHeroName = snapshot[4] == null ? "" : snapshot[4];
-                upperSelectedSide = Integer.parseInt( snapshot[5] );
-                upperSelectedSlot = Integer.parseInt( snapshot[6] );
                 troopSlots.clear();
                 troopSlots.addAll( slots );
                 clearTroopSelection();
@@ -826,6 +847,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( gameContext == CONTEXT_HERO_MEETING ) {
                 drawTroopDeck( canvas );
+                drawTroopSplitGuidance( canvas );
             }
 
             for ( final CommandButton button : buttons ) {
@@ -987,13 +1009,16 @@ final class ThorSecondScreenPresentation extends Presentation
                 final boolean pressed = pressedTroopIndex == index;
                 final boolean dragSource = troopDragActive && pressed;
                 final boolean dragDestination = troopDragActive && troopDragDestinationIndex == index;
+                final boolean splitSource = troopSplitSourceIndex == index;
+                final boolean splitDestination = troopSplitDestinationIndex == index;
+                final boolean splitTarget = isValidTroopSplitDestination( index );
 
                 paint.setStyle( Paint.Style.FILL );
-                paint.setColor( selected || pressed || dragDestination ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
+                paint.setColor( selected || pressed || dragDestination || splitSource || splitDestination ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
                 canvas.drawRoundRect( bounds, 13f, 13f, paint );
                 paint.setStyle( Paint.Style.STROKE );
-                paint.setStrokeWidth( selected || dragSource || dragDestination ? 6f : 3f );
-                paint.setColor( selected || dragSource || dragDestination ? GOLD_LIGHT_COLOR : GOLD_COLOR );
+                paint.setStrokeWidth( selected || dragSource || dragDestination || splitSource || splitDestination || splitTarget ? 6f : 3f );
+                paint.setColor( splitTarget ? VALID_TARGET_COLOR : ( selected || dragSource || dragDestination || splitSource || splitDestination ? GOLD_LIGHT_COLOR : GOLD_COLOR ) );
                 canvas.drawRoundRect( bounds, 13f, 13f, paint );
 
                 if ( troop.isOccupied() ) {
@@ -1024,7 +1049,53 @@ final class ThorSecondScreenPresentation extends Presentation
                     paint.setTextSize( 20f );
                     canvas.drawText( "EMPTY", bounds.centerX(), bounds.centerY() - ( paint.ascent() + paint.descent() ) * 0.5f, paint );
                 }
+
+                if ( splitSource ) {
+                    drawTroopBadge( canvas, bounds, "SPLIT", GOLD_LIGHT_COLOR );
+                }
+                else if ( selected ) {
+                    drawTroopBadge( canvas, bounds, "MOVE", GOLD_LIGHT_COLOR );
+                }
             }
+        }
+
+        private void drawTroopBadge( final Canvas canvas, final RectF slotBounds, final String label, final int color )
+        {
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextSize( 14f );
+            final float width = paint.measureText( label ) + 14f;
+            final float left = slotBounds.left + 7f;
+            final RectF badge = new RectF( left, slotBounds.top + 7f, left + width, slotBounds.top + 30f );
+            paint.setColor( SHADOW_COLOR );
+            canvas.drawRoundRect( badge, 6f, 6f, paint );
+            paint.setColor( color );
+            paint.setTextAlign( Paint.Align.CENTER );
+            canvas.drawText( label, badge.centerX(), badge.bottom - 6f, paint );
+        }
+
+        private void drawTroopSplitGuidance( final Canvas canvas )
+        {
+            if ( troopSplitSourceIndex < 0 || troopSplitSourceIndex >= troopSlots.size() ) {
+                return;
+            }
+
+            final TroopSlot source = troopSlots.get( troopSplitSourceIndex );
+            final String guidance;
+            if ( troopSplitDestinationIndex < 0 || troopSplitDestinationIndex >= troopSlots.size() ) {
+                guidance = "SPLIT " + source.name + "  •  SELECT AN EMPTY OR MATCHING DESTINATION";
+            }
+            else {
+                final TroopSlot destination = troopSlots.get( troopSplitDestinationIndex );
+                guidance = "MOVE " + troopSplitAmount + " " + source.name + "  •  " + source.count + " → " + ( source.count - troopSplitAmount )
+                           + "  •  " + destination.count + " → " + ( destination.count + troopSplitAmount );
+            }
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setColor( troopSplitDestinationIndex < 0 ? VALID_TARGET_COLOR : GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, guidance, getWidth() * 0.5f, getHeight() * 0.745f, getWidth() - 2f * getMargin(), 24f );
         }
 
         private void drawTroopDragPreview( final Canvas canvas )
@@ -1173,7 +1244,12 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( action == MotionEvent.ACTION_POINTER_DOWN ) {
                 releasePressedButton();
                 if ( gameContext == CONTEXT_HERO_MEETING ) {
-                    clearTroopSelection();
+                    if ( troopSplitSourceIndex >= 0 ) {
+                        cancelTroopSplit();
+                    }
+                    else {
+                        clearTroopSelection();
+                    }
                 }
                 if ( event.getPointerCount() == 2 && gameContext == CONTEXT_ADVENTURE_MAP_OVERVIEW && viewportControlEnabled && hasRadarSnapshot()
                      && radarBounds.contains( event.getX( 0 ), event.getY( 0 ) ) && radarBounds.contains( event.getX( 1 ), event.getY( 1 ) ) ) {
@@ -1195,6 +1271,9 @@ final class ThorSecondScreenPresentation extends Presentation
                         troopTouchDownY = event.getY();
                         troopDragX = troopTouchDownX;
                         troopDragY = troopTouchDownY;
+                        if ( troopSplitSourceIndex < 0 && pressedTroopIndex < troopSlots.size() && troopSlots.get( pressedTroopIndex ).count > 1 ) {
+                            postDelayed( troopLongPress, ViewConfiguration.getLongPressTimeout() );
+                        }
                         invalidate();
                         return true;
                     }
@@ -1250,6 +1329,12 @@ final class ThorSecondScreenPresentation extends Presentation
                     final float deltaX = event.getX() - troopTouchDownX;
                     final float deltaY = event.getY() - troopTouchDownY;
                     if ( !troopDragActive && deltaX * deltaX + deltaY * deltaY > troopTouchSlop * troopTouchSlop ) {
+                        removeCallbacks( troopLongPress );
+                        if ( troopSplitSourceIndex >= 0 ) {
+                            cancelTroopGesture();
+                            invalidate();
+                            return true;
+                        }
                         if ( pressedTroopIndex < troopSlots.size() && troopSlots.get( pressedTroopIndex ).isOccupied() ) {
                             troopDragActive = true;
                             selectedTroopSide = -1;
@@ -1313,6 +1398,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( action == MotionEvent.ACTION_UP ) {
                 if ( pressedTroopIndex >= 0 ) {
+                    removeCallbacks( troopLongPress );
                     final int sourceIndex = pressedTroopIndex;
                     final boolean wasDrag = troopDragActive;
                     final int destinationIndex = wasDrag ? troopSlotAt( event.getX(), event.getY() ) : -1;
@@ -1320,7 +1406,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     if ( wasDrag ) {
                         if ( destinationIndex >= 0 && destinationIndex != sourceIndex ) {
                             troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5,
-                                                  destinationIndex % 5 );
+                                                  destinationIndex % 5, 0 );
                         }
                     }
                     else if ( troopSlotBounds[sourceIndex].contains( event.getX(), event.getY() ) ) {
@@ -1378,6 +1464,20 @@ final class ThorSecondScreenPresentation extends Presentation
                 return;
             }
 
+            if ( troopSplitSourceIndex >= 0 ) {
+                if ( index == troopSplitSourceIndex ) {
+                    cancelTroopSplit();
+                }
+                else if ( isValidTroopSplitDestination( index ) ) {
+                    troopSplitDestinationIndex = index;
+                    troopSplitAmount = splitHalf();
+                    rebuildActions();
+                    layoutButtons( getWidth(), getHeight() );
+                }
+                invalidate();
+                return;
+            }
+
             final int side = index / 5;
             final int slot = index % 5;
             final TroopSlot tappedTroop = troopSlots.get( index );
@@ -1399,20 +1499,77 @@ final class ThorSecondScreenPresentation extends Presentation
                 return;
             }
 
-            if ( troopMoveSender.send( gameContext, troopRevision, selectedTroopSide, selectedTroopSlot, side, slot ) ) {
+            if ( troopMoveSender.send( gameContext, troopRevision, selectedTroopSide, selectedTroopSlot, side, slot, 0 ) ) {
                 clearTroopSelection();
             }
+        }
+
+        private void beginTroopSplit( final int index )
+        {
+            if ( index < 0 || index >= troopSlots.size() || troopContext != CONTEXT_HERO_MEETING || troopSlots.get( index ).count <= 1 ) {
+                return;
+            }
+
+            selectedTroopSide = -1;
+            selectedTroopSlot = -1;
+            troopSplitSourceIndex = index;
+            troopSplitDestinationIndex = -1;
+            troopSplitAmount = 0;
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
+        }
+
+        private boolean isValidTroopSplitDestination( final int index )
+        {
+            if ( troopSplitSourceIndex < 0 || troopSplitSourceIndex >= troopSlots.size() || index < 0 || index >= troopSlots.size()
+                 || index == troopSplitSourceIndex ) {
+                return false;
+            }
+
+            final TroopSlot source = troopSlots.get( troopSplitSourceIndex );
+            final TroopSlot destination = troopSlots.get( index );
+            return source.count > 1 && ( !destination.isOccupied() || destination.monsterId == source.monsterId );
+        }
+
+        private long splitMaximum()
+        {
+            if ( troopSplitSourceIndex < 0 || troopSplitSourceIndex >= troopSlots.size() ) {
+                return 0;
+            }
+            return Math.max( 0L, troopSlots.get( troopSplitSourceIndex ).count - 1L );
+        }
+
+        private long splitHalf()
+        {
+            if ( troopSplitSourceIndex < 0 || troopSplitSourceIndex >= troopSlots.size() ) {
+                return 0;
+            }
+            return Math.min( splitMaximum(), Math.max( 1L, troopSlots.get( troopSplitSourceIndex ).count / 2L ) );
+        }
+
+        private void cancelTroopSplit()
+        {
+            troopSplitSourceIndex = -1;
+            troopSplitDestinationIndex = -1;
+            troopSplitAmount = 0;
+            cancelTroopGesture();
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
         }
 
         private void clearTroopSelection()
         {
             selectedTroopSide = -1;
             selectedTroopSlot = -1;
+            troopSplitSourceIndex = -1;
+            troopSplitDestinationIndex = -1;
+            troopSplitAmount = 0;
             cancelTroopGesture();
         }
 
         private void cancelTroopGesture()
         {
+            removeCallbacks( troopLongPress );
             pressedTroopIndex = -1;
             troopDragActive = false;
             troopDragDestinationIndex = -1;
@@ -1530,6 +1687,10 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void handleLocalCommand( final int command )
         {
+            if ( command >= LOCAL_SPLIT_DECREASE_TEN && command <= LOCAL_SPLIT_CANCEL ) {
+                handleTroopSplitCommand( command );
+                return;
+            }
             if ( command == LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) {
                 overviewKindFilter = overviewKindFilter == SELECTION_KIND_CASTLE ? OVERVIEW_KIND_FILTER_BOTH : overviewKindFilter + 1;
                 applyOverviewFilterChange();
@@ -1554,6 +1715,57 @@ final class ThorSecondScreenPresentation extends Presentation
             releasePressedButton();
             rebuildActions();
             layoutButtons( getWidth(), getHeight() );
+            invalidate();
+        }
+
+        private void handleTroopSplitCommand( final int command )
+        {
+            if ( command == LOCAL_SPLIT_CANCEL ) {
+                cancelTroopSplit();
+                releasePressedButton();
+                invalidate();
+                return;
+            }
+            if ( troopSplitDestinationIndex < 0 || !isValidTroopSplitDestination( troopSplitDestinationIndex ) ) {
+                return;
+            }
+
+            final long maximum = splitMaximum();
+            switch ( command ) {
+            case LOCAL_SPLIT_DECREASE_TEN:
+                troopSplitAmount = Math.max( 1, troopSplitAmount - 10 );
+                break;
+            case LOCAL_SPLIT_DECREASE_ONE:
+                troopSplitAmount = Math.max( 1, troopSplitAmount - 1 );
+                break;
+            case LOCAL_SPLIT_INCREASE_ONE:
+                troopSplitAmount = Math.min( maximum, troopSplitAmount + 1 );
+                break;
+            case LOCAL_SPLIT_INCREASE_TEN:
+                troopSplitAmount = Math.min( maximum, troopSplitAmount + 10 );
+                break;
+            case LOCAL_SPLIT_ONE:
+                troopSplitAmount = 1;
+                break;
+            case LOCAL_SPLIT_HALF:
+                troopSplitAmount = splitHalf();
+                break;
+            case LOCAL_SPLIT_MAX:
+                troopSplitAmount = maximum;
+                break;
+            case LOCAL_SPLIT_MOVE:
+                if ( troopSplitAmount > 0 && troopSplitAmount <= maximum ) {
+                    final int sourceIndex = troopSplitSourceIndex;
+                    final int destinationIndex = troopSplitDestinationIndex;
+                    troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5, destinationIndex % 5,
+                                          troopSplitAmount );
+                    cancelTroopSplit();
+                }
+                break;
+            default:
+                return;
+            }
+            releasePressedButton();
             invalidate();
         }
 
@@ -1679,11 +1891,27 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "EXIT", ACTION_CASTLE_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_HERO_MEETING:
-                contextTitle = "HERO MEETING";
-                addAction( "ARMY →", ACTION_HERO_MEETING_TRANSFER_TO_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT );
-                addAction( "← ARMY", ACTION_HERO_MEETING_TRANSFER_TO_LEFT, KeyEvent.KEYCODE_DPAD_LEFT );
-                addAction( "SWAP ARMIES", ACTION_HERO_MEETING_SWAP_ARMIES, KeyEvent.KEYCODE_X );
-                addAction( "CLOSE", ACTION_HERO_MEETING_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                if ( troopSplitSourceIndex >= 0 ) {
+                    contextTitle = troopSplitDestinationIndex < 0 ? "SPLIT: SELECT DESTINATION" : "SPLIT STACK";
+                    if ( troopSplitDestinationIndex >= 0 ) {
+                        buttons.add( new CommandButton( "−10", LOCAL_SPLIT_DECREASE_TEN ) );
+                        buttons.add( new CommandButton( "−1", LOCAL_SPLIT_DECREASE_ONE ) );
+                        buttons.add( new CommandButton( "+1", LOCAL_SPLIT_INCREASE_ONE ) );
+                        buttons.add( new CommandButton( "+10", LOCAL_SPLIT_INCREASE_TEN ) );
+                        buttons.add( new CommandButton( "ONE", LOCAL_SPLIT_ONE ) );
+                        buttons.add( new CommandButton( "HALF", LOCAL_SPLIT_HALF ) );
+                        buttons.add( new CommandButton( "MAX", LOCAL_SPLIT_MAX ) );
+                        buttons.add( new CommandButton( "MOVE", LOCAL_SPLIT_MOVE ) );
+                    }
+                    buttons.add( new CommandButton( "CANCEL", LOCAL_SPLIT_CANCEL ) );
+                }
+                else {
+                    contextTitle = "HERO MEETING";
+                    addAction( "ARMY →", ACTION_HERO_MEETING_TRANSFER_TO_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT );
+                    addAction( "← ARMY", ACTION_HERO_MEETING_TRANSFER_TO_LEFT, KeyEvent.KEYCODE_DPAD_LEFT );
+                    addAction( "SWAP ARMIES", ACTION_HERO_MEETING_SWAP_ARMIES, KeyEvent.KEYCODE_X );
+                    addAction( "CLOSE", ACTION_HERO_MEETING_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                }
                 break;
             case CONTEXT_BATTLE:
                 contextTitle = "BATTLE";
@@ -2741,6 +2969,26 @@ final class ThorSecondScreenPresentation extends Presentation
                                              centerY + buttonHeight * 0.5f );
                 return;
             }
+            if ( gameContext == CONTEXT_HERO_MEETING && troopSplitSourceIndex >= 0 ) {
+                final float top = height * 0.77f;
+                if ( troopSplitDestinationIndex < 0 ) {
+                    final float buttonWidth = Math.min( width - 2f * margin, width * 0.62f );
+                    buttons.get( 0 ).bounds.set( ( width - buttonWidth ) * 0.5f, top, ( width + buttonWidth ) * 0.5f, height - margin );
+                    return;
+                }
+
+                final float rowHeight = ( height - top - margin - gap ) / 2f;
+                for ( int index = 0; index < buttons.size(); ++index ) {
+                    final int row = index < 4 ? 0 : 1;
+                    final int column = row == 0 ? index : index - 4;
+                    final int columns = row == 0 ? 4 : 5;
+                    final float columnWidth = ( width - 2f * margin - ( columns - 1 ) * gap ) / columns;
+                    final float left = margin + column * ( columnWidth + gap );
+                    final float buttonTop = top + row * ( rowHeight + gap );
+                    buttons.get( index ).bounds.set( left, buttonTop, left + columnWidth, buttonTop + rowHeight );
+                }
+                return;
+            }
             final float top = gameContext == CONTEXT_HERO_MEETING ? height * 0.76f : height * 0.265f;
             final boolean selectionList = gameContext == CONTEXT_ADVENTURE_HERO_LIST || gameContext == CONTEXT_ADVENTURE_CASTLE_LIST;
             final int columns = selectionList ? 2 : ( buttons.size() <= 2 || buttons.size() == 4 ? 2 : ( buttons.size() <= 6 ? 3 : 4 ) );
@@ -2822,6 +3070,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void releasePressedButton()
         {
             removeCallbacks( radarLongPress );
+            removeCallbacks( troopLongPress );
             radarGestureActive = false;
             radarGestureMoved = false;
             radarLongPressTriggered = false;
@@ -2840,6 +3089,15 @@ final class ThorSecondScreenPresentation extends Presentation
                 pressedButton = null;
                 invalidate();
             }
+        }
+
+        void cancelTransientInteraction()
+        {
+            clearTroopSelection();
+            releasePressedButton();
+            rebuildActions();
+            layoutButtons( getWidth(), getHeight() );
+            invalidate();
         }
     }
 
