@@ -788,6 +788,8 @@ bool Battle::Arena::DialogBattleSummary( const Result & res, const std::vector<A
 
 void Battle::Arena::DialogBattleNecromancy( const uint32_t raiseCount )
 {
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG_BATTLE_RESULT );
+
     // Set the cursor image. This dialog does not require a cursor restorer.
     Cursor::Get().SetThemes( Cursor::POINTER );
 
