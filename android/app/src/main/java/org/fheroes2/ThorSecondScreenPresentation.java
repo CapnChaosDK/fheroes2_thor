@@ -92,6 +92,13 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int CONTEXT_DIALOG_LEVEL_UP = 55;
     private static final int CONTEXT_DIALOG_ARENA = 56;
     private static final int CONTEXT_DIALOG_BATTLE_RESULT = 57;
+    private static final int CONTEXT_ADVENTURE_SYSTEM_OPTIONS = 58;
+    private static final int CONTEXT_SYSTEM_GRAPHICS = 59;
+    private static final int CONTEXT_SYSTEM_AUDIO = 60;
+    private static final int CONTEXT_SYSTEM_INTERFACE = 61;
+    private static final int CONTEXT_SYSTEM_LANGUAGE = 62;
+    private static final int CONTEXT_SYSTEM_HOT_KEYS = 63;
+    private static final int CONTEXT_SYSTEM_RESOLUTION = 64;
 
     private static final int ACTION_NONE = 0;
     private static final int ACTION_BATTLE_CAST_SPELL = 1;
@@ -330,6 +337,46 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_HERO_MEETING_ARTIFACTS_TO_RIGHT = 234;
     private static final int ACTION_HERO_MEETING_ARTIFACTS_TO_LEFT = 235;
     private static final int ACTION_HERO_MEETING_SWAP_ARTIFACTS = 236;
+    private static final int ACTION_ADVENTURE_SYSTEM_OPTIONS = 237;
+    private static final int ACTION_ADVENTURE_SYSTEM_LANGUAGE = 238;
+    private static final int ACTION_ADVENTURE_SYSTEM_GRAPHICS = 239;
+    private static final int ACTION_ADVENTURE_SYSTEM_AUDIO = 240;
+    private static final int ACTION_ADVENTURE_SYSTEM_HERO_SPEED = 241;
+    private static final int ACTION_ADVENTURE_SYSTEM_ENEMY_SPEED = 242;
+    private static final int ACTION_ADVENTURE_SYSTEM_HOT_KEYS = 243;
+    private static final int ACTION_ADVENTURE_SYSTEM_INTERFACE = 244;
+    private static final int ACTION_ADVENTURE_SYSTEM_TEXT_SUPPORT = 245;
+    private static final int ACTION_ADVENTURE_SYSTEM_BATTLES = 246;
+    private static final int ACTION_ADVENTURE_SYSTEM_CLOSE = 247;
+    private static final int ACTION_SYSTEM_GRAPHICS_RESOLUTION = 248;
+    private static final int ACTION_SYSTEM_GRAPHICS_MODE = 249;
+    private static final int ACTION_SYSTEM_GRAPHICS_SCALING = 250;
+    private static final int ACTION_SYSTEM_GRAPHICS_VSYNC = 251;
+    private static final int ACTION_SYSTEM_GRAPHICS_INFO = 252;
+    private static final int ACTION_SYSTEM_GRAPHICS_CLOSE = 253;
+    private static final int ACTION_SYSTEM_AUDIO_MUSIC = 254;
+    private static final int ACTION_SYSTEM_AUDIO_EFFECTS = 255;
+    private static final int ACTION_SYSTEM_AUDIO_MUSIC_TYPE = 256;
+    private static final int ACTION_SYSTEM_AUDIO_3D = 257;
+    private static final int ACTION_SYSTEM_AUDIO_CLOSE = 258;
+    private static final int ACTION_SYSTEM_INTERFACE_TYPE = 259;
+    private static final int ACTION_SYSTEM_INTERFACE_PRESENCE = 260;
+    private static final int ACTION_SYSTEM_INTERFACE_ARMY_ESTIMATION = 261;
+    private static final int ACTION_SYSTEM_INTERFACE_CURSOR = 262;
+    private static final int ACTION_SYSTEM_INTERFACE_SCROLL_SPEED = 263;
+    private static final int ACTION_SYSTEM_INTERFACE_CLOSE = 264;
+    private static final int ACTION_SYSTEM_LANGUAGE_PREVIOUS = 265;
+    private static final int ACTION_SYSTEM_LANGUAGE_NEXT = 266;
+    private static final int ACTION_SYSTEM_LANGUAGE_CHOOSE = 267;
+    private static final int ACTION_SYSTEM_LANGUAGE_CANCEL = 268;
+    private static final int ACTION_SYSTEM_HOT_KEYS_PREVIOUS = 269;
+    private static final int ACTION_SYSTEM_HOT_KEYS_NEXT = 270;
+    private static final int ACTION_SYSTEM_HOT_KEYS_EDIT = 271;
+    private static final int ACTION_SYSTEM_HOT_KEYS_CLOSE = 272;
+    private static final int ACTION_SYSTEM_RESOLUTION_PREVIOUS = 273;
+    private static final int ACTION_SYSTEM_RESOLUTION_NEXT = 274;
+    private static final int ACTION_SYSTEM_RESOLUTION_APPLY = 275;
+    private static final int ACTION_SYSTEM_RESOLUTION_CANCEL = 276;
 
     private static final int SELECTION_KIND_HERO = 1;
     private static final int SELECTION_KIND_CASTLE = 2;
@@ -595,7 +642,8 @@ final class ThorSecondScreenPresentation extends Presentation
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final int[] requestedVisualSnapshot,
                            final String[] requestedSelectionSnapshot, final String[] requestedTroopSnapshot, final int[] requestedTroopVisualSnapshot )
         {
-            final int context = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_DIALOG_BATTLE_RESULT ? requestedContext : CONTEXT_FALLBACK;
+            final int context
+                = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SYSTEM_RESOLUTION ? requestedContext : CONTEXT_FALLBACK;
             final boolean informationChanged = applyInformationSnapshot( requestedInformationSnapshot );
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
@@ -1826,6 +1874,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "END TURN", ACTION_ADVENTURE_END_TURN, KeyEvent.KEYCODE_E );
                 addAction( "ADVENTURE", ACTION_ADVENTURE_OPTIONS, KeyEvent.KEYCODE_A );
                 addAction( "FILE", ACTION_ADVENTURE_FILE_OPTIONS, KeyEvent.KEYCODE_F );
+                addAction( "OPTIONS", ACTION_ADVENTURE_SYSTEM_OPTIONS, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "PUZZLE", ACTION_ADVENTURE_PUZZLE_MAP, KeyEvent.KEYCODE_P );
                 addAction( "KINGDOM", ACTION_ADVENTURE_KINGDOM_SUMMARY, KeyEvent.KEYCODE_K );
                 addAction( "VIEW WORLD", ACTION_ADVENTURE_VIEW_WORLD, KeyEvent.KEYCODE_V );
@@ -1849,6 +1898,66 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "QUICK SAVE", ACTION_ADVENTURE_FILE_QUICK_SAVE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "QUIT", ACTION_ADVENTURE_FILE_QUIT, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "CANCEL", ACTION_ADVENTURE_FILE_CANCEL, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_ADVENTURE_SYSTEM_OPTIONS:
+                contextTitle = "SYSTEM OPTIONS";
+                addAction( "LANGUAGE", ACTION_ADVENTURE_SYSTEM_LANGUAGE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "GRAPHICS", ACTION_ADVENTURE_SYSTEM_GRAPHICS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "AUDIO", ACTION_ADVENTURE_SYSTEM_AUDIO, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "HERO SPEED", ACTION_ADVENTURE_SYSTEM_HERO_SPEED, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ENEMY SPEED", ACTION_ADVENTURE_SYSTEM_ENEMY_SPEED, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "HOT KEYS", ACTION_ADVENTURE_SYSTEM_HOT_KEYS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "INTERFACE", ACTION_ADVENTURE_SYSTEM_INTERFACE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "TEXT SUPPORT", ACTION_ADVENTURE_SYSTEM_TEXT_SUPPORT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "BATTLES", ACTION_ADVENTURE_SYSTEM_BATTLES, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_ADVENTURE_SYSTEM_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_GRAPHICS:
+                contextTitle = "GRAPHICS";
+                addAction( "RESOLUTION", ACTION_SYSTEM_GRAPHICS_RESOLUTION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MODE", ACTION_SYSTEM_GRAPHICS_MODE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SCALING", ACTION_SYSTEM_GRAPHICS_SCALING, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "V-SYNC", ACTION_SYSTEM_GRAPHICS_VSYNC, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SYSTEM INFO", ACTION_SYSTEM_GRAPHICS_INFO, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_SYSTEM_GRAPHICS_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_AUDIO:
+                contextTitle = "AUDIO";
+                addAction( "MUSIC", ACTION_SYSTEM_AUDIO_MUSIC, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "EFFECTS", ACTION_SYSTEM_AUDIO_EFFECTS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "MUSIC TYPE", ACTION_SYSTEM_AUDIO_MUSIC_TYPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "3D AUDIO", ACTION_SYSTEM_AUDIO_3D, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_SYSTEM_AUDIO_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_INTERFACE:
+                contextTitle = "INTERFACE";
+                addAction( "TYPE", ACTION_SYSTEM_INTERFACE_TYPE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SHOW / HIDE", ACTION_SYSTEM_INTERFACE_PRESENCE, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "ARMY ESTIMATE", ACTION_SYSTEM_INTERFACE_ARMY_ESTIMATION, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CURSOR", ACTION_SYSTEM_INTERFACE_CURSOR, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "SCROLL SPEED", ACTION_SYSTEM_INTERFACE_SCROLL_SPEED, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_SYSTEM_INTERFACE_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_LANGUAGE:
+                contextTitle = "LANGUAGE";
+                addAction( "PREVIOUS", ACTION_SYSTEM_LANGUAGE_PREVIOUS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT", ACTION_SYSTEM_LANGUAGE_NEXT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "CHOOSE", ACTION_SYSTEM_LANGUAGE_CHOOSE, KeyEvent.KEYCODE_ENTER );
+                addAction( "CANCEL", ACTION_SYSTEM_LANGUAGE_CANCEL, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_HOT_KEYS:
+                contextTitle = "HOT KEYS";
+                addAction( "PREVIOUS", ACTION_SYSTEM_HOT_KEYS_PREVIOUS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT", ACTION_SYSTEM_HOT_KEYS_NEXT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "EDIT", ACTION_SYSTEM_HOT_KEYS_EDIT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "OKAY / BACK", ACTION_SYSTEM_HOT_KEYS_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                break;
+            case CONTEXT_SYSTEM_RESOLUTION:
+                contextTitle = "RESOLUTION";
+                addAction( "PREVIOUS", ACTION_SYSTEM_RESOLUTION_PREVIOUS, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "NEXT", ACTION_SYSTEM_RESOLUTION_NEXT, KeyEvent.KEYCODE_UNKNOWN );
+                addAction( "APPLY", ACTION_SYSTEM_RESOLUTION_APPLY, KeyEvent.KEYCODE_ENTER );
+                addAction( "CANCEL", ACTION_SYSTEM_RESOLUTION_CANCEL, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_ADVENTURE_MAP_OVERVIEW:
                 contextTitle = "KINGDOM MAP";

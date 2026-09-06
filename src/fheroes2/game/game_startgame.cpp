@@ -1114,9 +1114,10 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPTIONS )
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_FILE_OPTIONS )
                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_PUZZLE_MAP )
-                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_KINGDOM_SUMMARY )
-                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_VIEW_WORLD )
-                                                  | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPEN_MAP_OVERVIEW );
+                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_KINGDOM_SUMMARY )
+                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_VIEW_WORLD )
+                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_OPTIONS )
+                                                   | fheroes2::thor::actionMask( ThorAction::ADVENTURE_OPEN_MAP_OVERVIEW );
 
         const VecHeroes & heroes = myKingdom.GetHeroes();
         if ( std::any_of( heroes.begin(), heroes.end(), []( const Heroes * hero ) {
@@ -1673,6 +1674,9 @@ fheroes2::GameMode Interface::AdventureMap::HumanTurn( const bool isLoadedFromSa
                     break;
                 case ThorAction::ADVENTURE_FILE_OPTIONS:
                     res = EventFileDialog();
+                    break;
+                case ThorAction::ADVENTURE_SYSTEM_OPTIONS:
+                    EventSystemDialog();
                     break;
                 case ThorAction::ADVENTURE_PUZZLE_MAP:
                     EventPuzzleMaps();

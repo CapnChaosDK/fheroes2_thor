@@ -75,7 +75,14 @@ namespace fheroes2::thor
         DIALOG_TREASURE,
         DIALOG_LEVEL_UP,
         DIALOG_ARENA,
-        DIALOG_BATTLE_RESULT
+        DIALOG_BATTLE_RESULT,
+        ADVENTURE_SYSTEM_OPTIONS,
+        SYSTEM_GRAPHICS,
+        SYSTEM_AUDIO,
+        SYSTEM_INTERFACE,
+        SYSTEM_LANGUAGE,
+        SYSTEM_HOT_KEYS,
+        SYSTEM_RESOLUTION
     };
 
     static_assert( static_cast<int32_t>( UiContext::ADVENTURE_MAP_OVERVIEW ) == 43 );
@@ -86,6 +93,8 @@ namespace fheroes2::thor
     static_assert( static_cast<int32_t>( UiContext::DIALOG_CLOSE ) == 48 );
     static_assert( static_cast<int32_t>( UiContext::DIALOG_ARENA ) == 56 );
     static_assert( static_cast<int32_t>( UiContext::DIALOG_BATTLE_RESULT ) == 57 );
+    static_assert( static_cast<int32_t>( UiContext::ADVENTURE_SYSTEM_OPTIONS ) == 58 );
+    static_assert( static_cast<int32_t>( UiContext::SYSTEM_RESOLUTION ) == 64 );
 
     constexpr bool isDialogUiContext( const UiContext context )
     {
@@ -332,13 +341,57 @@ namespace fheroes2::thor
         ADVENTURE_FILE_CANCEL,
         HERO_MEETING_ARTIFACTS_TO_RIGHT,
         HERO_MEETING_ARTIFACTS_TO_LEFT,
-        HERO_MEETING_SWAP_ARTIFACTS
+        HERO_MEETING_SWAP_ARTIFACTS,
+        ADVENTURE_SYSTEM_OPTIONS,
+        ADVENTURE_SYSTEM_LANGUAGE,
+        ADVENTURE_SYSTEM_GRAPHICS,
+        ADVENTURE_SYSTEM_AUDIO,
+        ADVENTURE_SYSTEM_HERO_SPEED,
+        ADVENTURE_SYSTEM_ENEMY_SPEED,
+        ADVENTURE_SYSTEM_HOT_KEYS,
+        ADVENTURE_SYSTEM_INTERFACE,
+        ADVENTURE_SYSTEM_TEXT_SUPPORT,
+        ADVENTURE_SYSTEM_BATTLES,
+        ADVENTURE_SYSTEM_CLOSE,
+        SYSTEM_GRAPHICS_RESOLUTION,
+        SYSTEM_GRAPHICS_MODE,
+        SYSTEM_GRAPHICS_SCALING,
+        SYSTEM_GRAPHICS_VSYNC,
+        SYSTEM_GRAPHICS_INFO,
+        SYSTEM_GRAPHICS_CLOSE,
+        SYSTEM_AUDIO_MUSIC,
+        SYSTEM_AUDIO_EFFECTS,
+        SYSTEM_AUDIO_MUSIC_TYPE,
+        SYSTEM_AUDIO_3D,
+        SYSTEM_AUDIO_CLOSE,
+        SYSTEM_INTERFACE_TYPE,
+        SYSTEM_INTERFACE_PRESENCE,
+        SYSTEM_INTERFACE_ARMY_ESTIMATION,
+        SYSTEM_INTERFACE_CURSOR,
+        SYSTEM_INTERFACE_SCROLL_SPEED,
+        SYSTEM_INTERFACE_CLOSE,
+        SYSTEM_LANGUAGE_PREVIOUS,
+        SYSTEM_LANGUAGE_NEXT,
+        SYSTEM_LANGUAGE_CHOOSE,
+        SYSTEM_LANGUAGE_CANCEL,
+        SYSTEM_HOT_KEYS_PREVIOUS,
+        SYSTEM_HOT_KEYS_NEXT,
+        SYSTEM_HOT_KEYS_EDIT,
+        SYSTEM_HOT_KEYS_CLOSE,
+        SYSTEM_RESOLUTION_PREVIOUS,
+        SYSTEM_RESOLUTION_NEXT,
+        SYSTEM_RESOLUTION_APPLY,
+        SYSTEM_RESOLUTION_CANCEL
     };
 
     static_assert( static_cast<int32_t>( Action::ADVENTURE_OVERVIEW_BACK ) == 217 );
     static_assert( static_cast<int32_t>( Action::HERO_MEETING_CLOSE ) == 221 );
     static_assert( static_cast<int32_t>( Action::ADVENTURE_FILE_CANCEL ) == 233 );
     static_assert( static_cast<int32_t>( Action::HERO_MEETING_SWAP_ARTIFACTS ) == 236 );
+    static_assert( static_cast<int32_t>( Action::ADVENTURE_SYSTEM_OPTIONS ) == 237 );
+    static_assert( static_cast<int32_t>( Action::ADVENTURE_SYSTEM_CLOSE ) == 247 );
+    static_assert( static_cast<int32_t>( Action::SYSTEM_GRAPHICS_RESOLUTION ) == 248 );
+    static_assert( static_cast<int32_t>( Action::SYSTEM_RESOLUTION_CANCEL ) == 276 );
 
     using ActionMask = uint64_t;
 

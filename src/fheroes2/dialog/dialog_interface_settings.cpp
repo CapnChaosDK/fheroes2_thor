@@ -32,6 +32,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -88,6 +89,58 @@ namespace
                               isArmyEstimationNumeric ? _( "Numeric" ) : _( "Canonical" ), fheroes2::UiOptionTextWidth::THREE_ELEMENTS_ROW );
     }
 
+    std::string getInterfaceTypeName( const InterfaceType type )
+    {
+        if ( type == InterfaceType::GOOD ) {
+            return "Good";
+        }
+        if ( type == InterfaceType::EVIL ) {
+            return "Evil";
+        }
+        return "Dynamic";
+    }
+
+    std::string getScrollSpeedName( const int speed )
+    {
+        switch ( speed ) {
+        case SCROLL_SPEED_NONE:
+            return "Off";
+        case SCROLL_SPEED_SLOW:
+            return "Slow";
+        case SCROLL_SPEED_NORMAL:
+            return "Normal";
+        case SCROLL_SPEED_FAST:
+            return "Fast";
+        case SCROLL_SPEED_VERY_FAST:
+            return "Very Fast";
+        default:
+            return "Unknown";
+        }
+    }
+
+    void publishThorInterfaceSettings()
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_INTERFACE;
+        snapshot.category = "INTERFACE";
+        snapshot.title = "Type: " + getInterfaceTypeName( conf.getInterfaceType() )
+                         + " | Interface: " + ( conf.isHideInterfaceEnabled() ? "Hide" : "Show" );
+        snapshot.detail = std::string( "Army Estimate: " ) + ( conf.isArmyEstimationViewNumeric() ? "Numeric" : "Canonical" );
+        snapshot.date = std::string( "Cursor: " ) + ( conf.isMonochromeCursorEnabled() ? "Monochrome" : "Color" );
+        snapshot.resources = "Scroll Speed: " + getScrollSpeedName( conf.ScrollSpeed() );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_TYPE )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_PRESENCE )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_ARMY_ESTIMATION )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_CURSOR )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_SCROLL_SPEED )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_INTERFACE_CLOSE ) );
+    }
+
     SelectedWindow showConfigurationWindow( bool & saveConfiguration )
     {
         fheroes2::Display & display = fheroes2::Display::instance();
@@ -130,6 +183,7 @@ namespace
         };
 
         display.render();
+        publishThorInterfaceSettings();
 
         bool isFullScreen = fheroes2::engine().isFullScreen();
 
@@ -137,26 +191,32 @@ namespace
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
-            if ( le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_TYPE || le.MouseClickLeft( windowInterfaceTypeRoi ) ) {
                 return SelectedWindow::InterfaceType;
             }
-            if ( le.MouseClickLeft( windowInterfacePresenceRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_PRESENCE || le.MouseClickLeft( windowInterfacePresenceRoi ) ) {
                 return SelectedWindow::InterfacePresence;
             }
-            if ( le.MouseClickLeft( windowCursorTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_CURSOR || le.MouseClickLeft( windowCursorTypeRoi ) ) {
                 return SelectedWindow::CursorType;
             }
-            if ( le.MouseClickLeft( windowArmyEstimationModeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_ARMY_ESTIMATION || le.MouseClickLeft( windowArmyEstimationModeRoi ) ) {
                 return SelectedWindow::ArmyEstimationMode;
             }
 
-            if ( le.MouseClickLeft( windowScrollSpeedRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_INTERFACE_SCROLL_SPEED || le.MouseClickLeft( windowScrollSpeedRoi ) ) {
                 saveConfiguration = true;
                 conf.SetScrollSpeed( ( conf.ScrollSpeed() + 1 ) % ( SCROLL_SPEED_VERY_FAST + 1 ) );
                 refreshWindow();
+                publishThorInterfaceSettings();
 
                 continue;
             }
@@ -164,6 +224,7 @@ namespace
                 saveConfiguration = true;
                 conf.SetScrollSpeed( conf.ScrollSpeed() + 1 );
                 refreshWindow();
+                publishThorInterfaceSettings();
 
                 continue;
             }
@@ -171,6 +232,7 @@ namespace
                 saveConfiguration = true;
                 conf.SetScrollSpeed( conf.ScrollSpeed() - 1 );
                 refreshWindow();
+                publishThorInterfaceSettings();
 
                 continue;
             }
@@ -206,6 +268,8 @@ namespace
 
                 display.render( emptyDialogRestorer.rect() );
             }
+
+            publishThorInterfaceSettings();
         }
 
         return SelectedWindow::Exit;
@@ -216,6 +280,7 @@ namespace fheroes2
 {
     bool openInterfaceSettingsDialog( const std::function<void()> & updateUI )
     {
+        const thor::UiContextGuard thorContextGuard( thor::UiContext::SYSTEM_INTERFACE );
         const CursorRestorer cursorRestorer( true, ::Cursor::POINTER );
 
         Settings & conf = Settings::Get();

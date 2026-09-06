@@ -41,6 +41,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -180,8 +181,32 @@ namespace
         }
     }
 
+    void publishThorResolution( const fheroes2::ResolutionInfo & resolution, const int32_t selectedIndex, const size_t resolutionCount )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_RESOLUTION;
+        snapshot.category = "RESOLUTION";
+        snapshot.title = std::to_string( resolution.gameWidth ) + " x " + std::to_string( resolution.gameHeight );
+        snapshot.detail = "Screen: " + std::to_string( resolution.screenWidth ) + " x " + std::to_string( resolution.screenHeight );
+        snapshot.date = "Choice " + std::to_string( selectedIndex + 1 ) + " of " + std::to_string( resolutionCount );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::SYSTEM_RESOLUTION_APPLY )
+                                                    | fheroes2::thor::actionMask( ThorAction::SYSTEM_RESOLUTION_CANCEL );
+        if ( selectedIndex > 0 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_RESOLUTION_PREVIOUS );
+        }
+        if ( selectedIndex + 1 < static_cast<int32_t>( resolutionCount ) ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_RESOLUTION_NEXT );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
     fheroes2::ResolutionInfo getNewResolution()
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::SYSTEM_RESOLUTION );
         // setup cursor
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -252,6 +277,10 @@ namespace
             }
         }
 
+        if ( selectedResolution == fheroes2::ResolutionInfo{} && !resolutions.empty() ) {
+            selectedResolution = listBox.GetCurrent();
+        }
+
         listBox.Redraw();
 
         RedrawInfo( selectedResRoi.getPosition(), selectedResolution, display );
@@ -267,23 +296,38 @@ namespace
         }
 
         display.render( background.totalArea() );
+        publishThorResolution( selectedResolution, listBox.getCurrentId(), resolutions.size() );
 
         LocalEvent & le = LocalEvent::Get();
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
             const int listId = listBox.getCurrentId();
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_RESOLUTION_PREVIOUS && listId > 0 ) {
+                listBox.SetCurrent( listId - 1 );
+            }
+            else if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_RESOLUTION_NEXT
+                      && listId + 1 < static_cast<int32_t>( resolutions.size() ) ) {
+                listBox.SetCurrent( listId + 1 );
+            }
             listBox.QueueEventProcessing();
             const bool needRedraw = listId != listBox.getCurrentId();
 
-            if ( ( buttonOk.isEnabled() && le.MouseClickLeft( buttonOk.area() ) ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY )
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_RESOLUTION_APPLY
+                 || ( buttonOk.isEnabled() && le.MouseClickLeft( buttonOk.area() ) ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY )
                  || listBox.isDoubleClicked() ) {
                 if ( listBox.isSelected() ) {
                     break;
                 }
             }
-            else if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+            else if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_RESOLUTION_CANCEL || le.MouseClickLeft( buttonCancel.area() )
+                      || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                 selectedResolution = {};
                 break;
             }
@@ -307,6 +351,7 @@ namespace
 
             listBox.Redraw();
             display.render( roi );
+            publishThorResolution( selectedResolution, listBox.getCurrentId(), resolutions.size() );
         }
 
         return selectedResolution;

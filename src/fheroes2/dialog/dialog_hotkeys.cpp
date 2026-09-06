@@ -40,6 +40,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "tools.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_constants.h"
@@ -232,12 +233,38 @@ namespace
     private:
         std::unique_ptr<fheroes2::ImageRestorer> _listBackground;
     };
+
+    void publishThorHotKeySelection( const std::pair<Game::HotKeyEvent, Game::HotKeyCategory> & hotKeyEvent, const int32_t selectedIndex,
+                                     const size_t hotKeyCount )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_HOT_KEYS;
+        snapshot.category = "HOT KEYS";
+        snapshot.title = _( Game::getHotKeyEventNameByEventId( hotKeyEvent.first ) );
+        snapshot.detail = "Key: " + Game::getHotKeyNameByEventId( hotKeyEvent.first );
+        snapshot.date = "Category: " + std::string( _( Game::getHotKeyCategoryName( hotKeyEvent.second ) ) );
+        snapshot.resources = "Choice " + std::to_string( selectedIndex + 1 ) + " of " + std::to_string( hotKeyCount );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::SYSTEM_HOT_KEYS_EDIT )
+                                                    | fheroes2::thor::actionMask( ThorAction::SYSTEM_HOT_KEYS_CLOSE );
+        if ( selectedIndex > 0 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_HOT_KEYS_PREVIOUS );
+        }
+        if ( selectedIndex + 1 < static_cast<int32_t>( hotKeyCount ) ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_HOT_KEYS_NEXT );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
 }
 
 namespace fheroes2
 {
     void openHotkeysDialog()
     {
+        const thor::UiContextGuard thorContextGuard( thor::UiContext::SYSTEM_HOT_KEYS );
         // Setup cursor.
         const CursorRestorer cursorRestorer( true, ::Cursor::POINTER );
 
@@ -287,15 +314,38 @@ namespace fheroes2
         listbox.Redraw();
 
         display.render( background.totalArea() );
+        publishThorHotKeySelection( listbox.GetCurrent(), listbox.getCurrentId(), hotKeyEvents.size() );
 
         LocalEvent & le = LocalEvent::Get();
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
+            const thor::Action requestedThorAction = thor::takeAction();
+            if ( requestedThorAction != thor::Action::NONE ) {
+                thor::setEnabledActions( 0 );
+            }
+
+            const int32_t previousListId = listbox.getCurrentId();
+            if ( requestedThorAction == thor::Action::SYSTEM_HOT_KEYS_PREVIOUS && previousListId > 0 ) {
+                listbox.SetCurrent( previousListId - 1 );
+            }
+            else if ( requestedThorAction == thor::Action::SYSTEM_HOT_KEYS_NEXT
+                      && previousListId + 1 < static_cast<int32_t>( hotKeyEvents.size() ) ) {
+                listbox.SetCurrent( previousListId + 1 );
+            }
+
             listbox.QueueEventProcessing();
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            if ( requestedThorAction == thor::Action::SYSTEM_HOT_KEYS_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 return;
+            }
+
+            if ( requestedThorAction == thor::Action::SYSTEM_HOT_KEYS_EDIT ) {
+                listbox.ActionListDoubleClick( listbox.GetCurrent() );
+                listbox.Redraw();
+                display.render( roi );
+                publishThorHotKeySelection( listbox.GetCurrent(), listbox.getCurrentId(), hotKeyEvents.size() );
+                continue;
             }
 
             if ( le.isMouseRightButtonPressedInArea( buttonOk.area() ) ) {
@@ -305,11 +355,13 @@ namespace fheroes2
             }
 
             if ( !listbox.IsNeedRedraw() ) {
+                publishThorHotKeySelection( listbox.GetCurrent(), listbox.getCurrentId(), hotKeyEvents.size() );
                 continue;
             }
 
             listbox.Redraw();
             display.render( roi );
+            publishThorHotKeySelection( listbox.GetCurrent(), listbox.getCurrentId(), hotKeyEvents.size() );
         }
     }
 }

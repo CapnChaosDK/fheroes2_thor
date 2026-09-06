@@ -41,6 +41,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -197,8 +198,32 @@ namespace
                                display );
     }
 
+    void publishThorLanguageSelection( const fheroes2::SupportedLanguage language, const int32_t selectedIndex, const size_t languageCount )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const fheroes2::LanguageSwitcher languageSwitcher( language );
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_LANGUAGE;
+        snapshot.category = "LANGUAGE";
+        snapshot.title = fheroes2::getLanguageName( language );
+        snapshot.detail = "Choice " + std::to_string( selectedIndex + 1 ) + " of " + std::to_string( languageCount );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::SYSTEM_LANGUAGE_CHOOSE )
+                                                    | fheroes2::thor::actionMask( ThorAction::SYSTEM_LANGUAGE_CANCEL );
+        if ( selectedIndex > 0 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_LANGUAGE_PREVIOUS );
+        }
+        if ( selectedIndex + 1 < static_cast<int32_t>( languageCount ) ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_LANGUAGE_NEXT );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
     bool getLanguage( const std::vector<fheroes2::SupportedLanguage> & languages, fheroes2::SupportedLanguage & chosenLanguage, const bool isGameLanguage )
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::SYSTEM_LANGUAGE );
         // setup cursor
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -274,6 +299,7 @@ namespace
         redrawDialogInfo( listRoi, chosenLanguage, isGameLanguage );
 
         display.render( background.totalArea() );
+        publishThorLanguageSelection( chosenLanguage, listBox.getCurrentId(), languages.size() );
 
         LocalEvent & le = LocalEvent::Get();
         while ( le.HandleEvents() ) {
@@ -283,20 +309,33 @@ namespace
 
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
             if ( le.isMouseRightButtonPressedInArea( listRoi ) ) {
                 continue;
             }
 
             const int listId = listBox.getCurrentId();
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_LANGUAGE_PREVIOUS && listId > 0 ) {
+                listBox.SetCurrent( listId - 1 );
+            }
+            else if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_LANGUAGE_NEXT && listId + 1 < static_cast<int32_t>( languages.size() ) ) {
+                listBox.SetCurrent( listId + 1 );
+            }
             listBox.QueueEventProcessing();
             const bool needRedraw = listId != listBox.getCurrentId();
 
-            if ( ( buttonOk.isEnabled() && le.MouseClickLeft( buttonOk.area() ) ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY )
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_LANGUAGE_CHOOSE
+                 || ( buttonOk.isEnabled() && le.MouseClickLeft( buttonOk.area() ) ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_OKAY )
                  || listBox.isDoubleClicked() ) {
                 return true;
             }
 
-            if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_LANGUAGE_CANCEL || le.MouseClickLeft( buttonCancel.area() )
+                 || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
                 return false;
             }
 
@@ -330,6 +369,7 @@ namespace
 
             listBox.Redraw( chosenLanguage );
             display.render( roi );
+            publishThorLanguageSelection( chosenLanguage, listBox.getCurrentId(), languages.size() );
         }
 
         return false;

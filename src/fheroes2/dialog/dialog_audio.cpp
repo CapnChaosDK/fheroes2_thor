@@ -37,6 +37,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -103,12 +104,46 @@ namespace
 
         fheroes2::drawOption( rects[3], interfaceStateIcon, _( "3D Audio" ), value, fheroes2::UiOptionTextWidth::TWO_ELEMENTS_ROW );
     }
+
+    std::string getMusicTypeName( const int musicType )
+    {
+        if ( musicType == MUSIC_MIDI_ORIGINAL ) {
+            return "MIDI";
+        }
+        if ( musicType == MUSIC_MIDI_EXPANSION ) {
+            return "MIDI Expansion";
+        }
+        return "External";
+    }
+
+    void publishThorAudioSettings()
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_AUDIO;
+        snapshot.category = "AUDIO";
+        snapshot.title = "Music: " + std::to_string( conf.MusicVolume() ) + " | Effects: " + std::to_string( conf.SoundVolume() );
+        snapshot.detail = "Music Type: " + getMusicTypeName( conf.MusicType() );
+        snapshot.date = std::string( "3D Audio: " ) + ( conf.is3DAudioEnabled() ? "On" : "Off" );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::SYSTEM_AUDIO_MUSIC_TYPE )
+                                                    | fheroes2::thor::actionMask( ThorAction::SYSTEM_AUDIO_3D )
+                                                    | fheroes2::thor::actionMask( ThorAction::SYSTEM_AUDIO_CLOSE );
+        if ( Audio::isValid() ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::SYSTEM_AUDIO_MUSIC ) | fheroes2::thor::actionMask( ThorAction::SYSTEM_AUDIO_EFFECTS );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
 }
 
 namespace Dialog
 {
     bool openAudioSettingsDialog( const bool fromAdventureMap )
     {
+        const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::SYSTEM_AUDIO );
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
         fheroes2::Display & display = fheroes2::Display::instance();
@@ -145,6 +180,7 @@ namespace Dialog
         drawDialog( roi );
 
         display.render( background.totalArea() );
+        publishThorAudioSettings();
 
         bool saveConfig = false;
 
@@ -152,7 +188,12 @@ namespace Dialog
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_AUDIO_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
 
@@ -162,7 +203,7 @@ namespace Dialog
                 {
                     bool haveMusicSettingsChanged = false;
 
-                    if ( le.MouseClickLeft( musicVolumeRoi ) ) {
+                    if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_AUDIO_MUSIC || le.MouseClickLeft( musicVolumeRoi ) ) {
                         conf.SetMusicVolume( ( conf.MusicVolume() + 1 ) % 11 );
                         haveMusicSettingsChanged = true;
                     }
@@ -185,7 +226,7 @@ namespace Dialog
                 {
                     bool haveSoundSettingsChanged = false;
 
-                    if ( le.MouseClickLeft( soundVolumeRoi ) ) {
+                    if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_AUDIO_EFFECTS || le.MouseClickLeft( soundVolumeRoi ) ) {
                         conf.SetSoundVolume( ( conf.SoundVolume() + 1 ) % 11 );
                         haveSoundSettingsChanged = true;
                     }
@@ -206,7 +247,7 @@ namespace Dialog
                 }
             }
 
-            if ( le.MouseClickLeft( musicTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_AUDIO_MUSIC_TYPE || le.MouseClickLeft( musicTypeRoi ) ) {
                 int type = conf.MusicType() + 1;
                 // If there's no expansion files we skip this option
                 if ( type == MUSIC_MIDI_EXPANSION && !conf.isPriceOfLoyaltySupported() ) {
@@ -220,7 +261,7 @@ namespace Dialog
                 haveSettingsChanged = true;
             }
 
-            if ( le.MouseClickLeft( audio3D ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_AUDIO_3D || le.MouseClickLeft( audio3D ) ) {
                 conf.set3DAudio( !conf.is3DAudioEnabled() );
 
                 if ( fromAdventureMap ) {
@@ -254,6 +295,8 @@ namespace Dialog
 
                 saveConfig = true;
             }
+
+            publishThorAudioSettings();
         }
 
         return saveConfig;

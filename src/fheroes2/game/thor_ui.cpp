@@ -85,6 +85,7 @@ namespace
         case Action::ADVENTURE_OPEN_HERO_LIST:
         case Action::ADVENTURE_OPEN_CASTLE_LIST:
         case Action::ADVENTURE_OPEN_MAP_OVERVIEW:
+        case Action::ADVENTURE_SYSTEM_OPTIONS:
             return true;
         case Action::NONE:
         default:
@@ -106,6 +107,57 @@ namespace
         default:
             return false;
         }
+    }
+
+    constexpr bool isAdventureSystemOptionsAction( const fheroes2::thor::Action action )
+    {
+        using Action = fheroes2::thor::Action;
+
+        switch ( action ) {
+        case Action::ADVENTURE_SYSTEM_LANGUAGE:
+        case Action::ADVENTURE_SYSTEM_GRAPHICS:
+        case Action::ADVENTURE_SYSTEM_AUDIO:
+        case Action::ADVENTURE_SYSTEM_HERO_SPEED:
+        case Action::ADVENTURE_SYSTEM_ENEMY_SPEED:
+        case Action::ADVENTURE_SYSTEM_HOT_KEYS:
+        case Action::ADVENTURE_SYSTEM_INTERFACE:
+        case Action::ADVENTURE_SYSTEM_TEXT_SUPPORT:
+        case Action::ADVENTURE_SYSTEM_BATTLES:
+        case Action::ADVENTURE_SYSTEM_CLOSE:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    constexpr bool isSystemGraphicsAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_GRAPHICS_RESOLUTION && action <= fheroes2::thor::Action::SYSTEM_GRAPHICS_CLOSE;
+    }
+
+    constexpr bool isSystemAudioAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_AUDIO_MUSIC && action <= fheroes2::thor::Action::SYSTEM_AUDIO_CLOSE;
+    }
+
+    constexpr bool isSystemInterfaceAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_INTERFACE_TYPE && action <= fheroes2::thor::Action::SYSTEM_INTERFACE_CLOSE;
+    }
+
+    constexpr bool isSystemLanguageAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_LANGUAGE_PREVIOUS && action <= fheroes2::thor::Action::SYSTEM_LANGUAGE_CANCEL;
+    }
+
+    constexpr bool isSystemHotKeysAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_HOT_KEYS_PREVIOUS && action <= fheroes2::thor::Action::SYSTEM_HOT_KEYS_CLOSE;
+    }
+
+    constexpr bool isSystemResolutionAction( const fheroes2::thor::Action action )
+    {
+        return action >= fheroes2::thor::Action::SYSTEM_RESOLUTION_PREVIOUS && action <= fheroes2::thor::Action::SYSTEM_RESOLUTION_CANCEL;
     }
 
     constexpr bool isAdventureFileOptionsAction( const fheroes2::thor::Action action )
@@ -549,7 +601,7 @@ namespace
                || context == UiContext::CASTLE || context == UiContext::HERO_MEETING || context == UiContext::ADVENTURE_HERO_LIST
                || context == UiContext::ADVENTURE_CASTLE_LIST
                || context == UiContext::ADVENTURE_MAP_OVERVIEW
-               || context == UiContext::ADVENTURE_OPTIONS || context == UiContext::ADVENTURE_FILE_OPTIONS
+               || context == UiContext::ADVENTURE_OPTIONS || context == UiContext::ADVENTURE_FILE_OPTIONS || context == UiContext::ADVENTURE_SYSTEM_OPTIONS
                || context == UiContext::NEW_GAME_MENU || context == UiContext::CAMPAIGN_MENU || context == UiContext::MULTIPLAYER_MENU
                || context == UiContext::HOT_SEAT_MENU || context == UiContext::LOAD_GAME_MENU || context == UiContext::SCENARIO_SETUP
                || context == UiContext::BATTLE_ONLY_SETUP || context == UiContext::HIGH_SCORES_STANDARD
@@ -560,6 +612,7 @@ namespace
                || context == UiContext::EDITOR_FILE_OPTIONS || context == UiContext::EDITOR_SYSTEM_OPTIONS
                || context == UiContext::EDITOR_MAP_SPECIFICATIONS || context == UiContext::EDITOR_MAP_SPEC_PLAYERS
                || context == UiContext::EDITOR_MAP_SPEC_VICTORY || context == UiContext::EDITOR_MAP_SPEC_LOSS || context == UiContext::EDITOR_TOOLS
+               || ( context >= UiContext::SYSTEM_GRAPHICS && context <= UiContext::SYSTEM_RESOLUTION )
                || ( context >= UiContext::EDITOR_TOOL_TERRAIN && context <= UiContext::EDITOR_TOOL_ERASE );
     }
 
@@ -576,6 +629,20 @@ namespace
             return isAdventureOptionsAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_FILE_OPTIONS:
             return isAdventureFileOptionsAction( action );
+        case fheroes2::thor::UiContext::ADVENTURE_SYSTEM_OPTIONS:
+            return isAdventureSystemOptionsAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_GRAPHICS:
+            return isSystemGraphicsAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_AUDIO:
+            return isSystemAudioAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_INTERFACE:
+            return isSystemInterfaceAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_LANGUAGE:
+            return isSystemLanguageAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_HOT_KEYS:
+            return isSystemHotKeysAction( action );
+        case fheroes2::thor::UiContext::SYSTEM_RESOLUTION:
+            return isSystemResolutionAction( action );
         case fheroes2::thor::UiContext::ADVENTURE_HERO_LIST:
         case fheroes2::thor::UiContext::ADVENTURE_CASTLE_LIST:
             return isAdventureSelectionAction( action );
@@ -648,15 +715,15 @@ namespace
         }
     }
 
-    constexpr bool hasUniqueActionMaskBitsPerContext()
+    constexpr bool hasUniqueActionMaskBitsPerContext( const fheroes2::thor::UiContext firstContext, const fheroes2::thor::UiContext lastContext )
     {
         using Action = fheroes2::thor::Action;
         using UiContext = fheroes2::thor::UiContext;
 
         constexpr int32_t firstActionId = static_cast<int32_t>( Action::BATTLE_CAST_SPELL );
-        constexpr int32_t lastActionId = static_cast<int32_t>( Action::HERO_MEETING_SWAP_ARTIFACTS );
-        constexpr int32_t firstContextId = static_cast<int32_t>( UiContext::FALLBACK );
-        constexpr int32_t lastContextId = static_cast<int32_t>( UiContext::DIALOG_BATTLE_RESULT );
+        constexpr int32_t lastActionId = static_cast<int32_t>( Action::SYSTEM_RESOLUTION_CANCEL );
+        const int32_t firstContextId = static_cast<int32_t>( firstContext );
+        const int32_t lastContextId = static_cast<int32_t>( lastContext );
 
         for ( int32_t contextId = firstContextId; contextId <= lastContextId; ++contextId ) {
             const UiContext context = static_cast<UiContext>( contextId );
@@ -681,7 +748,12 @@ namespace
         return true;
     }
 
-    static_assert( hasUniqueActionMaskBitsPerContext(), "Thor actions valid in the same context must use distinct enabled-action mask bits." );
+    static_assert( hasUniqueActionMaskBitsPerContext( fheroes2::thor::UiContext::FALLBACK, fheroes2::thor::UiContext::GAME_SETTINGS ),
+                   "Thor actions valid in the same context must use distinct enabled-action mask bits." );
+    static_assert( hasUniqueActionMaskBitsPerContext( fheroes2::thor::UiContext::EDITOR_MAIN_MENU, fheroes2::thor::UiContext::EDITOR_TOOL_ERASE ),
+                   "Thor actions valid in the same context must use distinct enabled-action mask bits." );
+    static_assert( hasUniqueActionMaskBitsPerContext( fheroes2::thor::UiContext::ADVENTURE_HERO_LIST, fheroes2::thor::UiContext::SYSTEM_RESOLUTION ),
+                   "Thor actions valid in the same context must use distinct enabled-action mask bits." );
 }
 
 namespace fheroes2::thor

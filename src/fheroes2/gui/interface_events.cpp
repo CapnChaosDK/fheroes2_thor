@@ -307,7 +307,7 @@ fheroes2::GameMode Interface::AdventureMap::EventFileDialog() const
 
 void Interface::AdventureMap::EventSystemDialog() const
 {
-    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::DIALOG );
+    const fheroes2::thor::UiContextGuard thorContextGuard( fheroes2::thor::UiContext::ADVENTURE_SYSTEM_OPTIONS );
 
     fheroes2::showSystemOptionsDialog();
 }

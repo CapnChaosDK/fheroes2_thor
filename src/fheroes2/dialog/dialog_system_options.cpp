@@ -46,6 +46,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -163,7 +164,62 @@ namespace
         }
     }
 
-    DialogAction openSystemOptionsDialog( bool & saveConfiguration )
+    std::string getHeroSpeedName( const int speed )
+    {
+        return speed == 10 ? "Jump" : std::to_string( speed );
+    }
+
+    std::string getEnemySpeedName( const int speed )
+    {
+        if ( speed == 0 ) {
+            return "Don't Show";
+        }
+
+        return speed == 10 ? "Jump" : std::to_string( speed );
+    }
+
+    std::string getBattleModeName( const Settings & conf )
+    {
+        if ( !conf.BattleAutoResolve() ) {
+            return "Manual";
+        }
+
+        return conf.BattleAutoSpellcast() ? "Auto Resolve" : "Auto, No Spells";
+    }
+
+    void publishThorSystemOptions( const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        const fheroes2::SupportedLanguage currentLanguage = fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() );
+        const fheroes2::LanguageSwitcher languageSwitcher( currentLanguage );
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::ADVENTURE_SYSTEM_OPTIONS;
+        snapshot.title = "Hero Speed: " + getHeroSpeedName( conf.HeroesMoveSpeed() ) + " | Enemy Speed: " + getEnemySpeedName( conf.AIMoveSpeed() );
+        snapshot.category = "SYSTEM OPTIONS";
+        snapshot.detail = "Battles: " + getBattleModeName( conf ) + " | Text Support: " + ( conf.isTextSupportModeEnabled() ? "On" : "Off" );
+        snapshot.date = std::string( "Interface: " ) + ( conf.isEvilInterfaceEnabled() ? "Evil" : "Good" );
+        snapshot.resources = "Language: " + std::string( fheroes2::getLanguageName( currentLanguage ) );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::ActionMask enabledActions = fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_GRAPHICS )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_AUDIO )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_HERO_SPEED )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_ENEMY_SPEED )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_HOT_KEYS )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_INTERFACE )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_TEXT_SUPPORT )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_BATTLES )
+                                                    | fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_CLOSE );
+        if ( supportedLanguages.size() > 1 ) {
+            enabledActions |= fheroes2::thor::actionMask( ThorAction::ADVENTURE_SYSTEM_LANGUAGE );
+        }
+        fheroes2::thor::setEnabledActions( enabledActions );
+    }
+
+    DialogAction openSystemOptionsDialog( bool & saveConfiguration, const std::vector<fheroes2::SupportedLanguage> & supportedLanguages )
     {
         const CursorRestorer cursorRestorer( true, Cursor::POINTER );
 
@@ -213,6 +269,7 @@ namespace
         };
 
         display.render();
+        publishThorSystemOptions( supportedLanguages );
 
         bool isTextSupportModeEnabled = conf.isTextSupportModeEnabled();
 
@@ -220,24 +277,30 @@ namespace
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
-            if ( le.MouseClickLeft( windowLanguageRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_LANGUAGE || le.MouseClickLeft( windowLanguageRoi ) ) {
                 return DialogAction::Language;
             }
-            if ( le.MouseClickLeft( windowGraphicsRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_GRAPHICS || le.MouseClickLeft( windowGraphicsRoi ) ) {
                 return DialogAction::Graphics;
             }
-            if ( le.MouseClickLeft( windowAudioRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_AUDIO || le.MouseClickLeft( windowAudioRoi ) ) {
                 return DialogAction::AudioSettings;
             }
 
-            if ( le.MouseClickLeft( windowHeroSpeedRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_HERO_SPEED || le.MouseClickLeft( windowHeroSpeedRoi ) ) {
                 saveConfiguration = true;
                 conf.SetHeroesMoveSpeed( conf.HeroesMoveSpeed() % 10 + 1 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
@@ -246,6 +309,7 @@ namespace
                 conf.SetHeroesMoveSpeed( conf.HeroesMoveSpeed() + 1 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
@@ -254,15 +318,17 @@ namespace
                 conf.SetHeroesMoveSpeed( conf.HeroesMoveSpeed() - 1 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
 
-            if ( le.MouseClickLeft( windowEnemySpeedRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_ENEMY_SPEED || le.MouseClickLeft( windowEnemySpeedRoi ) ) {
                 saveConfiguration = true;
                 conf.SetAIMoveSpeed( ( conf.AIMoveSpeed() + 1 ) % 11 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
@@ -271,6 +337,7 @@ namespace
                 conf.SetAIMoveSpeed( conf.AIMoveSpeed() + 1 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
@@ -279,24 +346,26 @@ namespace
                 conf.SetAIMoveSpeed( conf.AIMoveSpeed() - 1 );
                 Game::UpdateGameSpeed();
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
 
-            if ( le.MouseClickLeft( windowHotKeyRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_HOT_KEYS || le.MouseClickLeft( windowHotKeyRoi ) ) {
                 return DialogAction::HotKeys;
             }
-            if ( le.MouseClickLeft( windowInterfaceRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_INTERFACE || le.MouseClickLeft( windowInterfaceRoi ) ) {
                 return DialogAction::InterfaceSettings;
             }
-            if ( le.MouseClickLeft( windowTextSupportModeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_TEXT_SUPPORT || le.MouseClickLeft( windowTextSupportModeRoi ) ) {
                 saveConfiguration = true;
                 conf.setTextSupportMode( !conf.isTextSupportModeEnabled() );
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
-            if ( le.MouseClickLeft( windowBattlesRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::ADVENTURE_SYSTEM_BATTLES || le.MouseClickLeft( windowBattlesRoi ) ) {
                 saveConfiguration = true;
                 if ( conf.BattleAutoResolve() ) {
                     if ( conf.BattleAutoSpellcast() ) {
@@ -312,6 +381,7 @@ namespace
                 }
 
                 refreshWindow();
+                publishThorSystemOptions( supportedLanguages );
 
                 continue;
             }
@@ -355,6 +425,8 @@ namespace
 
                 refreshWindow();
             }
+
+            publishThorSystemOptions( supportedLanguages );
         }
 
         return DialogAction::Close;
@@ -368,6 +440,7 @@ namespace fheroes2
         // We should make file writing only once.
         bool saveConfiguration = false;
         Settings & conf = Settings::Get();
+        const std::vector<SupportedLanguage> supportedLanguages = getSupportedLanguages();
 
         auto redrawAdventureMap = []() {
             Interface::AdventureMap & adventureMap = Interface::AdventureMap::Get();
@@ -389,10 +462,10 @@ namespace fheroes2
         while ( action != DialogAction::Close ) {
             switch ( action ) {
             case DialogAction::Configuration:
-                action = openSystemOptionsDialog( saveConfiguration );
+                action = openSystemOptionsDialog( saveConfiguration, supportedLanguages );
                 break;
             case DialogAction::Language: {
-                const std::vector<SupportedLanguage> supportedLanguages = getSupportedLanguages();
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
 
                 if ( supportedLanguages.size() > 1 ) {
                     selectLanguage( supportedLanguages, getLanguageFromAbbreviation( conf.getGameLanguage() ), true );
@@ -413,26 +486,34 @@ namespace fheroes2
                 action = DialogAction::Configuration;
                 break;
             }
-            case DialogAction::Graphics:
+            case DialogAction::Graphics: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 saveConfiguration |= fheroes2::openGraphicsSettingsDialog( rebildAdventureMap );
 
                 action = DialogAction::Configuration;
                 break;
-            case DialogAction::AudioSettings:
+            }
+            case DialogAction::AudioSettings: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 saveConfiguration |= Dialog::openAudioSettingsDialog( true );
 
                 action = DialogAction::Configuration;
                 break;
-            case DialogAction::HotKeys:
+            }
+            case DialogAction::HotKeys: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 fheroes2::openHotkeysDialog();
 
                 action = DialogAction::Configuration;
                 break;
-            case DialogAction::InterfaceSettings:
+            }
+            case DialogAction::InterfaceSettings: {
+                const thor::UiContextGuard dialogContext( thor::UiContext::DIALOG );
                 saveConfiguration |= fheroes2::openInterfaceSettingsDialog( rebildAdventureMap );
 
                 action = DialogAction::Configuration;
                 break;
+            }
             default:
                 break;
             }

@@ -35,6 +35,7 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "thor_ui.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -136,6 +137,31 @@ namespace
         }
     }
 
+    void publishThorGraphicsSettings()
+    {
+        using ThorAction = fheroes2::thor::Action;
+
+        const Settings & conf = Settings::Get();
+        const fheroes2::Display & display = fheroes2::Display::instance();
+
+        fheroes2::thor::InformationSnapshot snapshot;
+        snapshot.context = fheroes2::thor::UiContext::SYSTEM_GRAPHICS;
+        snapshot.category = "GRAPHICS";
+        snapshot.title = "Resolution: " + std::to_string( display.width() ) + " x " + std::to_string( display.height() );
+        snapshot.detail = std::string( "Mode: " ) + ( fheroes2::engine().isFullScreen() ? "Fullscreen" : "Windowed" )
+                          + " | Scaling: " + ( conf.isScreenScalingTypeNearest() ? "Nearest" : "Linear" );
+        snapshot.date = std::string( "V-Sync: " ) + ( conf.isVSyncEnabled() ? "On" : "Off" );
+        snapshot.resources = std::string( "System Info: " ) + ( conf.isSystemInfoEnabled() ? "On" : "Off" );
+        fheroes2::thor::publishInformationSnapshot( std::move( snapshot ) );
+
+        fheroes2::thor::setEnabledActions( fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_RESOLUTION )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_MODE )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_SCALING )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_VSYNC )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_INFO )
+                                           | fheroes2::thor::actionMask( ThorAction::SYSTEM_GRAPHICS_CLOSE ) );
+    }
+
     SelectedWindow showConfigurationWindow()
     {
         fheroes2::Display & display = fheroes2::Display::instance();
@@ -170,6 +196,7 @@ namespace
         drawOptions();
 
         display.render( background.totalArea() );
+        publishThorGraphicsSettings();
 
         bool isFullScreen = fheroes2::engine().isFullScreen();
 
@@ -177,22 +204,27 @@ namespace
         while ( le.HandleEvents() ) {
             buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
 
-            if ( le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
+            const fheroes2::thor::Action requestedThorAction = fheroes2::thor::takeAction();
+            if ( requestedThorAction != fheroes2::thor::Action::NONE ) {
+                fheroes2::thor::setEnabledActions( 0 );
+            }
+
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_CLOSE || le.MouseClickLeft( buttonOk.area() ) || Game::HotKeyCloseWindow() ) {
                 break;
             }
-            if ( le.MouseClickLeft( windowResolutionRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_RESOLUTION || le.MouseClickLeft( windowResolutionRoi ) ) {
                 return SelectedWindow::Resolution;
             }
-            if ( le.MouseClickLeft( windowModeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_MODE || le.MouseClickLeft( windowModeRoi ) ) {
                 return SelectedWindow::Mode;
             }
-            if ( le.MouseClickLeft( windowScreenScalingTypeRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_SCALING || le.MouseClickLeft( windowScreenScalingTypeRoi ) ) {
                 return SelectedWindow::ScreenScalingType;
             }
-            if ( le.MouseClickLeft( windowVSyncRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_VSYNC || le.MouseClickLeft( windowVSyncRoi ) ) {
                 return SelectedWindow::VSync;
             }
-            if ( le.MouseClickLeft( windowSystemInfoRoi ) ) {
+            if ( requestedThorAction == fheroes2::thor::Action::SYSTEM_GRAPHICS_INFO || le.MouseClickLeft( windowSystemInfoRoi ) ) {
                 return SelectedWindow::SystemInfo;
             }
 
@@ -227,6 +259,8 @@ namespace
 
                 display.render( emptyDialogRestorer.rect() );
             }
+
+            publishThorGraphicsSettings();
         }
 
         return SelectedWindow::Exit;
@@ -237,6 +271,7 @@ namespace fheroes2
 {
     bool openGraphicsSettingsDialog( const std::function<void()> & updateUI )
     {
+        const thor::UiContextGuard thorContextGuard( thor::UiContext::SYSTEM_GRAPHICS );
         const CursorRestorer cursorRestorer( true, ::Cursor::POINTER );
 
         Settings & conf = Settings::Get();
