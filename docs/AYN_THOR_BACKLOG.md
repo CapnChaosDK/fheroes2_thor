@@ -968,7 +968,26 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Precise Hero Meeting stack splitting is complete and hardware-validated. Select the next focused slice from artifact transfers, broader player-installed sprite use, configurable haptic choices, configurable layouts, or multi-slot redistribution; each remains deferred until its exact behavior and focused tests are approved.
+- Whole-artifact Hero Meeting transfers are complete and hardware-validated. Select the next focused slice from broader player-installed sprite use, configurable haptic choices, configurable layouts, multi-slot redistribution, or individual artifact manipulation; each remains deferred until its exact behavior and focused tests are approved.
+
+### Hero Meeting whole-artifact transfers
+
+Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-06.
+
+- The lower Hero Meeting deck adds Artifacts Right, Artifacts Left, and Swap Artifacts alongside the established army controls. Each action invokes the matching native Hero Meeting operation on the game thread.
+- Directional actions are available only when the source has a transferable non-spellbook artifact and the destination has room. Swap is available only when the bags differ. Native capacity, spellbook, artifact-set assembly, primary stats, morale, luck, scouting, fog, and radar behavior remain authoritative.
+- The existing army snapshot and controls remain unchanged. Individual artifact selection, drag-and-drop, artifact artwork, multi-slot army redistribution, and configuration remain separate deferred slices.
+- The Thor identifier contract passes with 58 contexts and 237 actions. Android assemble, app lint, and isotools lint pass through the required short `R:` mapping. The candidate installed successfully over wireless ADB and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks found the resumed activity and companion presentation on display 4 without a fatal exception or JNI-link failure. Candidate debug APK SHA-256: `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`.
+- All six focused hardware checks passed. Directional and swap controls were present without obscuring troop management; transfers, capacity handling, spellbook retention, differing, empty, and identical bags behaved correctly; assembled-set dialogs and exact Hero Meeting restoration passed; stats, scouting, fog, and radar remained correct; rapid input and lifecycle checks produced no stale action; and troop manipulation plus every established upper-screen and physical-control path remained unchanged.
+
+#### Focused whole-artifact validation
+
+1. Move all transferable artifacts in both directions and verify exact inventories, spellbook retention, and full-bag behavior.
+2. Swap different artifact loads and verify both spellbooks and every transferable artifact remain correctly owned.
+3. Trigger an assembled artifact set and verify its native dialog, resulting inventory, and exact Hero Meeting restoration.
+4. Transfer scouting artifacts and verify primary stats, morale, luck, fog, and radar effects remain correct during and after the meeting.
+5. Test empty and identical bags, rapid taps, panel recreation, suspend/resume, and Close; verify unavailable actions are muted and no stale action fires.
+6. Recheck troop taps, dragging, splitting, whole-army controls, upper touchscreen, mouse, hotkeys, and physical controls.
 
 ### Hero Meeting precise stack splitting
 

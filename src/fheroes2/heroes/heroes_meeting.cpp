@@ -166,6 +166,16 @@ namespace
         }
     }
 
+    bool canMoveArtifacts( const BagArtifacts & bagFrom, const BagArtifacts & bagTo )
+    {
+        const bool hasTransferableArtifact = std::any_of( bagFrom.begin(), bagFrom.end(), []( const Artifact & artifact ) {
+            return artifact.isValid() && artifact.GetID() != Artifact::MAGIC_BOOK;
+        } );
+        const bool hasEmptyDestination = std::any_of( bagTo.begin(), bagTo.end(), []( const Artifact & artifact ) { return !artifact.isValid(); } );
+
+        return hasTransferableArtifact && hasEmptyDestination;
+    }
+
     void swapArtifacts( BagArtifacts & firstBag, BagArtifacts & secondBag )
     {
         const auto moveRemainingArtifact = []( BagArtifacts & from, BagArtifacts & to, const BagArtifacts::reverse_iterator & fromIter ) {
@@ -542,6 +552,15 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         if ( canMoveArmyTroops( GetArmy(), otherHero.GetArmy(), selectedMonsterId ) ) {
             actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_TRANSFER_TO_LEFT );
         }
+        if ( canMoveArtifacts( GetBagArtifacts(), otherHero.GetBagArtifacts() ) ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_ARTIFACTS_TO_RIGHT );
+        }
+        if ( canMoveArtifacts( otherHero.GetBagArtifacts(), GetBagArtifacts() ) ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_ARTIFACTS_TO_LEFT );
+        }
+        if ( GetBagArtifacts() != otherHero.GetBagArtifacts() ) {
+            actions |= fheroes2::thor::actionMask( ThorAction::HERO_MEETING_SWAP_ARTIFACTS );
+        }
         fheroes2::thor::setEnabledActions( actions );
 
         fheroes2::thor::InformationSnapshot snapshot;
@@ -910,7 +929,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
             display.render();
         }
-        else if ( le.MouseClickLeft( moveArtifactsToHero2.area() ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_ARTIFACTS_TO_RIGHT || le.MouseClickLeft( moveArtifactsToHero2.area() ) ) {
             moveArtifacts( GetBagArtifacts(), otherHero.GetBagArtifacts() );
 
             selectArtifacts1.ResetSelected();
@@ -931,7 +950,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
             display.render();
         }
-        else if ( le.MouseClickLeft( moveArtifactsToHero1.area() ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_ARTIFACTS_TO_LEFT || le.MouseClickLeft( moveArtifactsToHero1.area() ) ) {
             moveArtifacts( otherHero.GetBagArtifacts(), GetBagArtifacts() );
 
             selectArtifacts1.ResetSelected();
@@ -952,7 +971,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
 
             display.render();
         }
-        else if ( le.MouseClickLeft( swapArtifacts.area() ) ) {
+        else if ( requestedThorAction == ThorAction::HERO_MEETING_SWAP_ARTIFACTS || le.MouseClickLeft( swapArtifacts.area() ) ) {
             ::swapArtifacts( GetBagArtifacts(), otherHero.GetBagArtifacts() );
 
             selectArtifacts1.ResetSelected();

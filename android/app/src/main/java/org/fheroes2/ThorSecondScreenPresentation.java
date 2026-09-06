@@ -327,6 +327,9 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int ACTION_ADVENTURE_FILE_QUICK_SAVE = 231;
     private static final int ACTION_ADVENTURE_FILE_QUIT = 232;
     private static final int ACTION_ADVENTURE_FILE_CANCEL = 233;
+    private static final int ACTION_HERO_MEETING_ARTIFACTS_TO_RIGHT = 234;
+    private static final int ACTION_HERO_MEETING_ARTIFACTS_TO_LEFT = 235;
+    private static final int ACTION_HERO_MEETING_SWAP_ARTIFACTS = 236;
 
     private static final int SELECTION_KIND_HERO = 1;
     private static final int SELECTION_KIND_CASTLE = 2;
@@ -1911,6 +1914,9 @@ final class ThorSecondScreenPresentation extends Presentation
                     addAction( "← ARMY", ACTION_HERO_MEETING_TRANSFER_TO_LEFT, KeyEvent.KEYCODE_DPAD_LEFT );
                     addAction( "SWAP ARMIES", ACTION_HERO_MEETING_SWAP_ARMIES, KeyEvent.KEYCODE_X );
                     addAction( "CLOSE", ACTION_HERO_MEETING_CLOSE, KeyEvent.KEYCODE_ESCAPE );
+                    addAction( "ARTIFACTS →", ACTION_HERO_MEETING_ARTIFACTS_TO_RIGHT, KeyEvent.KEYCODE_UNKNOWN );
+                    addAction( "← ARTIFACTS", ACTION_HERO_MEETING_ARTIFACTS_TO_LEFT, KeyEvent.KEYCODE_UNKNOWN );
+                    addAction( "SWAP ARTIFACTS", ACTION_HERO_MEETING_SWAP_ARTIFACTS, KeyEvent.KEYCODE_UNKNOWN );
                 }
                 break;
             case CONTEXT_BATTLE:

@@ -261,6 +261,9 @@ namespace
         case Action::HERO_MEETING_TRANSFER_TO_LEFT:
         case Action::HERO_MEETING_SWAP_ARMIES:
         case Action::HERO_MEETING_CLOSE:
+        case Action::HERO_MEETING_ARTIFACTS_TO_RIGHT:
+        case Action::HERO_MEETING_ARTIFACTS_TO_LEFT:
+        case Action::HERO_MEETING_SWAP_ARTIFACTS:
             return true;
         default:
             return false;
@@ -651,7 +654,7 @@ namespace
         using UiContext = fheroes2::thor::UiContext;
 
         constexpr int32_t firstActionId = static_cast<int32_t>( Action::BATTLE_CAST_SPELL );
-        constexpr int32_t lastActionId = static_cast<int32_t>( Action::ADVENTURE_FILE_CANCEL );
+        constexpr int32_t lastActionId = static_cast<int32_t>( Action::HERO_MEETING_SWAP_ARTIFACTS );
         constexpr int32_t firstContextId = static_cast<int32_t>( UiContext::FALLBACK );
         constexpr int32_t lastContextId = static_cast<int32_t>( UiContext::DIALOG_BATTLE_RESULT );
 

@@ -329,12 +329,16 @@ namespace fheroes2::thor
         ADVENTURE_FILE_SAVE_GAME,
         ADVENTURE_FILE_QUICK_SAVE,
         ADVENTURE_FILE_QUIT,
-        ADVENTURE_FILE_CANCEL
+        ADVENTURE_FILE_CANCEL,
+        HERO_MEETING_ARTIFACTS_TO_RIGHT,
+        HERO_MEETING_ARTIFACTS_TO_LEFT,
+        HERO_MEETING_SWAP_ARTIFACTS
     };
 
     static_assert( static_cast<int32_t>( Action::ADVENTURE_OVERVIEW_BACK ) == 217 );
     static_assert( static_cast<int32_t>( Action::HERO_MEETING_CLOSE ) == 221 );
     static_assert( static_cast<int32_t>( Action::ADVENTURE_FILE_CANCEL ) == 233 );
+    static_assert( static_cast<int32_t>( Action::HERO_MEETING_SWAP_ARTIFACTS ) == 236 );
 
     using ActionMask = uint64_t;
 
