@@ -14,24 +14,24 @@
 ## Current validated checkpoint
 
 - Branch: `ayn-thor-dual-screen`.
-- Latest published release: `thor-v0.9.0`.
-- Release source commit: `271d2a0fa3c9f55d69b20b5caf01169536478b72`.
-- Release APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
-- v0.9.0 adds hardware-validated Hero Meeting direct manipulation, tap and whole-army transfers, player-installed Hero and creature visuals, complete in-game Adventure and File Options, and semantic anti-stuck gameplay dialogs. Save/load, treasure chest, Level Up, Arena, standard prompts, and battle-result layouts expose exact lower-screen actions and restore their native parent without stale input. It retains the complete v0.8.0 Expanded Adventure Map, quick-selection, touch-minimap, menu, gameplay-control, information-card, campaign, and Map Editor workflows.
-- Latest hardware-validated source commit: `a9ded7c4824ff4c20dcbb38449c542ee1a3f3fe4`.
-- This checkpoint adds native-authoritative Hero Meeting whole-artifact transfers in both directions and whole-bag swapping, with capacity-aware availability and spellbook retention. Android build, app and isotools lint, explicit Thor installation and launch, and all six focused hardware checks passed. The debug APK SHA-256 is `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`.
+- Latest published release: `thor-v0.10.0`.
+- Release source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`.
+- Release APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
+- v0.10.0 integrates official upstream through `d778cb44b`, precise Hero Meeting stack splitting, whole-artifact transfers and swapping, semantic necromancy control, and complete in-game Adventure Options. Graphics, Audio, Interface, Language, Hot Keys, and Resolution expose dedicated lower-screen actions and live values with exact nested restoration. It adds Thor default-branch Android CI and strengthened identifier and action-mask collision checks while retaining every validated v0.9.0 workflow.
+- Latest hardware-validated source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`.
+- Android build, app and isotools lint, explicit Thor installation and launch, and all focused parent and nested Options hardware checks passed. The validated debug APK is the v0.10.0 release asset with SHA-256 `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
 - The maintained implementation history, validation results, next work, and deferred features are in `docs/AYN_THOR_BACKLOG.md`.
 
 ## Worktree handoff
 
 - Precise Hero Meeting stack splitting, direct troop manipulation, tap-based troop-slot transfers, whole-army controls, player-installed creature sprites and Hero portrait, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, safe unknown-menu fallback, haptic, owned/allied/enemy/neutral-labeled, clustered, zoomable, presentation-filtered, fog-safe Expanded Adventure Map, marker information card, hero and castle quick-selection lists, touch minimap viewport control, Editor pre-entry, in-map File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, Scenario Setup player editing, Battle Only setup, High Scores, and both campaign selectors are complete and hardware-validated.
 - Expanded-map validation now covers system-respecting accepted-action haptics and silence for excluded inputs; owned, allied, enemy, and neutral individual labels at 2x and 4x with native authorization and live withdrawal or reclassification; focused-owned / owned / allied / enemy / neutral bounded truncation, edge and collision priority, and input transparency; deterministic filter-first clustering and counts at 1x and 2x; the individual 4x transition; same-tile offsets; relationship and kind badge presentation; focused-cluster highlighting; lower-only drill-down; cluster information suppression; bounded zoom and anchoring; transformed navigation and individual marker targeting; gesture cancellation; restoration; privacy-aware information; fog/ownership/alliance invalidation; owned native focus; safe non-owned navigation; exact Heroes/Towns and Back restoration; compact minimap; View World; dialogs; physical controls; upper touchscreen; mouse; and hotkeys.
-- The latest hardware-validated source implementation is `a9ded7c48`.
-- Build and lint passed, the candidate installed and launched explicitly on the Thor, and artifact directions, swapping, capacity handling, spellbook retention, artifact-set restoration, stat and scouting effects, lifecycle safety, troop management, upper touchscreen, and physical controls passed. The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`.
+- The latest hardware-validated source implementation is `9a7c595f2`.
+- Build and lint passed, the candidate installed and launched explicitly on the Thor, and complete Adventure Options, nested Graphics, Audio, Interface, Language, Hot Keys, Resolution, restoration, lifecycle, upper touchscreen, mouse, hotkey, haptic, and physical-control checks passed. The validated debug APK remains at `android/app/build/outputs/apk/debug/app-debug.apk` when build outputs have not been cleaned. SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
 
 ## Next recommended planning point
 
-- Select and propose the next focused slice before implementation. Remaining candidates include richer lower-screen army management or multi-slot redistribution, artifact transfers, broader player-installed sprite use, configurable haptic choices, and configurable layouts; each remains deferred until its exact behavior and focused tests are approved.
+- Recommend individual Hero Meeting artifact manipulation as the next focused slice, building on the validated whole-bag transfer path while keeping native ownership, capacity, spellbook, and assembled-set rules authoritative. Multi-slot army redistribution, broader player-installed sprite use, configurable haptic choices, and configurable layouts remain deferred alternatives until their exact behavior and focused tests are approved.
 - Retain the validated precise stack splitting, Hero Meeting direct manipulation, tap-based troop-slot and whole-army transfers, player-installed visuals, quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
@@ -60,7 +60,7 @@
 
 - APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Package/activity: `org.fheroes2.thor/org.fheroes2.GameActivity`.
-- The last device endpoint was `192.168.68.58:35751`, advertised as `adb-42d0284-qC5yYd._adb-tls-connect._tcp`, but wireless ADB ports can change. Run `adb devices` and `adb mdns services` before install or launch. If a daemon started inside the restricted sandbox returns Windows socket error 10013, restart the local ADB server with approved network access before reconnecting.
+- The last device endpoint was `192.168.68.71:44447`, advertised as `adb-42d0284-qC5yYd._adb-tls-connect._tcp`, but wireless ADB ports can change. Run `adb devices` and `adb mdns services` before install or launch. If a daemon started inside the restricted sandbox returns Windows socket error 10013, restart the local ADB server with approved network access before reconnecting.
 - Launch the explicit game activity after installation; do not use `monkey`, which can open the asset Toolset instead.
 - The lower Android display was display ID 4. Its last SurfaceFlinger physical ID was `4630946482288158084`; re-check after panel toggles or reboot.
 

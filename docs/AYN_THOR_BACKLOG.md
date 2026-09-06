@@ -6,19 +6,19 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.9.0` was published on 2026-09-03 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.9.0
-- Source commit: `271d2a0fa3c9f55d69b20b5caf01169536478b72`.
-- APK: `fheroes2-thor-v0.9.0-debug.apk`.
-- APK SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
-- The release adds Hero Meeting direct manipulation, tap and whole-army transfers, player-installed Hero and creature visuals, complete in-game Adventure and File Options, and semantic anti-stuck gameplay dialogs with exact save/load, treasure, Level Up, Arena, standard-prompt, and battle-result controls. It retains every hardware-validated v0.8.0 map, menu, editor, campaign, information, and input workflow.
+- `thor-v0.10.0` was published on 2026-09-06 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.10.0
+- Source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`.
+- APK: `fheroes2-thor-v0.10.0-debug.apk`.
+- APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
+- The release integrates upstream through `d778cb44b`, precise Hero Meeting splitting, whole-artifact transfers and swapping, semantic necromancy control, complete Adventure Options and nested settings decks, Thor default-branch Android CI, identifier parity, and compile-time action-mask collision safeguards. It retains every hardware-validated v0.9.0 workflow.
 
 ## Latest validated development checkpoint
 
-- The Hero Meeting whole-artifact checkpoint at `a9ded7c4824ff4c20dcbb38449c542ee1a3f3fe4` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
-- This checkpoint adds native-authoritative lower-screen moves of all transferable artifacts in both directions and whole-bag swapping, with capacity-aware availability and spellbook retention. It retains the official-upstream integration through `d778cb44b`, Thor CI safeguards, precise stack splitting, and every v0.9.0 feature.
-- Debug APK SHA-256: `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`.
-- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused artifact, restoration, lifecycle, troop-management, upper-input, and physical-control hardware checks.
+- The Adventure Options checkpoint at `9a7c595f276e9db4210e8c8589a9885020ccac15` is the latest hardware-validated source state and the source of prerelease `thor-v0.10.0`.
+- This checkpoint adds the compact Adventure Map Options entry, complete System Options actions and live values, and dedicated Graphics, Audio, Interface, Language, Hot Keys, and Resolution decks with exact nested restoration. It retains whole-artifact transfers, precise splitting, the upstream integration through `d778cb44b`, Thor CI safeguards, and every v0.9.0 feature.
+- Debug APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
+- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused Options, nested settings, restoration, lifecycle, upper-input, mouse, haptic, and physical-control hardware checks.
 
 ## Agreed product decisions
 
@@ -968,11 +968,13 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Adventure Map Options and all nested settings menus are complete and hardware-validated. Whole-artifact Hero Meeting transfers are also complete and hardware-validated. Broader player-installed sprite use, configurable haptic choices, configurable layouts, multi-slot redistribution, and individual artifact manipulation remain deferred until their exact behavior and focused tests are approved.
+- Adventure Map Options and all nested settings menus are complete and hardware-validated. Whole-artifact Hero Meeting transfers are also complete and hardware-validated. Individual Hero Meeting artifact manipulation is the recommended next slice because it extends the validated artifact path without requiring a new screen model. Broader player-installed sprite use, configurable haptic choices, configurable layouts, and multi-slot redistribution remain deferred alternatives until their exact behavior and focused tests are approved.
 
 ### Adventure Map System Options access
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-06.
+
+- Validated source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`.
 
 - The normal Adventure Map command deck used while moving heroes adds the compact Options command beside its existing gameplay, Adventure, File, and Map controls. The expanded full-screen Adventure Overview remains unchanged and does not show this command.
 - Options invokes the existing native in-game path exactly once on the game thread. Its dedicated lower deck exposes Language, Graphics, Audio, Hero Speed, Enemy Speed, Hot Keys, Interface, Text Support, Battles, and Okay / Back. A live information card reports language, interface, both movement speeds, battle mode, and text-support state; it refreshes after direct changes and after nested dialogs.
