@@ -6,8 +6,8 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.9.0` at `271d2a0fa3c9f55d69b20b5caf01169536478b72`
-- Latest hardware-validated source commit: `151f62abdda066e798c336b922fac6922b3965e9`
-- Development APK SHA-256: `2EDE3EBEE1240236D9D167CA5DB286A52554B07F5C38704215CD286F079CA05A`
+- Latest hardware-validated source commit: `dfc1a93ef23701e9c8e5060c2f313404305605bd`
+- Development APK SHA-256: `56B9166C20AAC7C4F76745D03FD9A55019350DFF13A71AFB1D72B7AF8A29DCF1`
 - Release APK: `fheroes2-thor-v0.9.0-debug.apk`; SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.

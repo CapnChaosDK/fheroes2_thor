@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The upstream and CI maintenance checkpoint at `151f62abdda066e798c336b922fac6922b3965e9` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
-- This checkpoint integrates official upstream through `d778cb44b`, including the surrendered-hero empty-army repair and water-Hero Editor support. It adds Thor-default-branch Android CI without development-push releases, complete native/Java identifier parity, and a compile-time same-context action-mask collision guard. It retains the validated precise-splitting and every v0.9.0 feature.
-- Debug APK SHA-256: `2EDE3EBEE1240236D9D167CA5DB286A52554B07F5C38704215CD286F079CA05A`.
-- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused upstream, CI-guard, splitting, surrender, Editor, lifecycle, restoration, haptic, dual-screen, upper-touchscreen, and physical-controller regression run.
+- The Necromancy-dialog checkpoint at `dfc1a93ef23701e9c8e5060c2f313404305605bd` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
+- This checkpoint retains the official-upstream integration through `d778cb44b`, Thor CI safeguards, precise stack splitting, and every v0.9.0 feature. It adds a semantic lower-screen Close control for the post-battle Necromancy popup and restores the exact Adventure context afterward.
+- Debug APK SHA-256: `56B9166C20AAC7C4F76745D03FD9A55019350DFF13A71AFB1D72B7AF8A29DCF1`.
+- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused Necromancy Close, Adventure restoration, upper-screen close, and physical-control hardware checks in addition to the retained upstream and regression checkpoint.
 
 ## Agreed product decisions
 
