@@ -15,10 +15,10 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The Necromancy-dialog checkpoint at `dfc1a93ef23701e9c8e5060c2f313404305605bd` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
-- This checkpoint retains the official-upstream integration through `d778cb44b`, Thor CI safeguards, precise stack splitting, and every v0.9.0 feature. It adds a semantic lower-screen Close control for the post-battle Necromancy popup and restores the exact Adventure context afterward.
-- Debug APK SHA-256: `56B9166C20AAC7C4F76745D03FD9A55019350DFF13A71AFB1D72B7AF8A29DCF1`.
-- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed the focused Necromancy Close, Adventure restoration, upper-screen close, and physical-control hardware checks in addition to the retained upstream and regression checkpoint.
+- The Hero Meeting whole-artifact checkpoint at `a9ded7c4824ff4c20dcbb38449c542ee1a3f3fe4` is the latest hardware-validated source state. Prerelease `thor-v0.9.0` remains the latest published release.
+- This checkpoint adds native-authoritative lower-screen moves of all transferable artifacts in both directions and whole-bag swapping, with capacity-aware availability and spellbook retention. It retains the official-upstream integration through `d778cb44b`, Thor CI safeguards, precise stack splitting, and every v0.9.0 feature.
+- Debug APK SHA-256: `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`.
+- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed all six focused artifact, restoration, lifecycle, troop-management, upper-input, and physical-control hardware checks.
 
 ## Agreed product decisions
 
@@ -973,6 +973,8 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 ### Hero Meeting whole-artifact transfers
 
 Status: `passed`; behavior and focused acceptance tests were approved and hardware-validated on 2026-09-06.
+
+- Validated source commit: `a9ded7c4824ff4c20dcbb38449c542ee1a3f3fe4`.
 
 - The lower Hero Meeting deck adds Artifacts Right, Artifacts Left, and Swap Artifacts alongside the established army controls. Each action invokes the matching native Hero Meeting operation on the game thread.
 - Directional actions are available only when the source has a transferable non-spellbook artifact and the destination has room. Swap is available only when the bags differ. Native capacity, spellbook, artifact-set assembly, primary stats, morale, luck, scouting, fog, and radar behavior remain authoritative.
