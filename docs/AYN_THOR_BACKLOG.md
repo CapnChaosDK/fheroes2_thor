@@ -15,10 +15,11 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- The Adventure Options checkpoint at `9a7c595f276e9db4210e8c8589a9885020ccac15` is the latest hardware-validated source state and the source of prerelease `thor-v0.10.0`.
-- This checkpoint adds the compact Adventure Map Options entry, complete System Options actions and live values, and dedicated Graphics, Audio, Interface, Language, Hot Keys, and Resolution decks with exact nested restoration. It retains whole-artifact transfers, precise splitting, the upstream integration through `d778cb44b`, Thor CI safeguards, and every v0.9.0 feature.
-- Debug APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
-- Android build, app and isotools lint passed. The APK installed and launched explicitly on the Thor, and the user passed all focused Options, nested settings, restoration, lifecycle, upper-input, mouse, haptic, and physical-control hardware checks.
+- Hardware-validated source commit: `d9079c1d1039fbf4fb76c23f1fad7b998ebdcb34` (2026-09-07).
+- Individual Hero Meeting artifact transfers and swaps are complete, including both 14-slot bags, scroll spell names, native spellbook and assembly rules, revision-checked requests, and exact nested restoration. All previously validated v0.10.0 workflows are retained.
+- Debug APK SHA-256: `35A526DF4CE4D6327BFC6A689200AE2061DB919E4481FD92F9F9D1F621E66DCA`.
+- Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing.
+- The latest published release remains `thor-v0.10.0`; this development checkpoint has not been published as a new release.
 
 ## Agreed product decisions
 
@@ -968,13 +969,13 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- The individual Hero Meeting artifact slice below was approved on 2026-09-07 and is now in progress, pending focused hardware validation before commit/push.
-
-- Adventure Map Options and all nested settings menus are complete and hardware-validated. Whole-artifact Hero Meeting transfers are also complete and hardware-validated. Individual Hero Meeting artifact manipulation is the recommended next slice because it extends the validated artifact path without requiring a new screen model. Broader player-installed sprite use, configurable haptic choices, configurable layouts, and multi-slot redistribution remain deferred alternatives until their exact behavior and focused tests are approved.
+- Individual Hero Meeting artifact manipulation is complete and hardware-validated. Recommend player-installed artifact artwork as the next focused proposal, reusing the existing bounded visual bridge to improve slot recognition. No next slice is approved yet. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, configurable haptics, and configurable layouts remain deferred alternatives.
 
 ### Hero Meeting individual artifact manipulation
 
 Status: `done`; tap-based behavior and focused acceptance tests approved and hardware-validated on 2026-09-07.
+
+- Validated source commit: `d9079c1d1039fbf4fb76c23f1fad7b998ebdcb34`.
 
 - Show Artifacts switches the lower meeting panel from the established troop rows to both 14-slot artifact bags; Show Army returns to the troop controls. Artifact names, scroll spell names, numbered slots, selection highlighting, and eligible destination borders identify the exact operation without bundling artifact artwork.
 - Tap a transferable artifact, then an empty slot in the other hero's bag to move it or an occupied transferable slot to swap. Tap the selected slot again to cancel; selecting another artifact in the same bag changes the source. Spellbooks remain locked, and identical artifact/spell pairs reject a no-op swap.
@@ -1171,8 +1172,8 @@ All six focused checks passed on the Thor. Portraits matched the upper Hero scre
 Status: `deferred`
 
 - Completed and hardware-validated foundations: touch minimap and expanded-map viewport control, Hero and Castle quick-selection, Hero Meeting tap/drag transfers, whole-army controls, and precise stack splitting.
-- Whole-artifact Hero Meeting transfers and swapping are also complete and hardware-validated.
-- Remaining candidates: multi-slot army redistribution, individual Hero Meeting artifact manipulation, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
+- Whole-artifact and individual Hero Meeting transfers and swapping are also complete and hardware-validated.
+- Remaining candidates: multi-slot army redistribution, artifact drag-and-drop and same-bag rearrangement, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
 
 ## Milestone 5: remaining native visual integration
 

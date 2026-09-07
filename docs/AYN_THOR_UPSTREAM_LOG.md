@@ -6,10 +6,10 @@ Use this log for every official-upstream assessment or integration. Keep validat
 
 - Branch: `ayn-thor-dual-screen`
 - Latest published release: `thor-v0.10.0` at `9a7c595f276e9db4210e8c8589a9885020ccac15`
-- Latest hardware-validated source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`
-- Development APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`
+- Latest hardware-validated source commit: `d9079c1d1039fbf4fb76c23f1fad7b998ebdcb34`
+- Development APK SHA-256: `35A526DF4CE4D6327BFC6A689200AE2061DB919E4481FD92F9F9D1F621E66DCA`
 - Release APK: `fheroes2-thor-v0.10.0-debug.apk`; SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
-- Complete Adventure System Options and nested settings, plus whole-artifact Hero Meeting transfers, are hardware-validated. Individual Hero Meeting artifact manipulation is the next recommended slice, pending behavior and focused-test approval.
+- Complete Adventure System Options and nested settings, plus whole-artifact and individual Hero Meeting transfers, are hardware-validated. All focused individual-artifact hardware checks passed on 2026-09-07. Individual Hero Meeting artifact manipulation is complete and hardware-validated. Recommend player-installed artifact artwork as the next focused proposal, reusing the existing bounded visual bridge to improve slot recognition. No next slice is approved yet. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, configurable haptics, and configurable layouts remain deferred alternatives.
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
