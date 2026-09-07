@@ -968,7 +968,33 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
+- The individual Hero Meeting artifact slice below was approved on 2026-09-07 and is now in progress, pending focused hardware validation before commit/push.
+
 - Adventure Map Options and all nested settings menus are complete and hardware-validated. Whole-artifact Hero Meeting transfers are also complete and hardware-validated. Individual Hero Meeting artifact manipulation is the recommended next slice because it extends the validated artifact path without requiring a new screen model. Broader player-installed sprite use, configurable haptic choices, configurable layouts, and multi-slot redistribution remain deferred alternatives until their exact behavior and focused tests are approved.
+
+### Hero Meeting individual artifact manipulation
+
+Status: `done`; tap-based behavior and focused acceptance tests approved and hardware-validated on 2026-09-07.
+
+- Show Artifacts switches the lower meeting panel from the established troop rows to both 14-slot artifact bags; Show Army returns to the troop controls. Artifact names, scroll spell names, numbered slots, selection highlighting, and eligible destination borders identify the exact operation without bundling artifact artwork.
+- Tap a transferable artifact, then an empty slot in the other hero's bag to move it or an occupied transferable slot to swap. Tap the selected slot again to cancel; selecting another artifact in the same bag changes the source. Spellbooks remain locked, and identical artifact/spell pairs reject a no-op swap.
+- A bounded, revisioned native snapshot and single pending request validate both slots, active meeting context, inventory revision, and transferability. Requests execute only on the game thread through the native artifact-bar operation and existing assembly/stat refresh path. Scroll spell IDs participate in invalidation and no-op detection.
+- Inventory changes, nested contexts, touch cancellation, multi-touch, and lifecycle changes clear transient selections. Nested Hero/dialog return preserves the artifact view; recreation safely returns to the ordinary meeting deck. Whole-artifact actions, army controls, precise splitting, and existing input remain available.
+- Native request regression tests cover bounds, source/destination spellbook protection, empty sources, full-bag swaps, duplicate pending requests, one-shot consumption, unchanged snapshots, stale inventories, distinct scroll spells, modal invalidation, and malformed snapshots. They pass locally with MSVC and are included in Thor push CI.
+- Artifact drag-and-drop, same-bag rearrangement, artifact artwork, multi-slot army redistribution, broader player-installed visuals, configurable haptics, and configurable layouts remain deferred.
+- Final Android build, app lint, and isotools lint passed through the short `R:` mapping. Lint remains at 0 errors and the existing 59 app / 2 isotools warnings; native/Java parity remains 65 contexts and 277 actions. The candidate installed on `192.168.68.62:33045` and explicitly launched `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks confirmed the live `org.fheroes2.thor:GameActivityProcess` and lower-display-4 presentation. No matching fatal startup entry appeared in the sampled recent logs. No automated game navigation was performed.
+- Candidate APK SHA-256: `35A526DF4CE4D6327BFC6A689200AE2061DB919E4481FD92F9F9D1F621E66DCA`. The user reported all focused hardware checks passed on 2026-09-07 and authorized committing the validated candidate.
+
+#### Focused individual-artifact hardware validation
+
+1. Meet two owned heroes, choose Show Artifacts, and compare both bags and scroll spell names with the upper screen. Move individual artifacts into empty slots in both directions; verify exact slots, one operation per tap, readable names, and live updates.
+2. Swap different occupied slots, including full bags and two scrolls with different spells. Verify spellbooks cannot be selected or replaced; identical artifacts/spells produce no transfer or haptic.
+3. Complete an artifact set and check the native assembly dialog, resulting inventory, and exact meeting restoration. Transfer stat/scouting artifacts and verify stats, morale/luck, fog, and radar through meeting exit.
+4. Cancel by retapping the source, move a touch outside its slot, use a second finger, and tap rapidly. Verify no accidental transfer or stuck selection. Open each nested Hero screen and return; verify the artifact view restores with current contents and no stale selection.
+5. Toggle the lower panel and suspend/resume while a source is selected. Verify safe recovery with no queued transfer, stale inventory, or stuck press; Show Artifacts remains usable after recreation.
+6. Recheck Show Army, precise splitting, troop tap/drag and whole-army transfers, whole-artifact transfers/swapping, Close to Adventure, upper touchscreen, mouse, hotkeys, physical controls, and system-respecting haptics.
+
+All focused checks passed on the Thor: both-direction individual transfers, occupied/full-bag swaps, scroll distinctions, spellbook protection, assembled sets, stat/scouting effects, cancellation, rapid taps, multi-touch, nested Hero restoration, panel and suspend/resume recovery, Show Army, precise splitting, troop and whole-artifact transfers, physical controls, and upper-screen inputs.
 
 ### Adventure Map System Options access
 
@@ -1145,7 +1171,8 @@ All six focused checks passed on the Thor. Portraits matched the upper Hero scre
 Status: `deferred`
 
 - Completed and hardware-validated foundations: touch minimap and expanded-map viewport control, Hero and Castle quick-selection, Hero Meeting tap/drag transfers, whole-army controls, and precise stack splitting.
-- Remaining candidates: multi-slot army redistribution, artifact transfers, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
+- Whole-artifact Hero Meeting transfers and swapping are also complete and hardware-validated.
+- Remaining candidates: multi-slot army redistribution, individual Hero Meeting artifact manipulation, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
 
 ## Milestone 5: remaining native visual integration
 

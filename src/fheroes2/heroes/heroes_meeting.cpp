@@ -53,6 +53,7 @@
 #include "screen.h"
 #include "skill.h"
 #include "skill_bar.h"
+#include "spell.h"
 #include "thor_ui.h"
 #include "tools.h"
 #include "translations.h"
@@ -144,6 +145,25 @@ namespace
 
         return fheroes2::makeButtonWithShadow( offsetX + minX, offsetY + minY, originalReleasedImage, originalPressedImage, display, fheroes2::Point( -3, 3 ) );
     }
+
+#if defined( TARGET_AYN_THOR )
+    void publishThorArtifacts( const Heroes & hero, const Heroes & otherHero )
+    {
+        fheroes2::thor::ArtifactSnapshot artifacts;
+        artifacts.context = fheroes2::thor::UiContext::HERO_MEETING;
+        for ( const BagArtifacts * bag : { &hero.GetBagArtifacts(), &otherHero.GetBagArtifacts() } ) {
+            for ( const Artifact & artifact : *bag ) {
+                std::string name = artifact.isValid() ? artifact.GetName() : "Empty";
+                if ( artifact.GetID() == Artifact::SPELL_SCROLL ) {
+                    name += std::string( ": " ) + Spell( artifact.getSpellId() ).GetName();
+                }
+                artifacts.slots.push_back( { artifact.isValid() ? artifact.GetID() : -1, artifact.getSpellId(), std::move( name ),
+                                             artifact.isValid() && artifact.GetID() != Artifact::MAGIC_BOOK } );
+            }
+        }
+        fheroes2::thor::publishArtifactSnapshot( std::move( artifacts ) );
+    }
+#endif
 
     void moveArtifacts( BagArtifacts & bagFrom, BagArtifacts & bagTo )
     {
@@ -595,6 +615,10 @@ void Heroes::MeetingDialog( Heroes & otherHero )
             troopSnapshot.slots.emplace_back( makeThorTroopSlotSnapshot( otherHero.GetArmy().GetTroop( index ) ) );
         }
         fheroes2::thor::publishTroopSnapshot( std::move( troopSnapshot ) );
+
+#if defined( TARGET_AYN_THOR )
+        publishThorArtifacts( *this, otherHero );
+#endif
     };
 
     publishThorMeetingState();
@@ -765,7 +789,26 @@ void Heroes::MeetingDialog( Heroes & otherHero )
         }
 
         // selector artifacts event
-        if ( ( le.isMouseCursorPosInArea( selectArtifacts1.GetArea() ) && selectArtifacts1.QueueEventProcessing( selectArtifacts2 ) )
+        bool thorArtifactChanged = false;
+#if defined( TARGET_AYN_THOR )
+        // Refresh after any army operation or nested modal before consuming a revision-bound request.
+        publishThorArtifacts( *this, otherHero );
+        const fheroes2::thor::ArtifactMoveRequest artifactMove = fheroes2::thor::takeArtifactMoveRequest();
+        if ( artifactMove.valid ) {
+            BagArtifacts & fromBag = artifactMove.source / 14 == 0 ? GetBagArtifacts() : otherHero.GetBagArtifacts();
+            BagArtifacts & toBag = artifactMove.destination / 14 == 0 ? GetBagArtifacts() : otherHero.GetBagArtifacts();
+            Artifact & from = fromBag[artifactMove.source % 14];
+            Artifact & to = toBag[artifactMove.destination % 14];
+            if ( from.isValid() && from.GetID() != Artifact::MAGIC_BOOK && to.GetID() != Artifact::MAGIC_BOOK ) {
+                MeetingArtifactBar & destinationBar = artifactMove.destination / 14 == 0 ? selectArtifacts1 : selectArtifacts2;
+                destinationBar.ActionBarLeftMouseSingleClick( to, from );
+                selectArtifacts1.ResetSelected();
+                selectArtifacts2.ResetSelected();
+                thorArtifactChanged = true;
+            }
+        }
+#endif
+        if ( thorArtifactChanged || ( le.isMouseCursorPosInArea( selectArtifacts1.GetArea() ) && selectArtifacts1.QueueEventProcessing( selectArtifacts2 ) )
              || ( le.isMouseCursorPosInArea( selectArtifacts2.GetArea() ) && selectArtifacts2.QueueEventProcessing( selectArtifacts1 ) ) ) {
             if ( selectArmy1.isSelected() )
                 selectArmy1.ResetSelected();

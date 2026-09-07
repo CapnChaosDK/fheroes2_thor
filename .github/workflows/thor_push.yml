@@ -35,6 +35,10 @@ jobs:
       run: make -C files/lang -j "$(nproc)"
     - name: Verify Thor identifier contract
       run: python3 script/android/check_thor_contract.py
+    - name: Test Thor artifact request validation
+      run: |
+        g++ -std=c++17 -pthread script/android/test_thor_artifact_requests.cpp src/fheroes2/game/thor_ui.cpp -o "$RUNNER_TEMP/thor-artifact-tests"
+        "$RUNNER_TEMP/thor-artifact-tests"
     - name: Build and lint Thor debug app
       run: |
         cd android

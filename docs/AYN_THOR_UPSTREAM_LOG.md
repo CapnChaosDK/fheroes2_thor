@@ -5,12 +5,24 @@ Use this log for every official-upstream assessment or integration. Keep validat
 ## Current Thor handoff baseline
 
 - Branch: `ayn-thor-dual-screen`
-- Latest published release: `thor-v0.9.0` at `271d2a0fa3c9f55d69b20b5caf01169536478b72`
-- Latest hardware-validated source commit: `a9ded7c4824ff4c20dcbb38449c542ee1a3f3fe4`
-- Development APK SHA-256: `B9220B7C9EEA7807EFF3F0996D6FF252166CAB26F0766B3EFE7DB2519EF0225A`
-- Release APK: `fheroes2-thor-v0.9.0-debug.apk`; SHA-256: `0AD83689B90F81E0C9001365CD0A60650DFCD4FF0CE0E63564222E694D720B66`.
+- Latest published release: `thor-v0.10.0` at `9a7c595f276e9db4210e8c8589a9885020ccac15`
+- Latest hardware-validated source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`
+- Development APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`
+- Release APK: `fheroes2-thor-v0.10.0-debug.apk`; SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
+- Complete Adventure System Options and nested settings, plus whole-artifact Hero Meeting transfers, are hardware-validated. Individual Hero Meeting artifact manipulation is the next recommended slice, pending behavior and focused-test approval.
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, configurable haptics, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
+
+## 2026-09-07: repository health and next-slice assessment
+
+- Assessed Thor HEAD: `70cdc0abbf3c7ac1b78465de30eb33dbc96d929a`; working tree was clean and the refreshed origin branch matched exactly. Changes since the v0.10.0 source tag are documentation only.
+- Git full integrity check passed with dangling objects only; no corruption was reported. Upstream push remains disabled.
+- Refreshed upstream: `15dcb1c1b`; four upstream-only commits affect translations and the Blood Lust description, with no gameplay logic change. Integration was not performed and is not an urgent prerequisite for the next Thor slice.
+- Native/Java contract passed: 65 contexts and 277 actions match. Android `:app:assembleDebug`, `:app:lintDebug`, and `:isotools:lint` passed through the short `R:` mapping using the existing build cache. Gradle reports deprecations relevant to a future Gradle 9 upgrade.
+- Hosted AYN Thor Push CI passed for the assessed HEAD: https://github.com/CapnChaosDK/fheroes2_thor/actions/runs/34053554508. GitHub release asset metadata matches the documented v0.10.0 SHA-256 and the local tag resolves to the validated source commit.
+- Corrected the stale current release baseline in this log and clarified that the remaining artifact backlog concerns individual manipulation. Historical slice records and deferred alternatives are retained.
+- Next recommendation: a focused tap-based individual Hero Meeting artifact selection and transfer/swap slice, reusing native inventory rules and existing meeting restoration. Approval must precede implementation; focused tests should cover both directions, occupied and empty destinations, full bags, spellbooks, assembled sets and stat/scouting refresh, cancellation/lifecycle recovery, and army/input regressions.
+- This was a repository audit, with no new gameplay candidate or device interaction. Documentation corrections remain uncommitted for review.
 
 ## 2026-08-23: initial fork checkpoint
 

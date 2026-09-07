@@ -543,6 +543,34 @@ namespace fheroes2::thor
         bool valid{ false };
     };
 
+    struct ArtifactSlotSnapshot
+    {
+        int32_t id{ -1 };
+        int32_t spellId{ 0 };
+        std::string name;
+        bool transferable{ false };
+    };
+
+    struct ArtifactSnapshot
+    {
+        UiContext context{ UiContext::FALLBACK };
+        uint64_t revision{ 0 };
+        std::vector<ArtifactSlotSnapshot> slots;
+    };
+
+    struct ArtifactMoveRequest
+    {
+        uint64_t revision{ 0 };
+        int32_t source{ -1 };
+        int32_t destination{ -1 };
+        bool valid{ false };
+    };
+
+    bool getArtifactSnapshot( uint64_t knownRevision, ArtifactSnapshot & snapshot );
+    void publishArtifactSnapshot( ArtifactSnapshot snapshot );
+    bool enqueueArtifactMoveRequest( uint64_t revision, int32_t source, int32_t destination );
+    ArtifactMoveRequest takeArtifactMoveRequest();
+
     constexpr int32_t actionMaskBit( const Action action )
     {
         const int32_t actionId = static_cast<int32_t>( action );

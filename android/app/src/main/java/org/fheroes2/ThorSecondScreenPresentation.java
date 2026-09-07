@@ -399,6 +399,7 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int LOCAL_SPLIT_MAX = 11;
     private static final int LOCAL_SPLIT_MOVE = 12;
     private static final int LOCAL_SPLIT_CANCEL = 13;
+    private static final int LOCAL_TOGGLE_ARTIFACTS = 14;
 
     private static final int OVERVIEW_KIND_FILTER_BOTH = 0;
     private static final int OVERVIEW_RELATIONSHIP_FILTER_ALL = 0;
@@ -442,6 +443,11 @@ final class ThorSecondScreenPresentation extends Presentation
         boolean send( int context, long revision, int kind, int id );
     }
 
+    interface ArtifactMoveSender
+    {
+        boolean send( long revision, int source, int destination );
+    }
+
     interface TroopMoveSender
     {
         boolean send( int context, long revision, int sourceSide, int sourceSlot, int destinationSide, int destinationSlot, long count );
@@ -453,11 +459,12 @@ final class ThorSecondScreenPresentation extends Presentation
     private final SelectionSender selectionSender;
     private final MarkerInfoSender markerInfoSender;
     private final TroopMoveSender troopMoveSender;
+    private final ArtifactMoveSender artifactMoveSender;
     private CommandDeckView commandDeckView;
 
     ThorSecondScreenPresentation( final Context context, final Display display, final KeySender keySender, final ActionSender actionSender,
                                   final ViewportSender viewportSender, final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender,
-                                  final TroopMoveSender troopMoveSender )
+                                  final TroopMoveSender troopMoveSender, final ArtifactMoveSender artifactMoveSender )
     {
         super( context, display );
         this.keySender = keySender;
@@ -466,6 +473,7 @@ final class ThorSecondScreenPresentation extends Presentation
         this.selectionSender = selectionSender;
         this.markerInfoSender = markerInfoSender;
         this.troopMoveSender = troopMoveSender;
+        this.artifactMoveSender = artifactMoveSender;
     }
 
     @Override
@@ -483,7 +491,7 @@ final class ThorSecondScreenPresentation extends Presentation
         }
 
         commandDeckView
-            = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender, markerInfoSender, troopMoveSender );
+            = new CommandDeckView( getContext(), keySender, actionSender, viewportSender, selectionSender, markerInfoSender, troopMoveSender, artifactMoveSender );
         setContentView( commandDeckView );
     }
 
@@ -496,13 +504,13 @@ final class ThorSecondScreenPresentation extends Presentation
         super.onStop();
     }
 
-    void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled,
-                       final int[] radarSnapshot, final int[] visualSnapshot, final String[] selectionSnapshot, final String[] troopSnapshot,
-                       final int[] troopVisualSnapshot )
+    void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled, final int[] radarSnapshot,
+                       final int[] visualSnapshot, final String[] selectionSnapshot, final String[] troopSnapshot, final int[] troopVisualSnapshot,
+                       final String[] artifactSnapshot )
     {
         if ( commandDeckView != null ) {
             commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot, visualSnapshot, selectionSnapshot,
-                                          troopSnapshot, troopVisualSnapshot );
+                                          troopSnapshot, troopVisualSnapshot, artifactSnapshot );
         }
     }
 
@@ -528,6 +536,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final SelectionSender selectionSender;
         private final MarkerInfoSender markerInfoSender;
         private final TroopMoveSender troopMoveSender;
+        private final ArtifactMoveSender artifactMoveSender;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -566,6 +575,15 @@ final class ThorSecondScreenPresentation extends Presentation
         private long selectionRevision = -1;
         private final List<SelectionEntry> selectionEntries = new ArrayList<>();
         private int selectionPage;
+        private boolean showArtifacts;
+        private int artifactContext = -1;
+        private long artifactRevision = -1;
+        private final List<ArtifactSlot> artifactSlots = new ArrayList<>();
+        private final RectF[] artifactBounds = new RectF[28];
+        private int selectedArtifact = -1;
+        private int pressedArtifact = -1;
+        private float artifactDownX;
+        private float artifactDownY;
         private int troopContext = -1;
         private long troopRevision = -1;
         private String leftHeroName = "";
@@ -603,7 +621,8 @@ final class ThorSecondScreenPresentation extends Presentation
         private final Runnable radarLongPress;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
-                         final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender, final TroopMoveSender troopMoveSender )
+                         final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender, final TroopMoveSender troopMoveSender,
+                         final ArtifactMoveSender artifactMoveSender )
         {
             super( context );
             this.keySender = keySender;
@@ -612,6 +631,10 @@ final class ThorSecondScreenPresentation extends Presentation
             this.selectionSender = selectionSender;
             this.markerInfoSender = markerInfoSender;
             this.troopMoveSender = troopMoveSender;
+            this.artifactMoveSender = artifactMoveSender;
+            for ( int index = 0; index < artifactBounds.length; ++index ) {
+                artifactBounds[index] = new RectF();
+            }
             troopTouchSlop = ViewConfiguration.get( context ).getScaledTouchSlop();
             for ( int index = 0; index < troopSlotBounds.length; ++index ) {
                 troopSlotBounds[index] = new RectF();
@@ -635,12 +658,13 @@ final class ThorSecondScreenPresentation extends Presentation
             };
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null, null, null );
+            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null, null, null, null );
         }
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot,
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final int[] requestedVisualSnapshot,
-                           final String[] requestedSelectionSnapshot, final String[] requestedTroopSnapshot, final int[] requestedTroopVisualSnapshot )
+                           final String[] requestedSelectionSnapshot, final String[] requestedTroopSnapshot, final int[] requestedTroopVisualSnapshot,
+                           final String[] requestedArtifactSnapshot )
         {
             final int context
                 = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SYSTEM_RESOLUTION ? requestedContext : CONTEXT_FALLBACK;
@@ -648,20 +672,28 @@ final class ThorSecondScreenPresentation extends Presentation
             final boolean radarChanged = applyRadarSnapshot( requestedRadarSnapshot );
             final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
             final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
+            final boolean artifactChanged = applyArtifactSnapshot( requestedArtifactSnapshot );
             final boolean troopChanged = applyTroopSnapshot( requestedTroopSnapshot );
             final boolean troopVisualChanged = applyTroopVisualSnapshot( requestedTroopVisualSnapshot );
-            if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled
-                 && !informationChanged && !radarChanged && !visualChanged && !selectionChanged && !troopChanged && !troopVisualChanged ) {
+            if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled && !informationChanged
+                 && !radarChanged && !visualChanged && !selectionChanged && !troopChanged && !troopVisualChanged && !artifactChanged ) {
                 return;
             }
 
             final boolean contextChanged = gameContext != context;
-            if ( contextChanged || selectionChanged || troopChanged || enabledActions != requestedEnabledActions
+            if ( contextChanged || selectionChanged || troopChanged || artifactChanged || enabledActions != requestedEnabledActions
                  || ( viewportControlEnabled && !requestedViewportControlEnabled ) ) {
                 releasePressedButton();
             }
             if ( contextChanged || troopChanged ) {
                 clearTroopSelection();
+            }
+            if ( contextChanged || artifactChanged ) {
+                selectedArtifact = -1;
+                pressedArtifact = -1;
+            }
+            if ( contextChanged && ( context == CONTEXT_ADVENTURE_MAP || context == CONTEXT_MAIN_MENU ) ) {
+                showArtifacts = false;
             }
             gameContext = context;
             enabledActions = requestedEnabledActions;
@@ -803,6 +835,126 @@ final class ThorSecondScreenPresentation extends Presentation
             }
         }
 
+        private boolean applyArtifactSnapshot( final String[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 4 ) {
+                return false;
+            }
+            try {
+                final int version = Integer.parseInt( snapshot[0] );
+                final int context = Integer.parseInt( snapshot[1] );
+                final long revision = Long.parseLong( snapshot[2] );
+                final int count = Integer.parseInt( snapshot[3] );
+                if ( version != 1 || revision == artifactRevision || ( count != 0 && count != 28 ) || snapshot.length != 4 + count * 4 ) {
+                    return false;
+                }
+                final List<ArtifactSlot> slots = new ArrayList<>( count );
+                for ( int index = 0; index < count; ++index ) {
+                    final int offset = 4 + index * 4;
+                    slots.add( new ArtifactSlot( Integer.parseInt( snapshot[offset] ), snapshot[offset + 1] == null ? "" : snapshot[offset + 1],
+                                                 "1".equals( snapshot[offset + 2] ), Integer.parseInt( snapshot[offset + 3] ) ) );
+                }
+                artifactContext = context;
+                artifactRevision = revision;
+                artifactSlots.clear();
+                artifactSlots.addAll( slots );
+                selectedArtifact = -1;
+                pressedArtifact = -1;
+                return true;
+            }
+            catch ( final NumberFormatException ex ) {
+                return false;
+            }
+        }
+
+        private void layoutArtifactSlots( final int width, final int height )
+        {
+            final float margin = getMargin();
+            final float gap = margin * 0.3f;
+            final float slotWidth = ( width - 2f * margin - 6f * gap ) / 7f;
+            final float slotHeight = height * 0.083f;
+            for ( int index = 0; index < 28; ++index ) {
+                final int side = index / 14;
+                final int slot = index % 14;
+                final float left = margin + slot % 7 * ( slotWidth + gap );
+                final float top = height * ( 0.315f + side * 0.215f ) + slot / 7 * ( slotHeight + gap );
+                artifactBounds[index].set( left, top, left + slotWidth, top + slotHeight );
+            }
+        }
+
+        private int artifactAt( final float x, final float y )
+        {
+            if ( !showArtifacts || gameContext != CONTEXT_HERO_MEETING || artifactContext != gameContext || artifactSlots.size() != 28 ) {
+                return -1;
+            }
+            for ( int index = 0; index < 28; ++index ) {
+                if ( artifactBounds[index].contains( x, y ) ) {
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        private void handleArtifactTap( final int index )
+        {
+            final ArtifactSlot target = artifactSlots.get( index );
+            if ( selectedArtifact == index ) {
+                selectedArtifact = -1;
+            }
+            else if ( selectedArtifact < 0 || selectedArtifact / 14 == index / 14 ) {
+                if ( target.transferable ) {
+                    selectedArtifact = index;
+                }
+            }
+            else if ( target.id < 0 || target.transferable ) {
+                if ( artifactMoveSender.send( artifactRevision, selectedArtifact, index ) ) {
+                    selectedArtifact = -1;
+                    performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
+                }
+            }
+        }
+
+        private void drawArtifactDeck( final Canvas canvas )
+        {
+            if ( artifactContext != gameContext || artifactSlots.size() != 28 ) {
+                return;
+            }
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            for ( int side = 0; side < 2; ++side ) {
+                paint.setColor( TEXT_COLOR );
+                drawFittedText( canvas, ( side == 0 ? "LEFT: " + leftHeroName : "RIGHT: " + rightHeroName ), getWidth() * 0.5f, artifactBounds[side * 14].top - 10f,
+                                getWidth() - 2f * getMargin(), 24f );
+            }
+            for ( int index = 0; index < 28; ++index ) {
+                final RectF bounds = artifactBounds[index];
+                final ArtifactSlot slot = artifactSlots.get( index );
+                final boolean selected = selectedArtifact == index;
+                final boolean target = selectedArtifact >= 0 && selectedArtifact / 14 != index / 14 && ( slot.id < 0 || slot.transferable )
+                                       && ( slot.id != artifactSlots.get( selectedArtifact ).id || slot.spellId != artifactSlots.get( selectedArtifact ).spellId );
+                paint.setStyle( Paint.Style.FILL );
+                paint.setColor( pressedArtifact == index ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
+                canvas.drawRoundRect( bounds, 8f, 8f, paint );
+                paint.setStyle( Paint.Style.STROKE );
+                paint.setStrokeWidth( selected ? 4f : 2f );
+                paint.setColor( selected ? GOLD_LIGHT_COLOR : target ? VALID_TARGET_COLOR : GOLD_COLOR );
+                canvas.drawRoundRect( bounds, 8f, 8f, paint );
+                paint.setStyle( Paint.Style.FILL );
+                paint.setColor( slot.transferable ? TEXT_COLOR : MUTED_TEXT_COLOR );
+                final int split = slot.name.lastIndexOf( ' ', slot.name.length() / 2 );
+                final String first = split > 0 ? slot.name.substring( 0, split ) : slot.name;
+                final String second = split > 0 ? slot.name.substring( split + 1 ) : "";
+                drawFittedText( canvas, first, bounds.centerX(), bounds.centerY() - 5f, bounds.width() - 12f, 20f );
+                drawFittedText( canvas, second, bounds.centerX(), bounds.centerY() + 18f, bounds.width() - 12f, 20f );
+                drawFittedText( canvas, Integer.toString( index % 14 + 1 ), bounds.centerX(), bounds.bottom - 5f, bounds.width() - 12f, 13f );
+            }
+            paint.setColor( TEXT_COLOR );
+            final String guidance = selectedArtifact < 0 ? "Tap an artifact, then a slot in the other bag. Spellbooks stay with their hero."
+                                                         : artifactSlots.get( selectedArtifact ).name + " - tap the other bag to move / swap; tap again to cancel.";
+            drawFittedText( canvas, guidance, getWidth() * 0.5f, getHeight() * 0.745f, getWidth() - 2f * getMargin(), 22f );
+        }
+
         private boolean applyTroopSnapshot( final String[] snapshot )
         {
             if ( snapshot == null || snapshot.length < 8 ) {
@@ -882,6 +1034,7 @@ final class ThorSecondScreenPresentation extends Presentation
             super.onSizeChanged( width, height, oldWidth, oldHeight );
             layoutButtons( width, height );
             layoutTroopSlots( width, height );
+            layoutArtifactSlots( width, height );
         }
 
         @Override
@@ -897,8 +1050,13 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             if ( gameContext == CONTEXT_HERO_MEETING ) {
-                drawTroopDeck( canvas );
-                drawTroopSplitGuidance( canvas );
+                if ( showArtifacts ) {
+                    drawArtifactDeck( canvas );
+                }
+                else {
+                    drawTroopDeck( canvas );
+                    drawTroopSplitGuidance( canvas );
+                }
             }
 
             for ( final CommandButton button : buttons ) {
@@ -1292,6 +1450,37 @@ final class ThorSecondScreenPresentation extends Presentation
         public boolean onTouchEvent( final MotionEvent event )
         {
             final int action = event.getActionMasked();
+            if ( action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_CANCEL ) {
+                selectedArtifact = -1;
+                pressedArtifact = -1;
+                invalidate();
+            }
+            if ( action == MotionEvent.ACTION_DOWN && gameContext == CONTEXT_HERO_MEETING && showArtifacts && event.getPointerCount() == 1 ) {
+                pressedArtifact = artifactAt( event.getX(), event.getY() );
+                artifactDownX = event.getX();
+                artifactDownY = event.getY();
+                if ( pressedArtifact >= 0 ) {
+                    invalidate();
+                    return true;
+                }
+            }
+            if ( action == MotionEvent.ACTION_MOVE && pressedArtifact >= 0 ) {
+                if ( event.getPointerCount() != 1 || Math.abs( event.getX() - artifactDownX ) > troopTouchSlop
+                     || Math.abs( event.getY() - artifactDownY ) > troopTouchSlop ) {
+                    pressedArtifact = -1;
+                    invalidate();
+                }
+                return true;
+            }
+            if ( action == MotionEvent.ACTION_UP && pressedArtifact >= 0 ) {
+                final int index = pressedArtifact;
+                pressedArtifact = -1;
+                if ( artifactAt( event.getX(), event.getY() ) == index ) {
+                    handleArtifactTap( index );
+                }
+                invalidate();
+                return true;
+            }
             if ( action == MotionEvent.ACTION_POINTER_DOWN ) {
                 releasePressedButton();
                 if ( gameContext == CONTEXT_HERO_MEETING ) {
@@ -1498,7 +1687,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private int troopSlotAt( final float x, final float y )
         {
-            if ( troopContext != gameContext || troopSlots.size() != 10 ) {
+            if ( showArtifacts || troopContext != gameContext || troopSlots.size() != 10 ) {
                 return -1;
             }
             for ( int index = 0; index < troopSlotBounds.length; ++index ) {
@@ -1738,6 +1927,16 @@ final class ThorSecondScreenPresentation extends Presentation
 
         private void handleLocalCommand( final int command )
         {
+            if ( command == LOCAL_TOGGLE_ARTIFACTS ) {
+                showArtifacts = !showArtifacts;
+                selectedArtifact = -1;
+                clearTroopSelection();
+                releasePressedButton();
+                rebuildActions();
+                layoutButtons( getWidth(), getHeight() );
+                invalidate();
+                return;
+            }
             if ( command >= LOCAL_SPLIT_DECREASE_TEN && command <= LOCAL_SPLIT_CANCEL ) {
                 handleTroopSplitCommand( command );
                 return;
@@ -2018,7 +2217,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     buttons.add( new CommandButton( "CANCEL", LOCAL_SPLIT_CANCEL ) );
                 }
                 else {
-                    contextTitle = "HERO MEETING";
+                    contextTitle = showArtifacts ? "HERO MEETING ARTIFACTS" : "HERO MEETING";
                     addAction( "ARMY →", ACTION_HERO_MEETING_TRANSFER_TO_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT );
                     addAction( "← ARMY", ACTION_HERO_MEETING_TRANSFER_TO_LEFT, KeyEvent.KEYCODE_DPAD_LEFT );
                     addAction( "SWAP ARMIES", ACTION_HERO_MEETING_SWAP_ARMIES, KeyEvent.KEYCODE_X );
@@ -2026,6 +2225,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     addAction( "ARTIFACTS →", ACTION_HERO_MEETING_ARTIFACTS_TO_RIGHT, KeyEvent.KEYCODE_UNKNOWN );
                     addAction( "← ARTIFACTS", ACTION_HERO_MEETING_ARTIFACTS_TO_LEFT, KeyEvent.KEYCODE_UNKNOWN );
                     addAction( "SWAP ARTIFACTS", ACTION_HERO_MEETING_SWAP_ARTIFACTS, KeyEvent.KEYCODE_UNKNOWN );
+                    buttons.add( new CommandButton( showArtifacts ? "SHOW ARMY" : "SHOW ARTIFACTS", LOCAL_TOGGLE_ARTIFACTS ) );
                 }
                 break;
             case CONTEXT_BATTLE:
@@ -3184,6 +3384,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void releasePressedButton()
         {
+            pressedArtifact = -1;
             removeCallbacks( radarLongPress );
             removeCallbacks( troopLongPress );
             radarGestureActive = false;
@@ -3200,6 +3401,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                     keySender.send( pressedButton.keyCode, false );
                 }
+                selectedArtifact = -1;
                 pressedButton.sentSemantically = false;
                 pressedButton = null;
                 invalidate();
@@ -3208,6 +3410,8 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void cancelTransientInteraction()
         {
+            selectedArtifact = -1;
+            pressedArtifact = -1;
             clearTroopSelection();
             releasePressedButton();
             rebuildActions();
@@ -3366,6 +3570,22 @@ final class ThorSecondScreenPresentation extends Presentation
             this.y = y;
             this.relationship = relationship;
             this.selectable = selectable;
+        }
+    }
+
+    private static final class ArtifactSlot
+    {
+        final int id;
+        final String name;
+        final boolean transferable;
+        final int spellId;
+
+        ArtifactSlot( final int id, final String name, final boolean transferable, final int spellId )
+        {
+            this.id = id;
+            this.name = name;
+            this.transferable = transferable;
+            this.spellId = spellId;
         }
     }
 

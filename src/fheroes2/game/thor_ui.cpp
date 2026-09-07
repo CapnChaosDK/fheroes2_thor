@@ -44,6 +44,9 @@ namespace
     std::mutex troopMutex;
     fheroes2::thor::TroopSnapshot troopSnapshot;
     fheroes2::thor::TroopMoveRequest troopMoveRequest;
+    std::mutex artifactMutex;
+    fheroes2::thor::ArtifactSnapshot artifactSnapshot;
+    fheroes2::thor::ArtifactMoveRequest artifactMoveRequest;
 
     constexpr bool isBattleAction( const fheroes2::thor::Action action )
     {
@@ -804,6 +807,15 @@ namespace fheroes2::thor
                 troopSnapshot = std::move( emptyTroops );
             }
 
+            {
+                std::lock_guard<std::mutex> artifactLock( artifactMutex );
+                artifactMoveRequest = {};
+                ArtifactSnapshot emptyArtifacts;
+                emptyArtifacts.context = context;
+                emptyArtifacts.revision = artifactSnapshot.revision + 1;
+                artifactSnapshot = std::move( emptyArtifacts );
+            }
+
             std::lock_guard<std::mutex> informationLock( informationMutex );
             InformationSnapshot emptySnapshot;
             emptySnapshot.context = context;
@@ -1195,6 +1207,65 @@ namespace fheroes2::thor
         return request;
     }
 
+    bool getArtifactSnapshot( const uint64_t knownRevision, ArtifactSnapshot & snapshot )
+    {
+        std::lock_guard<std::mutex> lock( artifactMutex );
+        if ( knownRevision == artifactSnapshot.revision ) {
+            return false;
+        }
+        snapshot = artifactSnapshot;
+        return true;
+    }
+
+    void publishArtifactSnapshot( ArtifactSnapshot snapshot )
+    {
+        if ( snapshot.context != UiContext::HERO_MEETING || snapshot.slots.size() != 28 ) {
+            snapshot.slots.clear();
+        }
+        std::lock_guard<std::mutex> lock( artifactMutex );
+        if ( artifactSnapshot.context == snapshot.context && artifactSnapshot.slots.size() == snapshot.slots.size()
+             && std::equal( artifactSnapshot.slots.begin(), artifactSnapshot.slots.end(), snapshot.slots.begin(),
+                            []( const ArtifactSlotSnapshot & left, const ArtifactSlotSnapshot & right ) {
+                                return left.id == right.id && left.spellId == right.spellId && left.name == right.name && left.transferable == right.transferable;
+                            } ) ) {
+            return;
+        }
+        snapshot.revision = artifactSnapshot.revision + 1;
+        artifactSnapshot = std::move( snapshot );
+        artifactMoveRequest = {};
+    }
+
+    bool enqueueArtifactMoveRequest( const uint64_t revision, const int32_t source, const int32_t destination )
+    {
+        if ( source < 0 || source >= 28 || destination < 0 || destination >= 28 || source / 14 == destination / 14 ) {
+            return false;
+        }
+        std::lock_guard<std::mutex> lock( artifactMutex );
+        if ( getUiContext() != UiContext::HERO_MEETING || artifactSnapshot.context != UiContext::HERO_MEETING || artifactSnapshot.revision != revision
+             || artifactSnapshot.slots.size() != 28 || artifactMoveRequest.valid ) {
+            return false;
+        }
+        const ArtifactSlotSnapshot & from = artifactSnapshot.slots[source];
+        const ArtifactSlotSnapshot & to = artifactSnapshot.slots[destination];
+        if ( !from.transferable || ( to.id >= 0 && !to.transferable ) || ( from.id == to.id && from.spellId == to.spellId ) ) {
+            return false;
+        }
+        artifactMoveRequest = { revision, source, destination, true };
+        return true;
+    }
+
+    ArtifactMoveRequest takeArtifactMoveRequest()
+    {
+        std::lock_guard<std::mutex> lock( artifactMutex );
+        const ArtifactMoveRequest request = artifactMoveRequest;
+        artifactMoveRequest = {};
+        if ( !request.valid || getUiContext() != UiContext::HERO_MEETING || artifactSnapshot.context != UiContext::HERO_MEETING
+             || request.revision != artifactSnapshot.revision ) {
+            return {};
+        }
+        return request;
+    }
+
     UiContextGuard::UiContextGuard( const UiContext context )
         : _previousContext( getUiContext() )
     {
@@ -1328,6 +1399,64 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeG
 
     env->DeleteLocalRef( stringClass );
     return fields;
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorArtifactSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    fheroes2::thor::ArtifactSnapshot snapshot;
+    if ( !fheroes2::thor::getArtifactSnapshot( static_cast<uint64_t>( knownRevision ), snapshot ) ) {
+        return nullptr;
+    }
+
+    constexpr size_t headerSize = 4;
+    constexpr size_t fieldsPerSlot = 4;
+    if ( snapshot.slots.size() > ( static_cast<size_t>( std::numeric_limits<jsize>::max() ) - headerSize ) / fieldsPerSlot ) {
+        return nullptr;
+    }
+
+    jclass stringClass = env->FindClass( "java/lang/String" );
+    if ( stringClass == nullptr ) {
+        return nullptr;
+    }
+
+    const jsize fieldCount = static_cast<jsize>( headerSize + snapshot.slots.size() * fieldsPerSlot );
+    jobjectArray fields = env->NewObjectArray( fieldCount, stringClass, nullptr );
+    if ( fields == nullptr ) {
+        env->DeleteLocalRef( stringClass );
+        return nullptr;
+    }
+
+    std::vector<std::string> values;
+    values.reserve( fieldCount );
+    values.emplace_back( "1" );
+    values.emplace_back( std::to_string( static_cast<int32_t>( snapshot.context ) ) );
+    values.emplace_back( std::to_string( snapshot.revision ) );
+    values.emplace_back( std::to_string( snapshot.slots.size() ) );
+    for ( const fheroes2::thor::ArtifactSlotSnapshot & slot : snapshot.slots ) {
+        values.emplace_back( std::to_string( slot.id ) );
+        values.emplace_back( slot.name );
+        values.emplace_back( slot.transferable ? "1" : "0" );
+        values.emplace_back( std::to_string( slot.spellId ) );
+    }
+
+    for ( jsize index = 0; index < fieldCount; ++index ) {
+        jstring value = env->NewStringUTF( values[index].c_str() );
+        if ( value == nullptr ) {
+            env->DeleteLocalRef( stringClass );
+            return nullptr;
+        }
+        env->SetObjectArrayElement( fields, index, value );
+        env->DeleteLocalRef( value );
+    }
+
+    env->DeleteLocalRef( stringClass );
+    return fields;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnqueueThorArtifactMoveRequest( JNIEnv *, jclass, const jlong revision, const jint source,
+                                                                                                           const jint destination )
+{
+    return fheroes2::thor::enqueueArtifactMoveRequest( static_cast<uint64_t>( revision ), source, destination ) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorTroopSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
