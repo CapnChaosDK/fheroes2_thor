@@ -969,7 +969,29 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Individual Hero Meeting artifact manipulation is complete and hardware-validated. Recommend player-installed artifact artwork as the next focused proposal, reusing the existing bounded visual bridge to improve slot recognition. No next slice is approved yet. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, configurable haptics, and configurable layouts remain deferred alternatives.
+- Configurable consistent lower-deck haptics are complete and hardware-validated. The next focused slice remains player-installed artifact artwork; no new slice is approved.
+
+### Configurable consistent lower-deck haptics
+
+Status: `done`; behavior and focused acceptance tests approved and hardware-validated on 2026-09-07.
+
+- Adventure System Options and Editor System Options each expose one `HAPTICS: ON` / `HAPTICS: OFF` lower-screen button. The shared Android preference defaults to ON and persists through lower-panel recreation and app restart. Android's own touch-feedback setting remains authoritative.
+- When ON, the lower deck emits one standard Android `CLOCK_TICK` for each accepted semantic command or valid local state transition, including deck actions, quick hero/town selection, valid troop moves and splits, individual artifact moves, panel/page changes, and the established overview marker, zoom, cluster, and filter actions. Selecting an artifact or troop without transferring it, invalid/no-op operations, cancellation, stale/rejected requests, panning, long-press information, upper-screen input, mouse, hotkeys, and physical controls remain silent.
+- The toggle updates its label immediately. Turning haptics ON gives one confirming tick; turning them OFF is silent.
+- Android assemble, app lint, and isotools lint passed through the short `R:` mapping. The candidate installed on `192.168.68.62:33045`, explicitly launched `org.fheroes2.thor/org.fheroes2.GameActivity`, and started `org.fheroes2.thor:GameActivityProcess` (PID 31566). The brief log check found no Android runtime or native fatal entry. No automated game navigation was performed.
+- Candidate APK SHA-256: `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989`.
+
+#### Focused configurable-haptics hardware validation
+
+1. In Adventure System Options and Editor System Options, toggle Haptics and verify the live label, shared value in the other deck, and persistence after leaving/re-entering and restarting the app.
+2. With ON, verify one tick—never two—for a regular lower-deck command, quick hero/town selection, a valid troop transfer or split, a valid artifact move, and each established overview selection/zoom/cluster/filter action.
+3. With OFF, repeat those actions and verify complete silence.
+4. Verify selection-only, cancellation, invalid/no-op operations, stale or rejected requests, empty-map navigation/panning, long-press information, upper touchscreen, mouse, hotkeys, and physical controls remain silent.
+5. Disable Android touch feedback, enable Thor haptics, and verify Thor remains silent; re-enable Android touch feedback and verify the ON setting resumes normal ticks.
+
+All focused checks passed on the Thor: the shared Adventure/Editor toggle updated and persisted across return and restart; ON produced exactly one tick for lower-deck, quick-selection, troop, artifact, and overview actions; OFF and Android-disabled touch feedback were silent; and cancellation, no-op, invalid, stale, navigation, upper-screen, mouse, hotkey, and physical-control regressions remained silent.
+
+- Individual Hero Meeting artifact manipulation and configurable lower-deck haptics are complete and hardware-validated. Recommend player-installed artifact artwork as the next focused proposal, reusing the existing bounded visual bridge to improve slot recognition. No next slice is approved yet. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, and configurable layouts remain deferred alternatives.
 
 ### Hero Meeting individual artifact manipulation
 

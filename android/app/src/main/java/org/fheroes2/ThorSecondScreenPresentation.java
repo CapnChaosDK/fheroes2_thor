@@ -15,6 +15,7 @@ import java.util.List;
 
 import android.app.Presentation;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -400,6 +401,9 @@ final class ThorSecondScreenPresentation extends Presentation
     private static final int LOCAL_SPLIT_MOVE = 12;
     private static final int LOCAL_SPLIT_CANCEL = 13;
     private static final int LOCAL_TOGGLE_ARTIFACTS = 14;
+    private static final int LOCAL_TOGGLE_HAPTICS = 15;
+    private static final String THOR_PREFERENCES = "thor_command_deck";
+    private static final String HAPTICS_ENABLED_PREFERENCE = "haptics_enabled";
 
     private static final int OVERVIEW_KIND_FILTER_BOTH = 0;
     private static final int OVERVIEW_RELATIONSHIP_FILTER_ALL = 0;
@@ -537,6 +541,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private final MarkerInfoSender markerInfoSender;
         private final TroopMoveSender troopMoveSender;
         private final ArtifactMoveSender artifactMoveSender;
+        private final SharedPreferences preferences;
         private final Paint paint = new Paint( Paint.ANTI_ALIAS_FLAG );
         private final List<CommandButton> buttons = new ArrayList<>();
 
@@ -619,6 +624,7 @@ final class ThorSecondScreenPresentation extends Presentation
         private float radarZoomPreviousMidpointY;
         private float radarZoomReferenceDistance;
         private final Runnable radarLongPress;
+        private boolean hapticsEnabled;
 
         CommandDeckView( final Context context, final KeySender keySender, final ActionSender actionSender, final ViewportSender viewportSender,
                          final SelectionSender selectionSender, final MarkerInfoSender markerInfoSender, final TroopMoveSender troopMoveSender,
@@ -632,6 +638,8 @@ final class ThorSecondScreenPresentation extends Presentation
             this.markerInfoSender = markerInfoSender;
             this.troopMoveSender = troopMoveSender;
             this.artifactMoveSender = artifactMoveSender;
+            preferences = context.getSharedPreferences( THOR_PREFERENCES, Context.MODE_PRIVATE );
+            hapticsEnabled = preferences.getBoolean( HAPTICS_ENABLED_PREFERENCE, true );
             for ( int index = 0; index < artifactBounds.length; ++index ) {
                 artifactBounds[index] = new RectF();
             }
@@ -909,7 +917,7 @@ final class ThorSecondScreenPresentation extends Presentation
             else if ( target.id < 0 || target.transferable ) {
                 if ( artifactMoveSender.send( artifactRevision, selectedArtifact, index ) ) {
                     selectedArtifact = -1;
-                    performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
+                    performThorHapticFeedback();
                 }
             }
         }
@@ -1542,6 +1550,9 @@ final class ThorSecondScreenPresentation extends Presentation
                         pressedButton.sentSemantically
                             = selectionContext == gameContext
                               && selectionSender.send( gameContext, selectionRevision, pressedButton.selectionKind, pressedButton.selectionId );
+                        if ( pressedButton.sentSemantically ) {
+                            performThorHapticFeedback();
+                        }
                     }
                     else if ( pressedButton.localCommand != 0 ) {
                         handleLocalCommand( pressedButton.localCommand );
@@ -1549,9 +1560,15 @@ final class ThorSecondScreenPresentation extends Presentation
                     }
                     else {
                         pressedButton.sentSemantically = pressedButton.action != ACTION_NONE && actionSender.send( pressedButton.action );
+                        if ( pressedButton.sentSemantically && !isCancellationAction( pressedButton.action ) ) {
+                            performThorHapticFeedback();
+                        }
                     }
                     if ( !pressedButton.sentSemantically && pressedButton.keyCode != KeyEvent.KEYCODE_UNKNOWN ) {
                         keySender.send( pressedButton.keyCode, true );
+                        if ( pressedButton.keyCode != KeyEvent.KEYCODE_ESCAPE ) {
+                            performThorHapticFeedback();
+                        }
                     }
                     invalidate();
                 }
@@ -1645,8 +1662,10 @@ final class ThorSecondScreenPresentation extends Presentation
                     cancelTroopGesture();
                     if ( wasDrag ) {
                         if ( destinationIndex >= 0 && destinationIndex != sourceIndex ) {
-                            troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5,
-                                                  destinationIndex % 5, 0 );
+                            if ( troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5,
+                                                       destinationIndex % 5, 0 ) ) {
+                                performThorHapticFeedback();
+                            }
                         }
                     }
                     else if ( troopSlotBounds[sourceIndex].contains( event.getX(), event.getY() ) ) {
@@ -1663,7 +1682,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     }
                     else if ( radarTapItem != null && radarTapItem.entry.selectable && selectionContext == gameContext ) {
                         if ( selectionSender.send( gameContext, selectionRevision, radarTapItem.entry.kind, radarTapItem.entry.id ) ) {
-                            performOverviewHapticFeedback();
+                            performThorHapticFeedback();
                         }
                     }
                     else {
@@ -1741,6 +1760,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             if ( troopMoveSender.send( gameContext, troopRevision, selectedTroopSide, selectedTroopSlot, side, slot, 0 ) ) {
                 clearTroopSelection();
+                performThorHapticFeedback();
             }
         }
 
@@ -1898,7 +1918,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
             overviewZoomLevel = clampedZoomLevel;
             centerOverviewZoomAt( anchorWorldX, anchorWorldY, anchorScreenX, anchorScreenY );
-            performOverviewHapticFeedback();
+            performThorHapticFeedback();
         }
 
         private void centerOverviewZoomAt( final float worldX, final float worldY, final float screenX, final float screenY )
@@ -1921,12 +1941,21 @@ final class ThorSecondScreenPresentation extends Presentation
             overviewZoomCenterX = cluster.worldX;
             overviewZoomCenterY = cluster.worldY;
             clampOverviewZoomCenter();
-            performOverviewHapticFeedback();
+            performThorHapticFeedback();
             invalidate();
         }
 
         private void handleLocalCommand( final int command )
         {
+            if ( command == LOCAL_TOGGLE_HAPTICS ) {
+                hapticsEnabled = !hapticsEnabled;
+                preferences.edit().putBoolean( HAPTICS_ENABLED_PREFERENCE, hapticsEnabled ).apply();
+                rebuildActions();
+                layoutButtons( getWidth(), getHeight() );
+                invalidate();
+                performThorHapticFeedback();
+                return;
+            }
             if ( command == LOCAL_TOGGLE_ARTIFACTS ) {
                 showArtifacts = !showArtifacts;
                 selectedArtifact = -1;
@@ -1935,6 +1964,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 rebuildActions();
                 layoutButtons( getWidth(), getHeight() );
                 invalidate();
+                performThorHapticFeedback();
                 return;
             }
             if ( command >= LOCAL_SPLIT_DECREASE_TEN && command <= LOCAL_SPLIT_CANCEL ) {
@@ -1944,28 +1974,34 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( command == LOCAL_CYCLE_OVERVIEW_KIND_FILTER ) {
                 overviewKindFilter = overviewKindFilter == SELECTION_KIND_CASTLE ? OVERVIEW_KIND_FILTER_BOTH : overviewKindFilter + 1;
                 applyOverviewFilterChange();
-                performOverviewHapticFeedback();
+                performThorHapticFeedback();
                 return;
             }
             if ( command == LOCAL_CYCLE_OVERVIEW_RELATIONSHIP_FILTER ) {
                 overviewRelationshipFilter
                     = overviewRelationshipFilter == SELECTION_RELATIONSHIP_NEUTRAL ? OVERVIEW_RELATIONSHIP_FILTER_ALL : overviewRelationshipFilter + 1;
                 applyOverviewFilterChange();
-                performOverviewHapticFeedback();
+                performThorHapticFeedback();
                 return;
             }
 
             final int pageCount = Math.max( 1, ( selectionEntries.size() + SELECTION_PAGE_SIZE - 1 ) / SELECTION_PAGE_SIZE );
+            boolean pageChanged = false;
             if ( command == LOCAL_PREVIOUS_PAGE && selectionPage > 0 ) {
                 --selectionPage;
+                pageChanged = true;
             }
             else if ( command == LOCAL_NEXT_PAGE && selectionPage + 1 < pageCount ) {
                 ++selectionPage;
+                pageChanged = true;
             }
             releasePressedButton();
             rebuildActions();
             layoutButtons( getWidth(), getHeight() );
             invalidate();
+            if ( pageChanged ) {
+                performThorHapticFeedback();
+            }
         }
 
         private void handleTroopSplitCommand( final int command )
@@ -1981,6 +2017,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
 
             final long maximum = splitMaximum();
+            final long previousAmount = troopSplitAmount;
             switch ( command ) {
             case LOCAL_SPLIT_DECREASE_TEN:
                 troopSplitAmount = Math.max( 1, troopSplitAmount - 10 );
@@ -2007,8 +2044,10 @@ final class ThorSecondScreenPresentation extends Presentation
                 if ( troopSplitAmount > 0 && troopSplitAmount <= maximum ) {
                     final int sourceIndex = troopSplitSourceIndex;
                     final int destinationIndex = troopSplitDestinationIndex;
-                    troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5, destinationIndex % 5,
-                                          troopSplitAmount );
+                    if ( troopMoveSender.send( gameContext, troopRevision, sourceIndex / 5, sourceIndex % 5, destinationIndex / 5,
+                                               destinationIndex % 5, troopSplitAmount ) ) {
+                        performThorHapticFeedback();
+                    }
                     cancelTroopSplit();
                 }
                 break;
@@ -2017,6 +2056,9 @@ final class ThorSecondScreenPresentation extends Presentation
             }
             releasePressedButton();
             invalidate();
+            if ( command != LOCAL_SPLIT_MOVE && troopSplitAmount != previousAmount ) {
+                performThorHapticFeedback();
+            }
         }
 
         private void applyOverviewFilterChange()
@@ -2031,9 +2073,11 @@ final class ThorSecondScreenPresentation extends Presentation
             invalidate();
         }
 
-        private void performOverviewHapticFeedback()
+        private void performThorHapticFeedback()
         {
-            performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
+            if ( hapticsEnabled ) {
+                performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
+            }
         }
 
         private void clearInformationDisplay()
@@ -2109,6 +2153,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "INTERFACE", ACTION_ADVENTURE_SYSTEM_INTERFACE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "TEXT SUPPORT", ACTION_ADVENTURE_SYSTEM_TEXT_SUPPORT, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "BATTLES", ACTION_ADVENTURE_SYSTEM_BATTLES, KeyEvent.KEYCODE_UNKNOWN );
+                buttons.add( new CommandButton( hapticsEnabled ? "HAPTICS: ON" : "HAPTICS: OFF", LOCAL_TOGGLE_HAPTICS ) );
                 addAction( "OKAY / BACK", ACTION_ADVENTURE_SYSTEM_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_SYSTEM_GRAPHICS:
@@ -2391,6 +2436,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 addAction( "INTERFACE TYPE", ACTION_EDITOR_SYSTEM_INTERFACE_TYPE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "CURSOR TYPE", ACTION_EDITOR_SYSTEM_CURSOR_TYPE, KeyEvent.KEYCODE_UNKNOWN );
                 addAction( "SCROLL SPEED", ACTION_EDITOR_SYSTEM_SCROLL_SPEED, KeyEvent.KEYCODE_UNKNOWN );
+                buttons.add( new CommandButton( hapticsEnabled ? "HAPTICS: ON" : "HAPTICS: OFF", LOCAL_TOGGLE_HAPTICS ) );
                 addAction( "OKAY / BACK", ACTION_EDITOR_SYSTEM_CLOSE, KeyEvent.KEYCODE_ESCAPE );
                 break;
             case CONTEXT_EDITOR_MAP_SPECIFICATIONS:
@@ -3380,6 +3426,36 @@ final class ThorSecondScreenPresentation extends Presentation
             final int usableBitCount = 63;
             final int bit = action <= usableBitCount ? action : ( ( action - 1 ) % usableBitCount ) + 1;
             return 1L << bit;
+        }
+
+        private static boolean isCancellationAction( final int action )
+        {
+            switch ( action ) {
+            case ACTION_HERO_CLOSE:
+            case ACTION_CASTLE_CLOSE:
+            case ACTION_MENU_BACK:
+            case ACTION_GAME_SETTINGS_CLOSE:
+            case ACTION_EDITOR_FILE_CANCEL:
+            case ACTION_EDITOR_SYSTEM_CLOSE:
+            case ACTION_EDITOR_MAP_SPEC_CANCEL:
+            case ACTION_EDITOR_MAP_SPEC_SUBMENU_BACK:
+            case ACTION_EDITOR_TOOL_BACK:
+            case ACTION_ADVENTURE_SELECTION_BACK:
+            case ACTION_ADVENTURE_OVERVIEW_BACK:
+            case ACTION_HERO_MEETING_CLOSE:
+            case ACTION_ADVENTURE_OPTIONS_CANCEL:
+            case ACTION_ADVENTURE_FILE_CANCEL:
+            case ACTION_ADVENTURE_SYSTEM_CLOSE:
+            case ACTION_SYSTEM_GRAPHICS_CLOSE:
+            case ACTION_SYSTEM_AUDIO_CLOSE:
+            case ACTION_SYSTEM_INTERFACE_CLOSE:
+            case ACTION_SYSTEM_LANGUAGE_CANCEL:
+            case ACTION_SYSTEM_HOT_KEYS_CLOSE:
+            case ACTION_SYSTEM_RESOLUTION_CANCEL:
+                return true;
+            default:
+                return false;
+            }
         }
 
         void releasePressedButton()
