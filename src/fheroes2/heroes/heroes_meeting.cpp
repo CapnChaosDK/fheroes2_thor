@@ -65,6 +65,32 @@
 
 namespace
 {
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+    void populateThorSlotPixels( const fheroes2::Sprite & sprite, int32_t & width, int32_t & height, std::vector<uint32_t> & pixels )
+    {
+        constexpr int32_t maximumSpriteDimension = 64;
+        width = std::min( sprite.width(), maximumSpriteDimension );
+        height = std::min( sprite.height(), maximumSpriteDimension );
+        if ( width <= 0 || height <= 0 ) {
+            return;
+        }
+
+        const int32_t sourceX = ( sprite.width() - width ) / 2;
+        const int32_t sourceY = ( sprite.height() - height ) / 2;
+        const auto palette = fheroes2::getNormalizedRGBGamePalette();
+        const uint8_t * image = sprite.image();
+        const uint8_t * transform = sprite.singleLayer() ? nullptr : sprite.transform();
+        pixels.resize( static_cast<size_t>( width ) * height );
+        for ( int32_t y = 0; y < height; ++y ) {
+            for ( int32_t x = 0; x < width; ++x ) {
+                const size_t sourceIndex = static_cast<size_t>( sourceY + y ) * sprite.width() + sourceX + x;
+                const size_t destinationIndex = static_cast<size_t>( y ) * width + x;
+                pixels[destinationIndex] = transform == nullptr || transform[sourceIndex] == 0 ? palette[image[sourceIndex]].getBGRA() : 0U;
+            }
+        }
+    }
+#endif
+
     bool canMoveArmyTroops( const Army & target, const Army & source, const int monsterIdToKeep )
     {
         if ( !target.isValid() || !source.isValid() ) {
@@ -111,25 +137,8 @@ namespace
         snapshot.name = troop->GetName();
 
 #if defined( ANDROID ) && defined( TARGET_AYN_THOR )
-        constexpr int32_t maximumSpriteDimension = 64;
         const fheroes2::Sprite & sprite = Assets::getImage( ICN::MONS32, troop->GetSpriteIndex() );
-        snapshot.width = std::min( sprite.width(), maximumSpriteDimension );
-        snapshot.height = std::min( sprite.height(), maximumSpriteDimension );
-        if ( snapshot.width > 0 && snapshot.height > 0 ) {
-            const int32_t sourceX = ( sprite.width() - snapshot.width ) / 2;
-            const int32_t sourceY = ( sprite.height() - snapshot.height ) / 2;
-            const auto palette = fheroes2::getNormalizedRGBGamePalette();
-            const uint8_t * image = sprite.image();
-            const uint8_t * transform = sprite.singleLayer() ? nullptr : sprite.transform();
-            snapshot.pixels.resize( static_cast<size_t>( snapshot.width ) * snapshot.height );
-            for ( int32_t y = 0; y < snapshot.height; ++y ) {
-                for ( int32_t x = 0; x < snapshot.width; ++x ) {
-                    const size_t sourceIndex = static_cast<size_t>( sourceY + y ) * sprite.width() + sourceX + x;
-                    const size_t destinationIndex = static_cast<size_t>( y ) * snapshot.width + x;
-                    snapshot.pixels[destinationIndex] = transform == nullptr || transform[sourceIndex] == 0 ? palette[image[sourceIndex]].getBGRA() : 0U;
-                }
-            }
-        }
+        populateThorSlotPixels( sprite, snapshot.width, snapshot.height, snapshot.pixels );
 #endif
 
         return snapshot;
@@ -149,6 +158,28 @@ namespace
 #if defined( TARGET_AYN_THOR )
     void publishThorArtifacts( const Heroes & hero, const Heroes & otherHero )
     {
+        static thread_local uint64_t knownBridgeRevision = 0;
+        static thread_local std::vector<std::pair<int32_t, int32_t>> publishedLayout;
+
+        fheroes2::thor::ArtifactSnapshot currentSnapshot;
+        if ( fheroes2::thor::getArtifactSnapshot( knownBridgeRevision, currentSnapshot ) ) {
+            knownBridgeRevision = currentSnapshot.revision;
+            if ( currentSnapshot.context != fheroes2::thor::UiContext::HERO_MEETING || currentSnapshot.slots.size() != 28 ) {
+                publishedLayout.clear();
+            }
+        }
+
+        std::vector<std::pair<int32_t, int32_t>> layout;
+        layout.reserve( 28 );
+        for ( const BagArtifacts * bag : { &hero.GetBagArtifacts(), &otherHero.GetBagArtifacts() } ) {
+            for ( const Artifact & artifact : *bag ) {
+                layout.emplace_back( artifact.isValid() ? artifact.GetID() : -1, artifact.getSpellId() );
+            }
+        }
+        if ( layout == publishedLayout ) {
+            return;
+        }
+
         fheroes2::thor::ArtifactSnapshot artifacts;
         artifacts.context = fheroes2::thor::UiContext::HERO_MEETING;
         for ( const BagArtifacts * bag : { &hero.GetBagArtifacts(), &otherHero.GetBagArtifacts() } ) {
@@ -157,11 +188,25 @@ namespace
                 if ( artifact.GetID() == Artifact::SPELL_SCROLL ) {
                     name += std::string( ": " ) + Spell( artifact.getSpellId() ).GetName();
                 }
-                artifacts.slots.push_back( { artifact.isValid() ? artifact.GetID() : -1, artifact.getSpellId(), std::move( name ),
-                                             artifact.isValid() && artifact.GetID() != Artifact::MAGIC_BOOK } );
+                fheroes2::thor::ArtifactSlotSnapshot slot;
+                slot.id = artifact.isValid() ? artifact.GetID() : -1;
+                slot.spellId = artifact.getSpellId();
+                slot.name = std::move( name );
+                slot.transferable = artifact.isValid() && artifact.GetID() != Artifact::MAGIC_BOOK;
+#if defined( ANDROID ) && defined( TARGET_AYN_THOR )
+                if ( artifact.isValid() ) {
+                    const fheroes2::Sprite & sprite = Assets::getImage( ICN::ARTIFACT, artifact.IndexSprite64() );
+                    populateThorSlotPixels( sprite, slot.width, slot.height, slot.pixels );
+                }
+#endif
+                artifacts.slots.emplace_back( std::move( slot ) );
             }
         }
         fheroes2::thor::publishArtifactSnapshot( std::move( artifacts ) );
+        if ( fheroes2::thor::getArtifactSnapshot( knownBridgeRevision, currentSnapshot ) ) {
+            knownBridgeRevision = currentSnapshot.revision;
+        }
+        publishedLayout = std::move( layout );
     }
 #endif
 

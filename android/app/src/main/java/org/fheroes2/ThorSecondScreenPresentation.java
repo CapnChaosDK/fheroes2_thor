@@ -510,11 +510,11 @@ final class ThorSecondScreenPresentation extends Presentation
 
     void setGameState( final int context, final long enabledActions, final String[] informationSnapshot, final boolean viewportControlEnabled, final int[] radarSnapshot,
                        final int[] visualSnapshot, final String[] selectionSnapshot, final String[] troopSnapshot, final int[] troopVisualSnapshot,
-                       final String[] artifactSnapshot )
+                       final String[] artifactSnapshot, final int[] artifactVisualSnapshot )
     {
         if ( commandDeckView != null ) {
             commandDeckView.setGameState( context, enabledActions, informationSnapshot, viewportControlEnabled, radarSnapshot, visualSnapshot, selectionSnapshot,
-                                          troopSnapshot, troopVisualSnapshot, artifactSnapshot );
+                                          troopSnapshot, troopVisualSnapshot, artifactSnapshot, artifactVisualSnapshot );
         }
     }
 
@@ -584,6 +584,9 @@ final class ThorSecondScreenPresentation extends Presentation
         private int artifactContext = -1;
         private long artifactRevision = -1;
         private final List<ArtifactSlot> artifactSlots = new ArrayList<>();
+        private int artifactVisualContext = -1;
+        private long artifactVisualRevision = -1;
+        private final List<Bitmap> artifactBitmaps = new ArrayList<>();
         private final RectF[] artifactBounds = new RectF[28];
         private int selectedArtifact = -1;
         private int pressedArtifact = -1;
@@ -666,13 +669,13 @@ final class ThorSecondScreenPresentation extends Presentation
             };
             setBackgroundColor( BACKGROUND_COLOR );
             setFocusable( true );
-            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null, null, null, null );
+            setGameState( CONTEXT_FALLBACK, -1L, null, false, null, null, null, null, null, null, null );
         }
 
         void setGameState( final int requestedContext, final long requestedEnabledActions, final String[] requestedInformationSnapshot,
                            final boolean requestedViewportControlEnabled, final int[] requestedRadarSnapshot, final int[] requestedVisualSnapshot,
                            final String[] requestedSelectionSnapshot, final String[] requestedTroopSnapshot, final int[] requestedTroopVisualSnapshot,
-                           final String[] requestedArtifactSnapshot )
+                           final String[] requestedArtifactSnapshot, final int[] requestedArtifactVisualSnapshot )
         {
             final int context
                 = requestedContext >= CONTEXT_FALLBACK && requestedContext <= CONTEXT_SYSTEM_RESOLUTION ? requestedContext : CONTEXT_FALLBACK;
@@ -681,10 +684,11 @@ final class ThorSecondScreenPresentation extends Presentation
             final boolean visualChanged = applyVisualSnapshot( requestedVisualSnapshot );
             final boolean selectionChanged = applySelectionSnapshot( requestedSelectionSnapshot );
             final boolean artifactChanged = applyArtifactSnapshot( requestedArtifactSnapshot );
+            final boolean artifactVisualChanged = applyArtifactVisualSnapshot( requestedArtifactVisualSnapshot );
             final boolean troopChanged = applyTroopSnapshot( requestedTroopSnapshot );
             final boolean troopVisualChanged = applyTroopVisualSnapshot( requestedTroopVisualSnapshot );
             if ( gameContext == context && enabledActions == requestedEnabledActions && viewportControlEnabled == requestedViewportControlEnabled && !informationChanged
-                 && !radarChanged && !visualChanged && !selectionChanged && !troopChanged && !troopVisualChanged && !artifactChanged ) {
+                 && !radarChanged && !visualChanged && !selectionChanged && !troopChanged && !troopVisualChanged && !artifactChanged && !artifactVisualChanged ) {
                 return;
             }
 
@@ -875,6 +879,24 @@ final class ThorSecondScreenPresentation extends Presentation
             }
         }
 
+        private boolean applyArtifactVisualSnapshot( final int[] snapshot )
+        {
+            if ( snapshot == null || snapshot.length < 4 || snapshot[0] != 1 || snapshot[2] == artifactVisualRevision ) {
+                return false;
+            }
+
+            final List<Bitmap> bitmaps = decodeSlotBitmaps( snapshot, 28 );
+            if ( bitmaps == null ) {
+                return false;
+            }
+
+            artifactVisualContext = snapshot[1];
+            artifactVisualRevision = snapshot[2];
+            artifactBitmaps.clear();
+            artifactBitmaps.addAll( bitmaps );
+            return true;
+        }
+
         private void layoutArtifactSlots( final int width, final int height )
         {
             final float margin = getMargin();
@@ -950,12 +972,32 @@ final class ThorSecondScreenPresentation extends Presentation
                 canvas.drawRoundRect( bounds, 8f, 8f, paint );
                 paint.setStyle( Paint.Style.FILL );
                 paint.setColor( slot.transferable ? TEXT_COLOR : MUTED_TEXT_COLOR );
+                final Bitmap bitmap = artifactVisualContext == artifactContext && artifactVisualRevision == artifactRevision && artifactBitmaps.size() == 28
+                                          ? artifactBitmaps.get( index )
+                                          : null;
+                final float textLeft;
+                if ( bitmap != null ) {
+                    final float maximumImageWidth = Math.min( bounds.width() * 0.38f, 58f );
+                    final float maximumImageHeight = Math.min( bounds.height() - 16f, 64f );
+                    final RectF imageBounds
+                        = fitBitmap( bitmap, bounds.left + 8f + maximumImageWidth * 0.5f, bounds.top + 8f, maximumImageWidth, maximumImageHeight );
+                    paint.setFilterBitmap( false );
+                    canvas.drawBitmap( bitmap, null, imageBounds, paint );
+                    textLeft = bounds.left + maximumImageWidth + 13f;
+                }
+                else {
+                    textLeft = bounds.left + 6f;
+                }
+                final float textCenter = ( textLeft + bounds.right - 6f ) * 0.5f;
+                final float textWidth = bounds.right - 6f - textLeft;
                 final int split = slot.name.lastIndexOf( ' ', slot.name.length() / 2 );
                 final String first = split > 0 ? slot.name.substring( 0, split ) : slot.name;
                 final String second = split > 0 ? slot.name.substring( split + 1 ) : "";
-                drawFittedText( canvas, first, bounds.centerX(), bounds.centerY() - 5f, bounds.width() - 12f, 20f );
-                drawFittedText( canvas, second, bounds.centerX(), bounds.centerY() + 18f, bounds.width() - 12f, 20f );
-                drawFittedText( canvas, Integer.toString( index % 14 + 1 ), bounds.centerX(), bounds.bottom - 5f, bounds.width() - 12f, 13f );
+                drawFittedText( canvas, first, textCenter, bounds.centerY() - 7f, textWidth, 18f );
+                drawFittedText( canvas, second, textCenter, bounds.centerY() + 15f, textWidth, 18f );
+                paint.setTextAlign( Paint.Align.RIGHT );
+                drawFittedText( canvas, Integer.toString( index % 14 + 1 ), bounds.right - 6f, bounds.bottom - 5f, 24f, 13f );
+                paint.setTextAlign( Paint.Align.CENTER );
             }
             paint.setColor( TEXT_COLOR );
             final String guidance = selectedArtifact < 0 ? "Tap an artifact, then a slot in the other bag. Spellbooks stay with their hero."
@@ -1005,27 +1047,8 @@ final class ThorSecondScreenPresentation extends Presentation
                 return false;
             }
 
-            final int count = snapshot[3];
-            if ( count != 0 && count != 10 ) {
-                return false;
-            }
-
-            final List<Bitmap> bitmaps = new ArrayList<>( count );
-            int offset = 4;
-            for ( int index = 0; index < count; ++index ) {
-                if ( offset + 3 > snapshot.length ) {
-                    return false;
-                }
-                final int width = snapshot[offset++];
-                final int height = snapshot[offset++];
-                final int pixelCount = snapshot[offset++];
-                if ( width < 0 || height < 0 || width > 64 || height > 64 || pixelCount != width * height || offset + pixelCount > snapshot.length ) {
-                    return false;
-                }
-                bitmaps.add( pixelCount == 0 ? null : Bitmap.createBitmap( snapshot, offset, width, width, height, Bitmap.Config.ARGB_8888 ) );
-                offset += pixelCount;
-            }
-            if ( offset != snapshot.length ) {
+            final List<Bitmap> bitmaps = decodeSlotBitmaps( snapshot, 10 );
+            if ( bitmaps == null ) {
                 return false;
             }
 
@@ -1034,6 +1057,31 @@ final class ThorSecondScreenPresentation extends Presentation
             troopBitmaps.clear();
             troopBitmaps.addAll( bitmaps );
             return true;
+        }
+
+        private List<Bitmap> decodeSlotBitmaps( final int[] snapshot, final int expectedCount )
+        {
+            final int count = snapshot[3];
+            if ( count != 0 && count != expectedCount ) {
+                return null;
+            }
+
+            final List<Bitmap> bitmaps = new ArrayList<>( count );
+            int offset = 4;
+            for ( int index = 0; index < count; ++index ) {
+                if ( offset + 3 > snapshot.length ) {
+                    return null;
+                }
+                final int width = snapshot[offset++];
+                final int height = snapshot[offset++];
+                final int pixelCount = snapshot[offset++];
+                if ( width < 0 || height < 0 || width > 64 || height > 64 || pixelCount != width * height || offset + pixelCount > snapshot.length ) {
+                    return null;
+                }
+                bitmaps.add( pixelCount == 0 ? null : Bitmap.createBitmap( snapshot, offset, width, width, height, Bitmap.Config.ARGB_8888 ) );
+                offset += pixelCount;
+            }
+            return offset == snapshot.length ? bitmaps : null;
         }
 
         @Override
@@ -1245,7 +1293,7 @@ final class ThorSecondScreenPresentation extends Presentation
                     if ( bitmap != null ) {
                         final float maximumImageWidth = Math.min( bounds.width() - 18f, 62f );
                         final float maximumImageHeight = Math.min( bounds.height() * 0.48f, 62f );
-                        final RectF imageBounds = fitTroopBitmap( bitmap, bounds.centerX(), bounds.top + 9f, maximumImageWidth, maximumImageHeight );
+                        final RectF imageBounds = fitBitmap( bitmap, bounds.centerX(), bounds.top + 9f, maximumImageWidth, maximumImageHeight );
                         paint.setFilterBitmap( false );
                         canvas.drawBitmap( bitmap, null, imageBounds, paint );
                     }
@@ -1342,7 +1390,7 @@ final class ThorSecondScreenPresentation extends Presentation
                                       ? troopBitmaps.get( pressedTroopIndex )
                                       : null;
             if ( bitmap != null ) {
-                final RectF imageBounds = fitTroopBitmap( bitmap, centerX, previewBounds.top + 7f, 64f, 64f );
+                final RectF imageBounds = fitBitmap( bitmap, centerX, previewBounds.top + 7f, 64f, 64f );
                 paint.setFilterBitmap( false );
                 paint.setAlpha( 225 );
                 canvas.drawBitmap( bitmap, null, imageBounds, paint );
@@ -1356,7 +1404,7 @@ final class ThorSecondScreenPresentation extends Presentation
             drawFittedText( canvas, Long.toString( troopSlots.get( pressedTroopIndex ).count ), centerX, previewBounds.bottom - 10f, previewWidth - 16f, 22f );
         }
 
-        private RectF fitTroopBitmap( final Bitmap bitmap, final float centerX, final float top, final float maximumWidth, final float maximumHeight )
+        private RectF fitBitmap( final Bitmap bitmap, final float centerX, final float top, final float maximumWidth, final float maximumHeight )
         {
             final float scale = Math.min( maximumWidth / bitmap.getWidth(), maximumHeight / bitmap.getHeight() );
             final float width = bitmap.getWidth() * scale;

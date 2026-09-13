@@ -549,6 +549,9 @@ namespace fheroes2::thor
         int32_t spellId{ 0 };
         std::string name;
         bool transferable{ false };
+        int32_t width{ 0 };
+        int32_t height{ 0 };
+        std::vector<uint32_t> pixels;
     };
 
     struct ArtifactSnapshot

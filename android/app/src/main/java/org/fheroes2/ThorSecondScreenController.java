@@ -79,6 +79,10 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                         Log.w( LOG_TAG, "Ignoring an invalid artifact snapshot revision.", ex );
                     }
                 }
+                final int[] artifactVisualSnapshot = activity.getThorArtifactVisualSnapshot( artifactVisualRevision );
+                if ( artifactVisualSnapshot != null && artifactVisualSnapshot.length >= 3 ) {
+                    artifactVisualRevision = artifactVisualSnapshot[2];
+                }
                 final String[] troopSnapshot = activity.getThorTroopSnapshot( troopRevision );
                 if ( troopSnapshot != null && troopSnapshot.length >= 3 ) {
                     try {
@@ -94,7 +98,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
                 }
                 ( (ThorSecondScreenPresentation)presentation )
                     .setGameState( activity.getThorUiContext(), activity.getThorEnabledActionMask(), informationSnapshot, activity.isThorViewportControlEnabled(),
-                                   radarSnapshot, visualSnapshot, selectionSnapshot, troopSnapshot, troopVisualSnapshot, artifactSnapshot );
+                                   radarSnapshot, visualSnapshot, selectionSnapshot, troopSnapshot, troopVisualSnapshot, artifactSnapshot, artifactVisualSnapshot );
             }
             mainHandler.postDelayed( this, 100 );
         }
@@ -107,6 +111,7 @@ final class ThorSecondScreenController implements DisplayManager.DisplayListener
     private long visualRevision = -1;
     private long selectionRevision = -1;
     private long artifactRevision = -1;
+    private long artifactVisualRevision = -1;
     private long troopRevision = -1;
     private long troopVisualRevision = -1;
 

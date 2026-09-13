@@ -969,7 +969,31 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Configurable consistent lower-deck haptics are complete and hardware-validated. The next focused slice remains player-installed artifact artwork; no new slice is approved.
+- Configurable consistent lower-deck haptics and player-installed Hero Meeting artifact artwork are complete and hardware-validated. No next slice is approved.
+
+### Player-installed Hero Meeting artifact artwork
+
+Status: `done`; behavior and focused acceptance tests approved and hardware-validated on 2026-09-13.
+
+- Show each valid artifact's native 64-pixel inventory sprite beside its existing name and slot number in both 14-slot Hero Meeting bags. Artwork is rendered by the engine from the player's installed Heroes II assets; the APK bundles no proprietary images.
+- A bounded visual payload carries exactly the same context and revision as the established artifact snapshot. Android accepts at most 28 images of at most 64 by 64 pixels, preserves each sprite's aspect ratio, and displays the existing text-only slot when artwork is absent or invalid.
+- Artwork is decorative and does not change hit testing, selection, eligible-target borders, scroll spell naming, spellbook protection, movement, swapping, haptics, or native inventory rules. Context and lifecycle invalidation prevent stale art from surviving a transfer, nested screen, panel recreation, or app resume.
+- The shared slot-bitmap decoder and aspect-fitting helper now serve troop and artifact artwork, reducing duplicate presentation code without broadening the slice into a general command-deck refactor.
+- Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, and broader player-installed visuals remain deferred.
+- Native publication avoids regenerating the bounded visual payload while artifact identities and scroll spells are unchanged. The native/Java contract and MSVC artifact-request regressions pass, including artwork bounds and malformed-image fallback. Android `:app:assembleDebug`, `:app:lintDebug`, and `:isotools:lint` pass through the short `R:` mapping.
+- The build also makes the Android version files explicitly project-relative, removing their prior dependency on the Gradle daemon's working directory. The compiler-capable local Temurin 17 path is recorded in `AGENTS.md`.
+- Candidate debug APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`. It installed successfully on the Thor at `192.168.68.76:43311` and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`. Brief checks confirmed resumed process `org.fheroes2.thor:GameActivityProcess` (PID 28783), the presentation window on display 4, and no matching fatal or JNI-link error in recent logs.
+
+#### Focused artifact-artwork validation
+
+1. Open Show Artifacts with varied artifacts in both bags and verify every visible icon, name, scroll spell name, slot number, empty slot, and spellbook matches the upper meeting screen.
+2. Check differently shaped artifacts and long localized names; verify icons retain their proportions and all artwork, labels, numbers, selection borders, and eligible-target borders remain inside their slots.
+3. Move into empty slots and swap occupied slots in both directions; verify artwork and text update together once, with assembled sets, stats, and scouting effects retaining their established behavior.
+4. Exercise selection change and cancellation, full bags, duplicate artifacts and scrolls, locked spellbooks, invalid/no-op targets, rapid taps, and haptics ON/OFF; verify existing rules and feedback remain unchanged.
+5. Open and close nested Hero/dialog screens, switch Show Artifacts / Show Army, toggle the lower panel, and suspend/resume; verify no stale, blank, corrupt, or cross-hero artwork and exact deck restoration.
+6. Recheck troop tap/drag/split controls, whole-army and whole-artifact actions, Close, upper touchscreen, mouse, hotkeys, physical controls, and the text-only fallback for missing or rejected artwork.
+
+All six focused checks passed on the Thor. Both 14-slot bags showed matching player-installed artifact artwork, names, scroll spell names, numbered slots, empty slots, and protected spellbooks. Artwork retained its proportions and bounded layout with long names; empty-slot moves and occupied-slot swaps updated artwork and text together in both directions while retaining assembled-set, statistics, and scouting behavior. Cancellation, full bags, duplicate artifacts and scrolls, spellbook protection, rejected/no-op targets, haptics, nested restoration, Show Artifacts / Show Army switching, panel recreation, suspend/resume, troop manipulation, whole-artifact controls, Close, upper touchscreen, mouse, hotkeys, and physical controls all retained their validated behavior without stale or corrupt artwork.
 
 ### Configurable consistent lower-deck haptics
 

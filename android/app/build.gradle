@@ -19,8 +19,8 @@ android {
         targetSdk 35
 
         // These paths are set relative to the android project directory
-        versionCode((new File('../version_code.txt')).getText('UTF-8').trim().toInteger())
-        versionName((new File('../version.txt')).getText('UTF-8').trim())
+        versionCode(rootProject.file('../version_code.txt').getText('UTF-8').trim().toInteger())
+        versionName(rootProject.file('../version.txt').getText('UTF-8').trim())
 
         externalNativeBuild {
             ndkBuild {

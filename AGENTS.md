@@ -31,7 +31,7 @@
 
 ## Next recommended planning point
 
-- Individual Hero Meeting artifact manipulation and configurable haptics are complete and hardware-validated. Recommend player-installed artifact artwork as the next focused proposal, reusing the existing bounded visual bridge to improve slot recognition. No next slice is approved yet. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, and configurable layouts remain deferred alternatives.
+- Player-installed Hero Meeting artifact artwork is implemented in the current uncommitted candidate and awaits Thor installation and focused hardware validation. The engine supplies bounded artifact sprites from the player's installed assets; Android ties them to the existing artifact revision and retains text-only fallback. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, and configurable layouts remain deferred alternatives.
 - Retain the validated precise stack splitting, Hero Meeting direct manipulation, tap-based troop-slot and whole-army transfers, player-installed visuals, quick-selection lists, touch minimap, Editor pre-entry, File Options, System Options, Map Specifications, Editor Tools, live map information, Game Settings, New Game, Load Game, Scenario Setup, Battle Only setup, High Scores, both campaign selectors, semantic gameplay controls, information cards, modal restoration, and all physical controls without regression.
 
 ## Android build and device workflow
@@ -39,7 +39,7 @@
 - Always build through a short temporary drive mapping. The full Windows path can exceed the Android NDK path limit while creating `*.cflags.tmp` files.
 - Known local tools:
   - Android SDK: `C:\Users\steen\AppData\Local\Android\Sdk`
-  - JDK 17: `C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-full\jdk-17.0.20.1+1`
+  - JDK 17: `C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-compiler-20260913\jdk-17.0.20.1+1`
   - ADB: `C:\Users\steen\AppData\Local\Android\Sdk\platform-tools\adb.exe`
 - Repeatable build from the repository root:
 
@@ -48,7 +48,7 @@
   subst.exe R: $thorRoot
   try {
       Set-Location R:\android
-      $env:JAVA_HOME = 'C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-full\jdk-17.0.20.1+1'
+      $env:JAVA_HOME = 'C:\Users\steen\AppData\Local\Temp\fheroes2-jdk17-compiler-20260913\jdk-17.0.20.1+1'
       $env:ANDROID_HOME = 'C:\Users\steen\AppData\Local\Android\Sdk'
       .\gradlew.bat --no-daemon :app:assembleDebug :app:lintDebug :isotools:lint
   }

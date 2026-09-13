@@ -24,10 +24,14 @@ int main()
     state.slots.resize( 28 );
     state.slots[0] = { 1, 0, "Locked spellbook", false };
     state.slots[1] = { 2, 0, "Transferable artifact", true };
+    state.slots[1].width = 2;
+    state.slots[1].height = 1;
+    state.slots[1].pixels = { 0xFF010203U, 0x00000000U };
     state.slots[14] = { 1, 0, "Locked spellbook", false };
     state.slots[15] = { 3, 0, "Other artifact", true };
     publishArtifactSnapshot( state );
     assert( getArtifactSnapshot( 0, state ) );
+    assert( state.slots[1].width == 2 && state.slots[1].height == 1 && state.slots[1].pixels.size() == 2 );
     const uint64_t revision = state.revision;
 
     assert( !enqueueArtifactMoveRequest( revision, -1, 15 ) );
@@ -82,6 +86,14 @@ int main()
     assert( getArtifactSnapshot( 0, state ) );
     assert( enqueueArtifactMoveRequest( state.revision, 1, 15 ) );
     assert( takeArtifactMoveRequest().valid );
+
+    // Malformed or oversized artwork is discarded without invalidating slot metadata.
+    state.slots[1].width = 65;
+    state.slots[1].height = 1;
+    state.slots[1].pixels.assign( 65, 0xFFFFFFFFU );
+    publishArtifactSnapshot( state );
+    assert( getArtifactSnapshot( 0, state ) );
+    assert( state.slots[1].id == 2 && state.slots[1].width == 0 && state.slots[1].height == 0 && state.slots[1].pixels.empty() );
 
     state.slots.resize( 27 );
     publishArtifactSnapshot( state );

@@ -1219,14 +1219,24 @@ namespace fheroes2::thor
 
     void publishArtifactSnapshot( ArtifactSnapshot snapshot )
     {
+        constexpr int32_t maximumSpriteDimension = 64;
         if ( snapshot.context != UiContext::HERO_MEETING || snapshot.slots.size() != 28 ) {
             snapshot.slots.clear();
+        }
+        for ( ArtifactSlotSnapshot & slot : snapshot.slots ) {
+            if ( slot.width < 0 || slot.height < 0 || slot.width > maximumSpriteDimension || slot.height > maximumSpriteDimension
+                 || slot.pixels.size() != static_cast<size_t>( slot.width ) * slot.height ) {
+                slot.width = 0;
+                slot.height = 0;
+                slot.pixels.clear();
+            }
         }
         std::lock_guard<std::mutex> lock( artifactMutex );
         if ( artifactSnapshot.context == snapshot.context && artifactSnapshot.slots.size() == snapshot.slots.size()
              && std::equal( artifactSnapshot.slots.begin(), artifactSnapshot.slots.end(), snapshot.slots.begin(),
                             []( const ArtifactSlotSnapshot & left, const ArtifactSlotSnapshot & right ) {
-                                return left.id == right.id && left.spellId == right.spellId && left.name == right.name && left.transferable == right.transferable;
+                                return left.id == right.id && left.spellId == right.spellId && left.name == right.name && left.transferable == right.transferable
+                                       && left.width == right.width && left.height == right.height && left.pixels == right.pixels;
                             } ) ) {
             return;
         }
@@ -1457,6 +1467,45 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_fheroes2_GameActivity_nativeEnque
                                                                                                            const jint destination )
 {
     return fheroes2::thor::enqueueArtifactMoveRequest( static_cast<uint64_t>( revision ), source, destination ) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jintArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorArtifactVisualSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
+{
+    fheroes2::thor::ArtifactSnapshot snapshot;
+    if ( !fheroes2::thor::getArtifactSnapshot( static_cast<uint64_t>( knownRevision ), snapshot ) ) {
+        return nullptr;
+    }
+
+    constexpr size_t headerSize = 4;
+    constexpr size_t fieldsPerSlot = 3;
+    size_t valueCount = headerSize;
+    for ( const fheroes2::thor::ArtifactSlotSnapshot & slot : snapshot.slots ) {
+        if ( slot.pixels.size() > static_cast<size_t>( std::numeric_limits<jsize>::max() ) - valueCount - fieldsPerSlot ) {
+            return nullptr;
+        }
+        valueCount += fieldsPerSlot + slot.pixels.size();
+    }
+
+    std::vector<jint> values( valueCount );
+    values[0] = 1;
+    values[1] = static_cast<jint>( snapshot.context );
+    values[2] = static_cast<jint>( snapshot.revision );
+    values[3] = static_cast<jint>( snapshot.slots.size() );
+    size_t offset = headerSize;
+    for ( const fheroes2::thor::ArtifactSlotSnapshot & slot : snapshot.slots ) {
+        values[offset++] = slot.width;
+        values[offset++] = slot.height;
+        values[offset++] = static_cast<jint>( slot.pixels.size() );
+        for ( const uint32_t pixel : slot.pixels ) {
+            values[offset++] = static_cast<jint>( pixel );
+        }
+    }
+
+    jintArray result = env->NewIntArray( static_cast<jsize>( values.size() ) );
+    if ( result != nullptr ) {
+        env->SetIntArrayRegion( result, 0, static_cast<jsize>( values.size() ), values.data() );
+    }
+    return result;
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL Java_org_fheroes2_GameActivity_nativeGetThorTroopSnapshot( JNIEnv * env, jclass, const jlong knownRevision )
