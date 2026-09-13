@@ -13,6 +13,13 @@ Use this log for every official-upstream assessment or integration. Keep validat
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait and correctly proportioned creature sprites, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. The next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, additional haptic customization, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
 
+## 2026-09-13: maintenance closeout and upstream assessment
+
+- Refreshed `origin` and `upstream`. The local Thor branch contains the hardware-validated configurable-haptics checkpoint at `3f07965c6`; documentation now consistently identifies that commit and its `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989` debug APK.
+- Official upstream advanced from the integrated `d778cb44b` to `8fef70ff6`: twelve commits, primarily translations, with small independent changes in `src/fheroes2/heroes/heroes.cpp` and `src/fheroes2/spell/spell.cpp`. No paths overlap the Thor branch changes since `d778cb44b`.
+- Integration was deliberately deferred. It appears low-conflict, but it would require a fresh Android build/lint, installation, launch, and focused Thor smoke test; it is not a prerequisite for the planned player-installed artifact-artwork slice.
+- The native/Java identifier contract passed with 65 contexts and 277 actions. The MSVC native artifact-request regression test passed.
+
 ## 2026-09-07: repository health and next-slice assessment
 
 - Assessed Thor HEAD: `70cdc0abbf3c7ac1b78465de30eb33dbc96d929a`; working tree was clean and the refreshed origin branch matched exactly. Changes since the v0.10.0 source tag are documentation only.

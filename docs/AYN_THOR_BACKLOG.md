@@ -15,9 +15,9 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Hardware-validated source commit: `d9079c1d1039fbf4fb76c23f1fad7b998ebdcb34` (2026-09-07).
-- Individual Hero Meeting artifact transfers and swaps are complete, including both 14-slot bags, scroll spell names, native spellbook and assembly rules, revision-checked requests, and exact nested restoration. All previously validated v0.10.0 workflows are retained.
-- Debug APK SHA-256: `35A526DF4CE4D6327BFC6A689200AE2061DB919E4481FD92F9F9D1F621E66DCA`.
+- Hardware-validated source commit: `3f07965c6dc86c6a160e38fec09024331f5bde54` (2026-09-07).
+- Individual Hero Meeting artifact transfers and swaps are complete, including both 14-slot bags, scroll spell names, native spellbook and assembly rules, revision-checked requests, and exact nested restoration. Configurable consistent lower-deck haptics are also complete: the shared Adventure and Editor setting persists, respects Android touch-feedback preferences, ticks once for accepted lower-deck actions, and remains silent for cancellation and rejected/no-op interaction. All previously validated v0.10.0 workflows are retained.
+- Debug APK SHA-256: `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989`.
 - Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing.
 - The latest published release remains `thor-v0.10.0`; this development checkpoint has not been published as a new release.
 
@@ -1006,7 +1006,7 @@ Status: `done`; tap-based behavior and focused acceptance tests approved and har
 - A bounded, revisioned native snapshot and single pending request validate both slots, active meeting context, inventory revision, and transferability. Requests execute only on the game thread through the native artifact-bar operation and existing assembly/stat refresh path. Scroll spell IDs participate in invalidation and no-op detection.
 - Inventory changes, nested contexts, touch cancellation, multi-touch, and lifecycle changes clear transient selections. Nested Hero/dialog return preserves the artifact view; recreation safely returns to the ordinary meeting deck. Whole-artifact actions, army controls, precise splitting, and existing input remain available.
 - Native request regression tests cover bounds, source/destination spellbook protection, empty sources, full-bag swaps, duplicate pending requests, one-shot consumption, unchanged snapshots, stale inventories, distinct scroll spells, modal invalidation, and malformed snapshots. They pass locally with MSVC and are included in Thor push CI.
-- Artifact drag-and-drop, same-bag rearrangement, artifact artwork, multi-slot army redistribution, broader player-installed visuals, configurable haptics, and configurable layouts remain deferred.
+- Artifact drag-and-drop, same-bag rearrangement, artifact artwork, multi-slot army redistribution, broader player-installed visuals, and configurable layouts remain deferred. Configurable haptics were deferred when this artifact slice was validated and are now complete in the later haptics checkpoint above.
 - Final Android build, app lint, and isotools lint passed through the short `R:` mapping. Lint remains at 0 errors and the existing 59 app / 2 isotools warnings; native/Java parity remains 65 contexts and 277 actions. The candidate installed on `192.168.68.62:33045` and explicitly launched `org.fheroes2.thor/org.fheroes2.GameActivity`; brief checks confirmed the live `org.fheroes2.thor:GameActivityProcess` and lower-display-4 presentation. No matching fatal startup entry appeared in the sampled recent logs. No automated game navigation was performed.
 - Candidate APK SHA-256: `35A526DF4CE4D6327BFC6A689200AE2061DB919E4481FD92F9F9D1F621E66DCA`. The user reported all focused hardware checks passed on 2026-09-07 and authorized committing the validated candidate.
 
