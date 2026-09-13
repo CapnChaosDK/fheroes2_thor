@@ -15,9 +15,9 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest validated development checkpoint
 
-- Hardware-validated source commit: `8b7e6702244a14acb548226fdef2df083c336bac` (2026-09-13).
-- Player-installed Hero Meeting artifact artwork completes both 14-slot bags with bounded native sprites, aspect-preserving Android presentation, revision-locked invalidation, and text-only fallback. Individual transfers and swaps, scroll spell names, spellbook and assembly rules, configured haptics, and exact nested restoration are retained. All previously validated v0.10.0 workflows are retained.
-- Debug APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`.
+- Hardware-validated source commit: `c636df9eea9347e9a2c52d4485be5740f274441d` (2026-09-13).
+- Hero Meeting artifact drag-and-drop supports native-safe empty-slot moves and occupied-slot swaps within either bag and across heroes, with touch-slop activation, bounded artwork feedback, revision validation, cancellation, and configured haptics. Tap transfers, spellbook and assembly rules, stats/scouting, lifecycle restoration, troop controls, and all previously validated v0.11.0 workflows are retained.
+- Debug APK SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`.
 - Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing and publishing.
 - The latest published release is `thor-v0.11.0`.
 
