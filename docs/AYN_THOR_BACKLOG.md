@@ -975,11 +975,13 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 Status: `done`; behavior and focused acceptance tests approved and hardware-validated on 2026-09-07.
 
+- Validated source commit: `3f07965c6dc86c6a160e38fec09024331f5bde54`.
+
 - Adventure System Options and Editor System Options each expose one `HAPTICS: ON` / `HAPTICS: OFF` lower-screen button. The shared Android preference defaults to ON and persists through lower-panel recreation and app restart. Android's own touch-feedback setting remains authoritative.
 - When ON, the lower deck emits one standard Android `CLOCK_TICK` for each accepted semantic command or valid local state transition, including deck actions, quick hero/town selection, valid troop moves and splits, individual artifact moves, panel/page changes, and the established overview marker, zoom, cluster, and filter actions. Selecting an artifact or troop without transferring it, invalid/no-op operations, cancellation, stale/rejected requests, panning, long-press information, upper-screen input, mouse, hotkeys, and physical controls remain silent.
 - The toggle updates its label immediately. Turning haptics ON gives one confirming tick; turning them OFF is silent.
 - Android assemble, app lint, and isotools lint passed through the short `R:` mapping. The candidate installed on `192.168.68.62:33045`, explicitly launched `org.fheroes2.thor/org.fheroes2.GameActivity`, and started `org.fheroes2.thor:GameActivityProcess` (PID 31566). The brief log check found no Android runtime or native fatal entry. No automated game navigation was performed.
-- Candidate APK SHA-256: `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989`.
+- Validated development APK SHA-256: `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989`.
 
 #### Focused configurable-haptics hardware validation
 
