@@ -5,13 +5,21 @@ Use this log for every official-upstream assessment or integration. Keep validat
 ## Current Thor handoff baseline
 
 - Branch: `ayn-thor-dual-screen`
-- Latest published release: `thor-v0.11.0` at `8b7e6702244a14acb548226fdef2df083c336bac`
-- Latest hardware-validated source commit: `8b7e6702244a14acb548226fdef2df083c336bac`
-- Development APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`
-- Release APK: `fheroes2-thor-v0.11.0-debug.apk`; SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`.
-- Complete Adventure System Options and nested settings, whole-artifact and individual Hero Meeting transfers, player-installed artifact artwork, and configurable consistent lower-deck haptics are hardware-validated. All focused individual-artifact, artwork, and haptics hardware checks passed by 2026-09-13. Adventure and Editor System Options share a persistent, system-respecting haptics toggle; valid lower-deck actions tick once when enabled, while cancellation and rejected/no-op interaction stay silent. No next slice is approved. Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, broader player-installed visuals, and configurable layouts remain deferred alternatives.
+- Latest published release: `thor-v0.12.0` at `2fe3bb0f9`
+- Latest hardware-validated source implementation: `c636df9eea9347e9a2c52d4485be5740f274441d`
+- Validated development APK SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`
+- Release APK: `fheroes2-thor-v0.12.0-debug.apk`; SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`.
+- Complete Adventure System Options and nested settings, whole-artifact and individual Hero Meeting transfers, player-installed artifact artwork, artifact drag-and-drop with same-bag rearrangement, and configurable consistent lower-deck haptics are hardware-validated. All focused artifact, artwork, drag, and haptics hardware checks passed by 2026-09-13. Adventure and Editor System Options share a persistent, system-respecting haptics toggle; valid lower-deck actions tick once when enabled, while cancellation and rejected/no-op interaction stay silent. No new feature slice is approved. Multi-slot army redistribution, broader player-installed visuals, configurable layouts, left/right-handed modes, controls-only battery-saving mode, and additional haptic customization or long-press actions remain deferred alternatives.
 - Precise Hero Meeting stack splitting, direct manipulation, tap-based troop-slot and whole-army transfers, player-installed Hero portrait, correctly proportioned creature sprites, and artifact artwork, semantic anti-stuck gameplay dialogs, complete in-game Adventure and File Options, complete Expanded Adventure Map, safe unknown-menu fallback, quick-selection lists, touch minimap viewport control, live Editor map information, complete Editor workflow, gameplay information and semantic controls, Game Settings, Battle Only setup, High Scores, and both campaign selectors are hardware-validated. Any next focused slice must be selected and approved from richer army or artifact management, broader player-installed sprite use, additional haptic customization, or configurable layouts.
 - For future integration candidates, automate build/lint and concise diagnostics, then use a focused user-run manual Thor smoke test. Reserve extended automated device interaction for explicit requests or targeted failure diagnosis.
+
+## 2026-09-13: artifact-drag validation and v0.12.0 release
+
+- Artifact drag-and-drop and same-bag rearrangement were implemented at `c636df9ee`. A drag begins only after crossing Android's touch-slop threshold, provides bounded player-installed artwork feedback, and submits the established revision-bound native move request on release.
+- Same-bag empty-slot moves and occupied-slot swaps, cross-bag moves and swaps, tap transfers, spellbook and identical-artifact protections, scroll handling, cancellation, lifecycle restoration, configured haptics, troop controls, and established upper-screen and physical input paths passed focused hardware validation.
+- Release cleanup introduced no gameplay changes. Identifier parity passed with 65 contexts and 277 actions; the MSVC artifact-request regression suite passed; Android assemble, app lint, and isotools lint passed through the short `R:` mapping.
+- The rebuilt APK matched the validated development candidate byte-for-byte. It installed successfully on `192.168.68.76:43311`, launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`, ran as `org.fheroes2.thor:GameActivityProcess` (PID 31543), and presented on display 4 without a sampled fatal or JNI-link error.
+- The user passed the focused release smoke test: same-bag moves and swaps in both bags, cross-bag dragging, tap transfers, spellbook and invalid-drop protection, Show Army troop controls, upper touchscreen, and physical controls.
 
 ## 2026-09-13: artifact-artwork validation and v0.11.0 release
 

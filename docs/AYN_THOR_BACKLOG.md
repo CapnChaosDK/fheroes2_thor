@@ -6,12 +6,12 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.11.0` was published on 2026-09-13 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.11.0
-- Source commit: `8b7e6702244a14acb548226fdef2df083c336bac`.
-- APK: `fheroes2-thor-v0.11.0-debug.apk`.
-- APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`.
-- The release adds bounded player-installed artifact artwork to both Hero Meeting bags, revision-locked native/Android visual transport, aspect-preserving display, text-only fallback, and artifact-payload regression coverage. It retains all hardware-validated v0.10.0 workflows.
+- `thor-v0.12.0` was published on 2026-09-13 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.12.0
+- Source commit: `2fe3bb0f9`.
+- APK: `fheroes2-thor-v0.12.0-debug.apk`.
+- APK SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`.
+- The release adds artifact drag-and-drop and same-bag rearrangement to both Hero Meeting bags, with touch-slop activation, bounded artwork feedback, revision validation, safe cancellation, and configured haptics. It retains tap transfers, native artifact artwork, spellbook and assembly rules, statistics and scouting, lifecycle restoration, troop controls, and all hardware-validated v0.11.0 workflows.
 
 ## Latest validated development checkpoint
 
@@ -19,7 +19,7 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 - Hero Meeting artifact drag-and-drop supports native-safe empty-slot moves and occupied-slot swaps within either bag and across heroes, with touch-slop activation, bounded artwork feedback, revision validation, cancellation, and configured haptics. Tap transfers, spellbook and assembly rules, stats/scouting, lifecycle restoration, troop controls, and all previously validated v0.11.0 workflows are retained.
 - Debug APK SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`.
 - Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing and publishing.
-- The latest published release is `thor-v0.11.0`.
+- The latest published release is `thor-v0.12.0`.
 
 ## Agreed product decisions
 
@@ -1001,7 +1001,7 @@ Status: `done`; behavior and focused acceptance tests approved and hardware-vali
 - A bounded visual payload carries exactly the same context and revision as the established artifact snapshot. Android accepts at most 28 images of at most 64 by 64 pixels, preserves each sprite's aspect ratio, and displays the existing text-only slot when artwork is absent or invalid.
 - Artwork is decorative and does not change hit testing, selection, eligible-target borders, scroll spell naming, spellbook protection, movement, swapping, haptics, or native inventory rules. Context and lifecycle invalidation prevent stale art from surviving a transfer, nested screen, panel recreation, or app resume.
 - The shared slot-bitmap decoder and aspect-fitting helper now serve troop and artifact artwork, reducing duplicate presentation code without broadening the slice into a general command-deck refactor.
-- Artifact drag-and-drop, same-bag rearrangement, multi-slot army redistribution, and broader player-installed visuals remain deferred.
+- At the time of this artwork slice, artifact drag-and-drop and same-bag rearrangement remained deferred; both are now complete and hardware-validated. Multi-slot army redistribution and broader player-installed visuals remain deferred.
 - Native publication avoids regenerating the bounded visual payload while artifact identities and scroll spells are unchanged. The native/Java contract and MSVC artifact-request regressions pass, including artwork bounds and malformed-image fallback. Android `:app:assembleDebug`, `:app:lintDebug`, and `:isotools:lint` pass through the short `R:` mapping.
 - The build also makes the Android version files explicitly project-relative, removing their prior dependency on the Gradle daemon's working directory. The compiler-capable local Temurin 17 path is recorded in `AGENTS.md`.
 - Candidate debug APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`. It installed successfully on the Thor at `192.168.68.76:43311` and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`. Brief checks confirmed resumed process `org.fheroes2.thor:GameActivityProcess` (PID 28783), the presentation window on display 4, and no matching fatal or JNI-link error in recent logs.
