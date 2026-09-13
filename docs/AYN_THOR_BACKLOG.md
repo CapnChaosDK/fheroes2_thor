@@ -6,20 +6,20 @@ Status values: `planned`, `in progress`, `blocked`, `done`, `deferred`.
 
 ## Latest release checkpoint
 
-- `thor-v0.10.0` was published on 2026-09-06 as a debug-signed AYN Thor prerelease.
-- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.10.0
-- Source commit: `9a7c595f276e9db4210e8c8589a9885020ccac15`.
-- APK: `fheroes2-thor-v0.10.0-debug.apk`.
-- APK SHA-256: `E3DC75FF2B8A512E05BA36BBBCCE75B993E14A30540D2ECBFBD4D2DFA35441F6`.
-- The release integrates upstream through `d778cb44b`, precise Hero Meeting splitting, whole-artifact transfers and swapping, semantic necromancy control, complete Adventure Options and nested settings decks, Thor default-branch Android CI, identifier parity, and compile-time action-mask collision safeguards. It retains every hardware-validated v0.9.0 workflow.
+- `thor-v0.11.0` was published on 2026-09-13 as a debug-signed AYN Thor prerelease.
+- Release: https://github.com/CapnChaosDK/fheroes2_thor/releases/tag/thor-v0.11.0
+- Source commit: `8b7e6702244a14acb548226fdef2df083c336bac`.
+- APK: `fheroes2-thor-v0.11.0-debug.apk`.
+- APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`.
+- The release adds bounded player-installed artifact artwork to both Hero Meeting bags, revision-locked native/Android visual transport, aspect-preserving display, text-only fallback, and artifact-payload regression coverage. It retains all hardware-validated v0.10.0 workflows.
 
 ## Latest validated development checkpoint
 
-- Hardware-validated source commit: `3f07965c6dc86c6a160e38fec09024331f5bde54` (2026-09-07).
-- Individual Hero Meeting artifact transfers and swaps are complete, including both 14-slot bags, scroll spell names, native spellbook and assembly rules, revision-checked requests, and exact nested restoration. Configurable consistent lower-deck haptics are also complete: the shared Adventure and Editor setting persists, respects Android touch-feedback preferences, ticks once for accepted lower-deck actions, and remains silent for cancellation and rejected/no-op interaction. All previously validated v0.10.0 workflows are retained.
-- Debug APK SHA-256: `F08438A8A94C2939BAA2D0FB01F30600E5E8DCFA27E51038BE31735C14970989`.
-- Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing.
-- The latest published release remains `thor-v0.10.0`; this development checkpoint has not been published as a new release.
+- Hardware-validated source commit: `8b7e6702244a14acb548226fdef2df083c336bac` (2026-09-13).
+- Player-installed Hero Meeting artifact artwork completes both 14-slot bags with bounded native sprites, aspect-preserving Android presentation, revision-locked invalidation, and text-only fallback. Individual transfers and swaps, scroll spell names, spellbook and assembly rules, configured haptics, and exact nested restoration are retained. All previously validated v0.10.0 workflows are retained.
+- Debug APK SHA-256: `8AD7C063E3854F688DDD3D0008454B66DCE65D4DCF95CCE9A6CB97CB3B97CBF4`.
+- Android build, app/isotools lint, native request regression tests, and identifier checks passed. The APK installed and launched explicitly on the Thor; the user reported all focused hardware tests passed and authorized committing and publishing.
+- The latest published release is `thor-v0.11.0`.
 
 ## Agreed product decisions
 
