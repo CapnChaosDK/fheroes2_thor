@@ -592,6 +592,10 @@ final class ThorSecondScreenPresentation extends Presentation
         private int pressedArtifact = -1;
         private float artifactDownX;
         private float artifactDownY;
+        private boolean artifactDragActive;
+        private int artifactDragDestination = -1;
+        private float artifactDragX;
+        private float artifactDragY;
         private int troopContext = -1;
         private long troopRevision = -1;
         private String leftHeroName = "";
@@ -702,7 +706,7 @@ final class ThorSecondScreenPresentation extends Presentation
             }
             if ( contextChanged || artifactChanged ) {
                 selectedArtifact = -1;
-                pressedArtifact = -1;
+                cancelArtifactGesture();
             }
             if ( contextChanged && ( context == CONTEXT_ADVENTURE_MAP || context == CONTEXT_MAIN_MENU ) ) {
                 showArtifacts = false;
@@ -871,7 +875,7 @@ final class ThorSecondScreenPresentation extends Presentation
                 artifactSlots.clear();
                 artifactSlots.addAll( slots );
                 selectedArtifact = -1;
-                pressedArtifact = -1;
+                cancelArtifactGesture();
                 return true;
             }
             catch ( final NumberFormatException ex ) {
@@ -963,12 +967,14 @@ final class ThorSecondScreenPresentation extends Presentation
                 final boolean selected = selectedArtifact == index;
                 final boolean target = selectedArtifact >= 0 && selectedArtifact / 14 != index / 14 && ( slot.id < 0 || slot.transferable )
                                        && ( slot.id != artifactSlots.get( selectedArtifact ).id || slot.spellId != artifactSlots.get( selectedArtifact ).spellId );
+                final boolean dragSource = artifactDragActive && pressedArtifact == index;
+                final boolean dragDestination = artifactDragActive && artifactDragDestination == index;
                 paint.setStyle( Paint.Style.FILL );
-                paint.setColor( pressedArtifact == index ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
+                paint.setColor( pressedArtifact == index || dragDestination ? BUTTON_PRESSED_COLOR : PANEL_INNER_COLOR );
                 canvas.drawRoundRect( bounds, 8f, 8f, paint );
                 paint.setStyle( Paint.Style.STROKE );
-                paint.setStrokeWidth( selected ? 4f : 2f );
-                paint.setColor( selected ? GOLD_LIGHT_COLOR : target ? VALID_TARGET_COLOR : GOLD_COLOR );
+                paint.setStrokeWidth( selected || dragSource || dragDestination ? 4f : 2f );
+                paint.setColor( selected || dragSource ? GOLD_LIGHT_COLOR : target || dragDestination ? VALID_TARGET_COLOR : GOLD_COLOR );
                 canvas.drawRoundRect( bounds, 8f, 8f, paint );
                 paint.setStyle( Paint.Style.FILL );
                 paint.setColor( slot.transferable ? TEXT_COLOR : MUTED_TEXT_COLOR );
@@ -1000,9 +1006,52 @@ final class ThorSecondScreenPresentation extends Presentation
                 paint.setTextAlign( Paint.Align.CENTER );
             }
             paint.setColor( TEXT_COLOR );
-            final String guidance = selectedArtifact < 0 ? "Tap an artifact, then a slot in the other bag. Spellbooks stay with their hero."
-                                                         : artifactSlots.get( selectedArtifact ).name + " - tap the other bag to move / swap; tap again to cancel.";
+            final String guidance
+                = artifactDragActive ? "Drag to any valid slot in either bag; release outside to cancel."
+                                     : selectedArtifact < 0 ? "Tap across bags or drag within / across bags. Spellbooks stay with their hero."
+                                                            : artifactSlots.get( selectedArtifact ).name
+                                                                  + " - tap the other bag to move / swap; tap again to cancel.";
             drawFittedText( canvas, guidance, getWidth() * 0.5f, getHeight() * 0.745f, getWidth() - 2f * getMargin(), 22f );
+            drawArtifactDragPreview( canvas );
+        }
+
+        private void drawArtifactDragPreview( final Canvas canvas )
+        {
+            if ( !artifactDragActive || pressedArtifact < 0 || pressedArtifact >= artifactSlots.size() ) {
+                return;
+            }
+
+            final float previewSize = 104f;
+            final float centerX = Math.max( previewSize * 0.5f, Math.min( getWidth() - previewSize * 0.5f, artifactDragX ) );
+            final float centerY = Math.max( previewSize * 0.5f, Math.min( getHeight() - previewSize * 0.5f, artifactDragY - 72f ) );
+            final RectF previewBounds = new RectF( centerX - previewSize * 0.5f, centerY - previewSize * 0.5f, centerX + previewSize * 0.5f,
+                                                   centerY + previewSize * 0.5f );
+
+            paint.setStyle( Paint.Style.FILL );
+            paint.setColor( BUTTON_PRESSED_COLOR );
+            paint.setAlpha( 225 );
+            canvas.drawRoundRect( previewBounds, 13f, 13f, paint );
+            paint.setStyle( Paint.Style.STROKE );
+            paint.setStrokeWidth( 5f );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            canvas.drawRoundRect( previewBounds, 13f, 13f, paint );
+
+            final Bitmap bitmap
+                = artifactVisualContext == artifactContext && artifactVisualRevision == artifactRevision && artifactBitmaps.size() == 28
+                      ? artifactBitmaps.get( pressedArtifact )
+                      : null;
+            if ( bitmap != null ) {
+                final RectF imageBounds = fitBitmap( bitmap, centerX, previewBounds.top + 8f, 72f, 72f );
+                paint.setFilterBitmap( false );
+                canvas.drawBitmap( bitmap, null, imageBounds, paint );
+            }
+
+            paint.setAlpha( 255 );
+            paint.setStyle( Paint.Style.FILL );
+            paint.setTypeface( Typeface.create( Typeface.SERIF, Typeface.BOLD ) );
+            paint.setTextAlign( Paint.Align.CENTER );
+            paint.setColor( GOLD_LIGHT_COLOR );
+            drawFittedText( canvas, artifactSlots.get( pressedArtifact ).name, centerX, previewBounds.bottom - 8f, previewSize - 12f, 16f );
         }
 
         private boolean applyTroopSnapshot( final String[] snapshot )
@@ -1508,30 +1557,59 @@ final class ThorSecondScreenPresentation extends Presentation
             final int action = event.getActionMasked();
             if ( action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_CANCEL ) {
                 selectedArtifact = -1;
-                pressedArtifact = -1;
+                cancelArtifactGesture();
                 invalidate();
             }
             if ( action == MotionEvent.ACTION_DOWN && gameContext == CONTEXT_HERO_MEETING && showArtifacts && event.getPointerCount() == 1 ) {
                 pressedArtifact = artifactAt( event.getX(), event.getY() );
                 artifactDownX = event.getX();
                 artifactDownY = event.getY();
+                artifactDragX = artifactDownX;
+                artifactDragY = artifactDownY;
                 if ( pressedArtifact >= 0 ) {
                     invalidate();
                     return true;
                 }
             }
             if ( action == MotionEvent.ACTION_MOVE && pressedArtifact >= 0 ) {
-                if ( event.getPointerCount() != 1 || Math.abs( event.getX() - artifactDownX ) > troopTouchSlop
-                     || Math.abs( event.getY() - artifactDownY ) > troopTouchSlop ) {
-                    pressedArtifact = -1;
+                if ( event.getPointerCount() != 1 ) {
+                    cancelArtifactGesture();
+                    invalidate();
+                    return true;
+                }
+                final float deltaX = event.getX() - artifactDownX;
+                final float deltaY = event.getY() - artifactDownY;
+                if ( !artifactDragActive && deltaX * deltaX + deltaY * deltaY > troopTouchSlop * troopTouchSlop ) {
+                    if ( pressedArtifact < artifactSlots.size() && artifactSlots.get( pressedArtifact ).transferable ) {
+                        artifactDragActive = true;
+                        selectedArtifact = -1;
+                    }
+                    else {
+                        cancelArtifactGesture();
+                        invalidate();
+                        return true;
+                    }
+                }
+                if ( artifactDragActive ) {
+                    artifactDragX = event.getX();
+                    artifactDragY = event.getY();
+                    final int destination = artifactAt( artifactDragX, artifactDragY );
+                    artifactDragDestination = isValidArtifactDestination( pressedArtifact, destination ) ? destination : -1;
                     invalidate();
                 }
                 return true;
             }
             if ( action == MotionEvent.ACTION_UP && pressedArtifact >= 0 ) {
                 final int index = pressedArtifact;
-                pressedArtifact = -1;
-                if ( artifactAt( event.getX(), event.getY() ) == index ) {
+                final boolean wasDrag = artifactDragActive;
+                final int destination = wasDrag ? artifactAt( event.getX(), event.getY() ) : -1;
+                cancelArtifactGesture();
+                if ( wasDrag ) {
+                    if ( isValidArtifactDestination( index, destination ) && artifactMoveSender.send( artifactRevision, index, destination ) ) {
+                        performThorHapticFeedback();
+                    }
+                }
+                else if ( artifactAt( event.getX(), event.getY() ) == index ) {
                     handleArtifactTap( index );
                 }
                 invalidate();
@@ -1883,6 +1961,13 @@ final class ThorSecondScreenPresentation extends Presentation
             troopDragDestinationIndex = -1;
         }
 
+        private void cancelArtifactGesture()
+        {
+            pressedArtifact = -1;
+            artifactDragActive = false;
+            artifactDragDestination = -1;
+        }
+
         private boolean hasHeroPortraitSnapshot()
         {
             return gameContext == CONTEXT_HERO && visualContext == CONTEXT_HERO && visualRevision >= 0 && visualBitmap != null;
@@ -2007,6 +2092,7 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( command == LOCAL_TOGGLE_ARTIFACTS ) {
                 showArtifacts = !showArtifacts;
                 selectedArtifact = -1;
+                cancelArtifactGesture();
                 clearTroopSelection();
                 releasePressedButton();
                 rebuildActions();
@@ -2126,6 +2212,18 @@ final class ThorSecondScreenPresentation extends Presentation
             if ( hapticsEnabled ) {
                 performHapticFeedback( HapticFeedbackConstants.CLOCK_TICK );
             }
+        }
+
+        private boolean isValidArtifactDestination( final int source, final int destination )
+        {
+            if ( source < 0 || source >= artifactSlots.size() || destination < 0 || destination >= artifactSlots.size() || source == destination
+                 || !artifactSlots.get( source ).transferable ) {
+                return false;
+            }
+
+            final ArtifactSlot from = artifactSlots.get( source );
+            final ArtifactSlot to = artifactSlots.get( destination );
+            return ( to.id < 0 || to.transferable ) && ( from.id != to.id || from.spellId != to.spellId );
         }
 
         private void clearInformationDisplay()
@@ -3508,7 +3606,7 @@ final class ThorSecondScreenPresentation extends Presentation
 
         void releasePressedButton()
         {
-            pressedArtifact = -1;
+            cancelArtifactGesture();
             removeCallbacks( radarLongPress );
             removeCallbacks( troopLongPress );
             radarGestureActive = false;
@@ -3535,7 +3633,7 @@ final class ThorSecondScreenPresentation extends Presentation
         void cancelTransientInteraction()
         {
             selectedArtifact = -1;
-            pressedArtifact = -1;
+            cancelArtifactGesture();
             clearTroopSelection();
             releasePressedButton();
             rebuildActions();

@@ -36,7 +36,7 @@ int main()
 
     assert( !enqueueArtifactMoveRequest( revision, -1, 15 ) );
     assert( !enqueueArtifactMoveRequest( revision, 1, 28 ) );
-    assert( !enqueueArtifactMoveRequest( revision, 1, 2 ) );
+    assert( !enqueueArtifactMoveRequest( revision, 1, 1 ) );
     assert( !enqueueArtifactMoveRequest( revision, 0, 15 ) );
     assert( !enqueueArtifactMoveRequest( revision, 1, 14 ) );
     assert( !enqueueArtifactMoveRequest( revision, 2, 15 ) );
@@ -50,6 +50,11 @@ int main()
     assert( move.valid && move.source == 1 && move.destination == 16 );
     assert( !takeArtifactMoveRequest().valid );
 
+    // Same-bag requests support reordering into empty slots.
+    assert( enqueueArtifactMoveRequest( revision, 1, 2 ) );
+    const ArtifactMoveRequest sameBagMove = takeArtifactMoveRequest();
+    assert( sameBagMove.valid && sameBagMove.source == 1 && sameBagMove.destination == 2 );
+
     // Occupied targets allow swaps even with full bags.
     for ( ArtifactSlotSnapshot & slot : state.slots ) {
         if ( slot.id < 0 ) {
@@ -58,6 +63,9 @@ int main()
     }
     publishArtifactSnapshot( state );
     assert( getArtifactSnapshot( revision, state ) );
+    assert( enqueueArtifactMoveRequest( state.revision, 1, 2 ) );
+    const ArtifactMoveRequest sameBagSwap = takeArtifactMoveRequest();
+    assert( sameBagSwap.valid && sameBagSwap.source == 1 && sameBagSwap.destination == 2 );
     assert( enqueueArtifactMoveRequest( state.revision, 15, 1 ) );
     assert( takeArtifactMoveRequest().valid );
     assert( !enqueueArtifactMoveRequest( state.revision, 2, 16 ) );

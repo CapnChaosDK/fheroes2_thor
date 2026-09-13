@@ -1247,7 +1247,7 @@ namespace fheroes2::thor
 
     bool enqueueArtifactMoveRequest( const uint64_t revision, const int32_t source, const int32_t destination )
     {
-        if ( source < 0 || source >= 28 || destination < 0 || destination >= 28 || source / 14 == destination / 14 ) {
+        if ( source < 0 || source >= 28 || destination < 0 || destination >= 28 || source == destination ) {
             return false;
         }
         std::lock_guard<std::mutex> lock( artifactMutex );

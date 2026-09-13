@@ -969,7 +969,29 @@ All six focused checks passed on the Thor, including Credits menu fallback and s
 
 ## Next recommended planning point
 
-- Configurable consistent lower-deck haptics and player-installed Hero Meeting artifact artwork are complete and hardware-validated. No next slice is approved.
+- Artifact drag-and-drop with same-bag rearrangement is complete and hardware-validated. No next slice is approved. Multi-slot army redistribution, configurable layouts, broader player-installed visuals, and the remaining Milestone 4 alternatives remain deferred.
+
+### Hero Meeting artifact drag-and-drop and same-bag rearrangement
+
+Status: `passed`; behavior and focused acceptance tests approved and hardware-validated on 2026-09-13.
+
+- Drag any transferable artifact to another slot in either hero's bag. Same-bag drops move into empty slots or swap different artifacts; cross-bag drops retain the validated native movement, swapping, capacity, spellbook, assembly, statistics, and scouting rules.
+- A drag begins only after crossing the system touch-slop threshold. The validated tap-select/tap-destination workflow remains unchanged, and releasing outside a valid slot or without crossing the threshold cannot accidentally move an artifact.
+- The source and valid current destination receive clear drag feedback using the existing player-installed artifact artwork. Android submits only the established revision-bound source/destination request; the Hero Meeting loop revalidates and applies it on the SDL thread.
+- Multitouch, cancellation, context or snapshot changes, nested screens, panel recreation, and lifecycle transitions cancel pending drag state. Rejected and cancelled drops remain silent; accepted operations retain the configured haptic behavior.
+- The native artifact-request regression suite passes with same-bag empty-slot moves, occupied-slot swaps, source-equals-destination rejection, and all established revision, spellbook, scroll, modal, and artwork safeguards. The Thor identifier contract remains 65 contexts and 277 actions.
+- Android assemble, app lint, and isotools lint pass through the required short `R:` mapping. The candidate installed successfully on `192.168.68.76:43311` and launched explicitly as `org.fheroes2.thor/org.fheroes2.GameActivity`; the game process was live as PID 30461 and its presentation window was visible on display 4. The brief fatal-log query was empty. Candidate debug APK SHA-256: `6A40ABEB678C7C8A5419B0933E35A5DA442F0A01F4EC84F8F62699CEDCCBF629`.
+
+#### Focused artifact drag-and-drop validation
+
+1. Reorder artifacts into empty slots and swap occupied slots within each bag.
+2. Move and swap artifacts between heroes, including full bags and distinct scrolls.
+3. Confirm spellbooks and identical artifact/spell pairs remain protected from invalid operations.
+4. Verify taps still work and short movements or outside drops cannot cause accidental transfers.
+5. Test cancellation, rapid input, multitouch, nested screens, panel recreation, and suspend/resume.
+6. Recheck assembled sets, stats/scouting, Show Army, troop manipulation, whole-artifact controls, and all established upper-screen and physical inputs.
+
+All six focused checks passed on the Thor. Empty-slot moves and occupied-slot swaps worked within both bags and between heroes, including full bags and distinct scrolls. Spellbooks, identical artifacts and spells, invalid slots, short movements, outside drops, cancellation, rapid input, and multitouch remained safe and silent. Tap transfers, nested restoration, panel and suspend/resume lifecycle handling, assembled sets, stats and scouting, Show Army, troop manipulation, whole-artifact actions, upper touchscreen, mouse, hotkeys, and physical controls retained their validated behavior.
 
 ### Player-installed Hero Meeting artifact artwork
 
@@ -1221,7 +1243,8 @@ Status: `deferred`
 
 - Completed and hardware-validated foundations: touch minimap and expanded-map viewport control, Hero and Castle quick-selection, Hero Meeting tap/drag transfers, whole-army controls, and precise stack splitting.
 - Whole-artifact and individual Hero Meeting transfers and swapping are also complete and hardware-validated.
-- Remaining candidates: multi-slot army redistribution, artifact drag-and-drop and same-bag rearrangement, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and additional haptic customization or long-press actions.
+- Artifact drag-and-drop and same-bag rearrangement are complete and hardware-validated.
+- Remaining candidates: multi-slot army redistribution, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and additional haptic customization or long-press actions.
 
 ## Milestone 5: remaining native visual integration
 
