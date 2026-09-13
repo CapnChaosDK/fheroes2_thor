@@ -1197,7 +1197,7 @@ Status: `deferred`
 
 - Completed and hardware-validated foundations: touch minimap and expanded-map viewport control, Hero and Castle quick-selection, Hero Meeting tap/drag transfers, whole-army controls, and precise stack splitting.
 - Whole-artifact and individual Hero Meeting transfers and swapping are also complete and hardware-validated.
-- Remaining candidates: multi-slot army redistribution, artifact drag-and-drop and same-bag rearrangement, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and configurable haptics or long-press actions.
+- Remaining candidates: multi-slot army redistribution, artifact drag-and-drop and same-bag rearrangement, configurable layouts and button sizing, left/right-handed modes, controls-only battery-saving mode, and additional haptic customization or long-press actions.
 
 ## Milestone 5: remaining native visual integration
 
